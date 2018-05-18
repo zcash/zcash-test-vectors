@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from sapling_utils import i2lebsp
 
 ENDIANNESS = 'little'
 
@@ -43,6 +44,9 @@ class FieldElement(object):
 
     def inv(self):
         return self.exp(self.m - 2)
+
+    def bits(self, l):
+        return i2lebsp(l, self.s)
 
     def __bytes__(self):
         return self.s.to_bytes(32, byteorder=ENDIANNESS)
