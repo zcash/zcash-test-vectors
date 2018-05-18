@@ -9,10 +9,15 @@ from sapling_jubjub import Point, JUBJUB_COFACTOR
 # We deliberately use an ASCII hex string of 32 bytes here.
 CRS = b'096b36a5804bfacef1691e173c366a47ff5ba84a44f26ddd7e8d9f79d5b42df0'
 
-def group_hash(d, m):
-    digest = blake2s(person=d)
+
+#
+# Group hash
+#
+
+def group_hash(D, M):
+    digest = blake2s(person=D)
     digest.update(CRS)
-    digest.update(m)
+    digest.update(M)
     p = Point.from_bytes(digest.digest())
     if not p:
         return None
@@ -21,10 +26,10 @@ def group_hash(d, m):
         return None
     return q
 
-def find_group_hash(d, m):
+def find_group_hash(D, M):
     i = 0
     while True:
-        p = group_hash(d, m + bytes([i]))
+        p = group_hash(D, M + bytes([i]))
         if p:
             return p
         i += 1
