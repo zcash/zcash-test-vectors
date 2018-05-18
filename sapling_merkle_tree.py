@@ -10,7 +10,7 @@ def merkle_crh(layer, left, right):
     assert layer < MERKLE_DEPTH
     assert len(left) == 255
     assert len(right) == 255
-    l = i2lebsp(6, layer)
+    l = i2lebsp(6, MERKLE_DEPTH - 1 - layer)
     return pedersen_hash(b'Zcash_PH', l + left + right)
 
 
@@ -20,5 +20,5 @@ c = unhexlify('5bf43b5736c19b714d1f462c9d22ba3492c36e3d9bbd7ca24d94b440550aa561'
 a = leos2bsp(a)[:255]
 b = leos2bsp(b)[:255]
 c = leos2bsp(c)[:255]
-assert merkle_crh(25, a, b) == c
-assert merkle_crh(26, a, b) != c
+assert merkle_crh(MERKLE_DEPTH - 1 - 25, a, b) == c
+assert merkle_crh(MERKLE_DEPTH - 1 - 26, a, b) != c
