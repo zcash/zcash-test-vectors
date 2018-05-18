@@ -4,7 +4,8 @@ from pyblake2 import blake2b, blake2s
 
 from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
 from sapling_jubjub import Fr
-from sapling_utils import chunk
+from sapling_notes import note_commit
+from sapling_utils import chunk, leos2bsp
 
 #
 # PRFs and hashes
@@ -93,11 +94,21 @@ def main():
             ivk: [u8; 32],
             default_d: [u8; 11],
             default_pk_d: [u8; 32],
+            note_v: u64,
+            note_r: [u8; 32],
+            note_cm: [u8; 32],
         };
 
         let test_vectors = vec![''')
     for i in range(0, 10):
         sk = SpendingKey(bytes([i] * 32))
+        note_v = (2548793025584392057432895043257984320*i) % 2**64
+        note_r = Fr(8890123457840276890326754358439057438290574382905).exp(i+1)
+        note_cm = note_commit(
+            note_r,
+            leos2bsp(bytes(group_hash(b'Zcash_gd', sk.default_d()))),
+            leos2bsp(bytes(sk.default_pkd())),
+            note_v)
         print('''            TestVector {
                 sk: [
                     %s
@@ -126,6 +137,13 @@ def main():
                 default_pk_d: [
                     %s
                 ],
+                note_v: %s,
+                note_r: [
+                    %s
+                ],
+                note_cm: [
+                    %s
+                ],
             },''' % (
                 chunk(hexlify(sk.data)),
                 chunk(hexlify(bytes(sk.ask()))),
@@ -136,6 +154,9 @@ def main():
                 chunk(hexlify(bytes(sk.ivk()))),
                 chunk(hexlify(sk.default_d())),
                 chunk(hexlify(bytes(sk.default_pkd()))),
+                note_v,
+                chunk(hexlify(bytes(note_r))),
+                chunk(hexlify(bytes(note_cm.u))),
             ))
     print('        ];')
 
