@@ -5,7 +5,7 @@ q_j = 52435875175126190479447740508185965837690552500527637822603658699938581184
 r_j = 6554484396890773809930967563523245729705921265872317281365359162392183254199
 
 qm1d2 = 26217937587563095239723870254092982918845276250263818911301829349969290592256
-assert((q_j - 1) // 2 == qm1d2)
+assert (q_j - 1) // 2 == qm1d2
 
 
 #
@@ -28,7 +28,7 @@ class FieldElement(object):
         return self.t(self.s * a.s)
 
     def __truediv__(self, a):
-        assert(a.s != 0)
+        assert a.s != 0
         return self * a.inv()
 
     def exp(self, e):
@@ -84,11 +84,11 @@ class Fq(FieldElement):
                 while t2i != self.ONE:
                     t2i = t2i * t2i
                     i += 1
-                assert(i < m)
+                assert i < m
 
                 # 9:
                 # w <- z^(2^(v-k-1))
-                for j in range(0, m - i - 1):
+                for _ in range(0, m - i - 1):
                     c = c * c
                 # b <- bz
                 r = r * c
@@ -98,12 +98,11 @@ class Fq(FieldElement):
                 t = t * c
                 # v <- k
                 m = i
-            assert(r * r == self)
+            assert r * r == self
             return r
         elif a == self.MINUS_ONE:
             return None
-        else:
-            return self.ZERO
+        return self.ZERO
 
 
 class Fr(FieldElement):
@@ -187,4 +186,4 @@ class Point(object):
 
 Point.ZERO = Point(Fq.ZERO, Fq.ONE)
 
-assert(Point.ZERO + Point.ZERO == Point.ZERO)
+assert Point.ZERO + Point.ZERO == Point.ZERO

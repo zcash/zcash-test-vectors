@@ -33,7 +33,7 @@ def find_group_hash(D, M):
         if p:
             return p
         i += 1
-        assert(i < 256)
+        assert i < 256
 
 
 #

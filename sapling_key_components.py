@@ -74,7 +74,7 @@ class SpendingKey(object):
             if group_hash(b'Zcash_gd', d):
                 return d
             i += 1
-            assert(i < 256)
+            assert i < 256
 
     @cached
     def default_pkd(self):
@@ -127,19 +127,18 @@ def main():
                     %s
                 ],
             },''' % (
-    chunk(hexlify(sk.data)),
-    chunk(hexlify(bytes(sk.ask()))),
-    chunk(hexlify(bytes(sk.nsk()))),
-    chunk(hexlify(sk.ovk())),
-    chunk(hexlify(bytes(sk.ak()))),
-    chunk(hexlify(bytes(sk.nk()))),
-    chunk(hexlify(bytes(sk.ivk()))),
-    chunk(hexlify(sk.default_d())),
-    chunk(hexlify(bytes(sk.default_pkd()))),
-))
+                chunk(hexlify(sk.data)),
+                chunk(hexlify(bytes(sk.ask()))),
+                chunk(hexlify(bytes(sk.nsk()))),
+                chunk(hexlify(sk.ovk())),
+                chunk(hexlify(bytes(sk.ak()))),
+                chunk(hexlify(bytes(sk.nk()))),
+                chunk(hexlify(bytes(sk.ivk()))),
+                chunk(hexlify(sk.default_d())),
+                chunk(hexlify(bytes(sk.default_pkd()))),
+            ))
     print('        ];')
 
 
 if __name__ == '__main__':
     main()
-
