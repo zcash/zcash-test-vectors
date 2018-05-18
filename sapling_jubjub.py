@@ -148,6 +148,8 @@ class Point(object):
         u_sign = buf[31] >> 7
         buf = buf[:31] + bytes([buf[31] & 0b01111111])
         v = Fq.from_bytes(buf)
+        if bytes(v) != buf:
+            return None
 
         vv = v * v
         u2 = (vv - Fq.ONE) / (vv * JUBJUB_D - JUBJUB_A)
