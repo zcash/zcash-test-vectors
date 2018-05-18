@@ -4,6 +4,7 @@ from pyblake2 import blake2b, blake2s
 
 from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
 from sapling_jubjub import Fr
+from sapling_utils import chunk
 
 #
 # PRFs and hashes
@@ -79,10 +80,6 @@ class SpendingKey(object):
     def default_pkd(self):
         return group_hash(b'Zcash_gd', self.default_d()) * self.ivk()
 
-
-def chunk(h):
-    h = str(h, 'utf-8')
-    return '0x' + ', 0x'.join([h[i:i+2] for i in range(0, len(h), 2)])
 
 def main():
     print('''
