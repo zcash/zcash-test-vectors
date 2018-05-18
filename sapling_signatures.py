@@ -85,6 +85,7 @@ def main():
             rsig: [u8; 64],
         };
 
+        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_signatures.py
         let test_vectors = vec![''')
     for i in range(0, 10):
         sk = rj.gen_private()

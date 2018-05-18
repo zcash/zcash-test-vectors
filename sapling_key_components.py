@@ -102,6 +102,7 @@ def main():
             note_nf: [u8; 32],
         };
 
+        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_key_components.py
         let test_vectors = vec![''')
     for i in range(0, 10):
         sk = SpendingKey(bytes([i] * 32))

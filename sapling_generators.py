@@ -61,6 +61,7 @@ def main():
             vcrb: [u8; 32],
         };
 
+        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_generators.py
         let sapling_generators = SaplingGenerators {
             skb: [
                 %s
