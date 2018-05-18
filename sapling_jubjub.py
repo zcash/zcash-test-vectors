@@ -116,14 +116,27 @@ class Fr(FieldElement):
     def __str__(self):
         return 'Fr(%s)' % self.s
 
+Fq.ZERO = Fq(0)
+Fq.ONE = Fq(1)
+Fq.MINUS_ONE = Fq(-1)
+
+assert Fq.ZERO + Fq.ZERO == Fq.ZERO
+assert Fq.ZERO + Fq.ONE == Fq.ONE
+assert Fq.ONE + Fq.ZERO == Fq.ONE
+assert Fq.ZERO - Fq.ONE == Fq.MINUS_ONE
+assert Fq.ZERO * Fq.ONE == Fq.ZERO
+assert Fq.ONE * Fq.ZERO == Fq.ZERO
+
+_A = Fq(-13443226831829260228624682877674385705155231329884953466695813022153219761455)
+_A_SQUARED = Fq(1615918303262283860389448007513155112015187847020867660361132469416696757234)
+assert _A * _A == _A_SQUARED
+assert _A.exp(2) == _A_SQUARED
+assert _A_SQUARED.sqrt() == _A
+
 
 #
 # Point arithmetic
 #
-
-Fq.ZERO = Fq(0)
-Fq.ONE = Fq(1)
-Fq.MINUS_ONE = Fq(-1)
 
 JUBJUB_A = Fq.MINUS_ONE
 JUBJUB_D = Fq(-10240) / Fq(10241)
