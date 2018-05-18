@@ -42,3 +42,7 @@ def find_group_hash(D, M):
 
 SPENDING_KEY_BASE = find_group_hash(b'Zcash_G_', b'')
 PROVING_KEY_BASE = find_group_hash(b'Zcash_H_', b'')
+NOTE_POSITION_BASE = find_group_hash(b'Zcash_J_', b'')
+WINDOWED_PEDERSEN_RANDOMNESS_BASE = find_group_hash(b'Zcash_PH', b'r')
+VALUE_COMMITMENT_VALUE_BASE = find_group_hash(b'Zcash_cv', b'v')
+VALUE_COMMITMENT_RANDOMNESS_BASE = find_group_hash(b'Zcash_cv', b'r')
