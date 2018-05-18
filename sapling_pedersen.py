@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from sapling_generators import find_group_hash, NOTE_POSITION_BASE, WINDOWED_PEDERSEN_RANDOMNESS_BASE
-from sapling_jubjub import ENDIANNESS, Fr
+from sapling_jubjub import Fr
+from sapling_utils import cldiv, i2leosp
 
 
 #
@@ -8,7 +9,7 @@ from sapling_jubjub import ENDIANNESS, Fr
 #
 
 def I_D_i(D, i):
-    return find_group_hash(D, (i - 1).to_bytes(4, byteorder=ENDIANNESS))
+    return find_group_hash(D, i2leosp(32, i - 1))
 
 def encode_chunk(mj):
     (s0, s1, s2) = mj
@@ -19,9 +20,6 @@ def encode_segment(Mi):
     Michunks = [Mi[i:i+3] for i in range(0, len(Mi), 3)]
     assert(len(Michunks) == ki)
     return Fr(sum([encode_chunk(Michunks[j-1]) * 2**(4*(j-1)) for j in range(1, ki + 1)]))
-
-def cldiv(n, divisor):
-    return (n + (divisor - 1)) // divisor
 
 c = 63
 

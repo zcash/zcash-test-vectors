@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-from sapling_utils import i2lebsp
-
-ENDIANNESS = 'little'
+from sapling_utils import i2lebsp, leos2ip, i2leosp
 
 q_j = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 r_j = 6554484396890773809930967563523245729705921265872317281365359162392183254199
@@ -49,7 +47,8 @@ class FieldElement(object):
         return i2lebsp(l, self.s)
 
     def __bytes__(self):
-        return self.s.to_bytes(32, byteorder=ENDIANNESS)
+        # TODO: Check length
+        return i2leosp(256, self.s)
 
     def __eq__(self, a):
         return self.s == a.s
@@ -59,8 +58,7 @@ class FieldElement(object):
 class Fq(FieldElement):
     @staticmethod
     def from_bytes(buf):
-        s = int.from_bytes(buf, byteorder=ENDIANNESS)
-        return Fq(s)
+        return Fq(leos2ip(buf))
 
     def __init__(self, s):
         FieldElement.__init__(self, Fq, s, q_j)
@@ -111,8 +109,7 @@ class Fq(FieldElement):
 class Fr(FieldElement):
     @staticmethod
     def from_bytes(buf):
-        s = int.from_bytes(buf, byteorder=ENDIANNESS)
-        return Fr(s)
+        return Fr(leos2ip(buf))
 
     def __init__(self, s):
         FieldElement.__init__(self, Fr, s, r_j)
