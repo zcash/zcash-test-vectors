@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from sapling_generators import find_group_hash, NOTE_POSITION_BASE, WINDOWED_PEDERSEN_RANDOMNESS_BASE
-from sapling_jubjub import Fr
+from sapling_jubjub import Fr, Point
 from sapling_utils import cldiv, i2leosp
 
 
@@ -16,7 +16,7 @@ def encode_chunk(mj):
     return (1 - 2*s2) * (1 + s0 + 2*s1)
 
 def encode_segment(Mi):
-    ki = len(Mi) / 3
+    ki = len(Mi) // 3
     Michunks = [Mi[i:i+3] for i in range(0, len(Mi), 3)]
     assert(len(Michunks) == ki)
     return Fr(sum([encode_chunk(Michunks[j-1]) * 2**(4*(j-1)) for j in range(1, ki + 1)]))
@@ -26,10 +26,11 @@ c = 63
 def pedersen_hash_to_point(D, M):
     # Pad M to a multiple of 3 bits
     Mdash = M + [0] * ((-len(M)) % 3)
+    assert((len(Mdash) // 3) * 3 == len(Mdash))
     n = cldiv(len(Mdash), 3 * c)
     Msegs = [Mdash[i:i+(3*c)] for i in range(0, len(Mdash), 3*c)]
     assert(len(Msegs) == n)
-    return sum([I_D_i(D, i) * encode_segment(Msegs[i-1]) for i in range(1, n + 1)])
+    return sum([I_D_i(D, i) * encode_segment(Msegs[i-1]) for i in range(1, n + 1)], Point.ZERO)
 
 def pedersen_hash(D, M):
     return pedersen_hash_to_point(D, M).u.bits(255)
