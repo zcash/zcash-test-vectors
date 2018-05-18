@@ -4,7 +4,8 @@ from pyblake2 import blake2b, blake2s
 
 from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
 from sapling_jubjub import Fr
-from sapling_notes import note_commit
+from sapling_merkle_tree import MERKLE_DEPTH
+from sapling_notes import note_commit, note_nullifier
 from sapling_utils import chunk, leos2bsp
 
 #
@@ -97,6 +98,8 @@ def main():
             note_v: u64,
             note_r: [u8; 32],
             note_cm: [u8; 32],
+            note_pos: u64,
+            note_nf: [u8; 32],
         };
 
         let test_vectors = vec![''')
@@ -109,6 +112,8 @@ def main():
             leos2bsp(bytes(group_hash(b'Zcash_gd', sk.default_d()))),
             leos2bsp(bytes(sk.default_pkd())),
             note_v)
+        note_pos = (980705743285409327583205473820957432*i) % 2**MERKLE_DEPTH
+        note_nf = note_nullifier(sk.nk(), note_cm, Fr(note_pos))
         print('''            TestVector {
                 sk: [
                     %s
@@ -144,6 +149,10 @@ def main():
                 note_cm: [
                     %s
                 ],
+                note_pos: %s,
+                note_nf: [
+                    %s
+                ],
             },''' % (
                 chunk(hexlify(sk.data)),
                 chunk(hexlify(bytes(sk.ask()))),
@@ -157,6 +166,8 @@ def main():
                 note_v,
                 chunk(hexlify(bytes(note_r))),
                 chunk(hexlify(bytes(note_cm.u))),
+                note_pos,
+                chunk(hexlify(note_nf)),
             ))
     print('        ];')
 
