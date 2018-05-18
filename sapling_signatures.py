@@ -81,8 +81,8 @@ def main():
             rsk: [u8; 32],
             rvk: [u8; 32],
             m: [u8; 32],
-            sig: [u8; 32],
-            rsig: [u8; 32],
+            sig: [u8; 64],
+            rsig: [u8; 64],
         };
 
         let test_vectors = vec![''')
