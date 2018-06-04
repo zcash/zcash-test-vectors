@@ -4,7 +4,8 @@ import os
 from pyblake2 import blake2b
 
 from sapling_generators import SPENDING_KEY_BASE
-from sapling_jubjub import Fr, Point
+from sapling_jubjub import Fr, Point, r_j
+from sapling_key_components import to_scalar
 from sapling_utils import cldiv, chunk, leos2ip
 
 
@@ -29,7 +30,7 @@ class RedJubjub(object):
         self._random = random
 
     def gen_private(self):
-        return self.Private.from_bytes(self._random(64))
+        return to_scalar(self._random(64))
 
     def derive_public(self, sk):
         return self.P_g * sk
@@ -58,9 +59,9 @@ class RedJubjub(object):
         mid = cldiv(self.l_G, 8)
         (Rbar, Sbar) = (sig[:mid], sig[mid:]) # TODO: bitlength(r_j)
         R = Point.from_bytes(Rbar)
-        S = Fr.from_bytes(Sbar)
+        S = leos2ip(Sbar)
         c = h_star(Rbar + M)
-        return R and S.s == leos2ip(Sbar) and self.P_g * S == R + vk * c
+        return R and S < r_j and self.P_g * Fr(S) == R + vk * c
 
 
 def main():

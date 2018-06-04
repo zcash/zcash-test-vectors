@@ -106,10 +106,6 @@ class Fq(FieldElement):
 
 
 class Fr(FieldElement):
-    @staticmethod
-    def from_bytes(buf):
-        return Fr(leos2ip(buf))
-
     def __init__(self, s):
         FieldElement.__init__(self, Fr, s, r_j)
 
