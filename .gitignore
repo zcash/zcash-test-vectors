@@ -1,1 +1,8 @@
-env
+env/
+__pycache__/
+
+.*.swp
+*.*~*
+*.bak
+*.pyc
+*.pyo
