@@ -6,7 +6,15 @@ from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
 from sapling_jubjub import Fr
 from sapling_merkle_tree import MERKLE_DEPTH
 from sapling_notes import note_commit, note_nullifier
-from sapling_utils import chunk, leos2bsp
+from sapling_utils import chunk, leos2bsp, leos2ip
+
+#
+# Utilities
+#
+
+def to_scalar(buf):
+    return Fr(leos2ip(buf))
+
 
 #
 # PRFs and hashes
@@ -23,8 +31,7 @@ def crh_ivk(ak, nk):
     digest.update(ak)
     digest.update(nk)
     ivk = digest.digest()
-    ivk = ivk[:31] + bytes([ivk[31] & 0b00000111])
-    return ivk
+    return leos2ip(ivk) % 2**251
 
 
 #
@@ -46,11 +53,11 @@ class SpendingKey(object):
 
     @cached
     def ask(self):
-        return Fr.from_bytes(prf_expand(self.data, b'\0'))
+        return to_scalar(prf_expand(self.data, b'\0'))
 
     @cached
     def nsk(self):
-        return Fr.from_bytes(prf_expand(self.data, b'\1'))
+        return to_scalar(prf_expand(self.data, b'\1'))
 
     @cached
     def ovk(self):
@@ -66,7 +73,7 @@ class SpendingKey(object):
 
     @cached
     def ivk(self):
-        return Fr.from_bytes(crh_ivk(bytes(self.ak()), bytes(self.nk())))
+        return Fr(crh_ivk(bytes(self.ak()), bytes(self.nk())))
 
     @cached
     def default_d(self):
