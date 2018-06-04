@@ -8,7 +8,7 @@ from tv_output import render_args, render_tv
 # This is chosen to be some random string that we couldn't have
 # anticipated when we designed the algorithm, for rigidity purposes.
 # We deliberately use an ASCII hex string of 32 bytes here.
-CRS = b'096b36a5804bfacef1691e173c366a47ff5ba84a44f26ddd7e8d9f79d5b42df0'
+URS = b'096b36a5804bfacef1691e173c366a47ff5ba84a44f26ddd7e8d9f79d5b42df0'
 
 
 #
@@ -17,7 +17,7 @@ CRS = b'096b36a5804bfacef1691e173c366a47ff5ba84a44f26ddd7e8d9f79d5b42df0'
 
 def group_hash(D, M):
     digest = blake2s(person=D)
-    digest.update(CRS)
+    digest.update(URS)
     digest.update(M)
     p = Point.from_bytes(digest.digest())
     if not p:
