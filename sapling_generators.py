@@ -3,7 +3,7 @@ from binascii import hexlify
 from pyblake2 import blake2s
 
 from sapling_jubjub import Point, JUBJUB_COFACTOR
-from sapling_utils import chunk
+from tv_output import chunk
 
 # First 64 bytes of the BLAKE2s input during group hash.
 # This is chosen to be some random string that we couldn't have

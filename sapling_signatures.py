@@ -6,7 +6,8 @@ from pyblake2 import blake2b
 from sapling_generators import SPENDING_KEY_BASE
 from sapling_jubjub import Fr, Point, r_j
 from sapling_key_components import to_scalar
-from sapling_utils import cldiv, chunk, leos2ip
+from sapling_utils import cldiv, leos2ip
+from tv_output import chunk
 
 
 def H(x):

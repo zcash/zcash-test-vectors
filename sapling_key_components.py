@@ -6,7 +6,8 @@ from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
 from sapling_jubjub import Fr
 from sapling_merkle_tree import MERKLE_DEPTH
 from sapling_notes import note_commit, note_nullifier
-from sapling_utils import chunk, leos2bsp, leos2ip
+from sapling_utils import leos2bsp, leos2ip
+from tv_output import chunk
 
 #
 # Utilities
