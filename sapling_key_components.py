@@ -38,6 +38,7 @@ def crh_ivk(ak, nk):
 def diversify_hash(d):
     return group_hash(b'Zcash_gd', d)
 
+
 #
 # Key components
 #
@@ -97,6 +98,95 @@ class SpendingKey(DerivedAkNk, DerivedIvk):
     @cached
     def default_pkd(self):
         return diversify_hash(self.default_d()) * self.ivk()
+
+    @cached
+    def expanded_spending_key(self):
+        return ExpandedSpendingKey(self.ask(), self.nsk(), self.ovk())
+
+    @cached
+    def full_viewing_key(self):
+        return self.expanded_spending_key().full_viewing_key()
+
+    @cached
+    def default_address(self):
+        return self.full_viewing_key().incoming_viewing_key().address(self.default_d())
+
+    def __eq__(self, other):
+        return self.data == other.data
+
+
+class ExpandedSpendingKey(DerivedAkNk):
+    def __init__(self, ask, nsk, ovk):
+        self._ask = ask
+        self._nsk = nsk
+        self._ovk = ovk
+
+    def ask(self):
+        return self._ask
+
+    def nsk(self):
+        return self._nsk
+
+    def ovk(self):
+        return self._ovk
+
+    def full_viewing_key(self):
+        return FullViewingKey(self.ak(), self.nk(), self.ovk())
+
+    def __eq__(self, other):
+        return self.ask() == other.ask() and self.nsk() == other.nsk() and self.ovk() == other.ovk()
+
+
+class FullViewingKey(DerivedIvk):
+    def __init__(self, ak, nk, ovk):
+        self._ak = ak
+        self._nk = nk
+        self._ovk = ovk
+
+    def ak(self):
+        return self._ak
+
+    def nk(self):
+        return self._nk
+
+    def ovk(self):
+        return self._ovk
+
+    def incoming_viewing_key(self):
+        return IncomingViewingKey(self.ivk())
+
+    def __eq__(self, other):
+        return self.ak() == other.ak() and self.nk() == other.nk() and self.ovk() == other.ovk()
+
+
+class IncomingViewingKey(object):
+    def __init__(self, ivk):
+        self._ivk = ivk
+
+    def ivk(self):
+        return self._ivk
+
+    def address(self, diversifier):
+        pk_d = diversify_hash(diversifier) * self.ivk()
+        return PaymentAddress(diversifier, pk_d)
+
+    def __eq__(self, other):
+        return self.ivk() == other.ivk()
+
+
+class PaymentAddress(object):
+    def __init__(self, d, pk_d):
+        self._d = d
+        self._pk_d = pk_d
+
+    def d(self):
+        return self._d
+
+    def pk_d(self):
+        return self._pk_d
+
+    def __eq__(self, other):
+        return self.d() == other.d() and self.pk_d() == other.pk_d()
 
 
 def main():
