@@ -6,7 +6,7 @@ from sapling_generators import SPENDING_KEY_BASE
 from sapling_jubjub import Fr, Point, r_j
 from sapling_key_components import to_scalar
 from sapling_utils import cldiv, leos2ip
-from tv_output import tv_rust
+from tv_output import render_args, render_tv
 
 
 def H(x):
@@ -65,6 +65,8 @@ class RedJubjub(object):
 
 
 def main():
+    args = render_args()
+
     from random import Random
     rng = Random(0xabad533d)
     def randbytes(l):
@@ -101,7 +103,8 @@ def main():
             'rsig': rsig,
         })
 
-    tv_rust(
+    render_tv(
+        args,
         'sapling_signatures',
         (
             ('sk', '[u8; 32]'),

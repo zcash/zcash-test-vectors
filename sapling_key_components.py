@@ -6,7 +6,7 @@ from sapling_jubjub import Fr
 from sapling_merkle_tree import MERKLE_DEPTH
 from sapling_notes import note_commit, note_nullifier
 from sapling_utils import leos2bsp, leos2ip
-from tv_output import tv_rust
+from tv_output import render_args, render_tv
 
 #
 # Utilities
@@ -91,6 +91,8 @@ class SpendingKey(object):
 
 
 def main():
+    args = render_args()
+
     test_vectors = []
     for i in range(0, 10):
         sk = SpendingKey(bytes([i] * 32))
@@ -120,7 +122,8 @@ def main():
             'note_nf': note_nf,
         })
 
-    tv_rust(
+    render_tv(
+        args,
         'sapling_key_components',
         (
             ('sk', '[u8; 32]'),

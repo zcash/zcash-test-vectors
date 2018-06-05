@@ -2,7 +2,7 @@
 from pyblake2 import blake2s
 
 from sapling_jubjub import Point, JUBJUB_COFACTOR
-from tv_output import tv_rust
+from tv_output import render_args, render_tv
 
 # First 64 bytes of the BLAKE2s input during group hash.
 # This is chosen to be some random string that we couldn't have
@@ -50,7 +50,8 @@ VALUE_COMMITMENT_RANDOMNESS_BASE = find_group_hash(b'Zcash_cv', b'r')
 
 
 def main():
-    tv_rust(
+    render_tv(
+        render_args(),
         'sapling_generators',
         (
             ('skb', '[u8; 32]'),
