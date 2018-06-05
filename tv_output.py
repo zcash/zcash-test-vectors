@@ -5,13 +5,17 @@ def chunk(h):
     h = str(h, 'utf-8')
     return '0x' + ', 0x'.join([h[i:i+2] for i in range(0, len(h), 2)])
 
-def tv_part_rust(name, value):
-    print('''            %s: [
-                %s
-            ],''' % (
-                name,
-                chunk(hexlify(value))
-            ))
+def tv_part_rust(name, value, indent=3):
+    pad = '    ' * indent
+    print('''%s%s: [
+    %s%s
+%s],''' % (
+        pad,
+        name,
+        pad,
+        chunk(hexlify(value)),
+        pad,
+    ))
 
 def tv_rust(filename, parts, vectors):
     print('        struct TestVector {')
@@ -25,5 +29,12 @@ def tv_rust(filename, parts, vectors):
         print('        let test_vector = TestVector {')
         [tv_part_rust(p[0], vectors[p[0]]) for p in parts]
         print('        };')
+    elif type(vectors) == type([]):
+        print('        let test_vectors = vec![')
+        for vector in vectors:
+            print('            TestVector {')
+            [tv_part_rust(p[0], vector[p[0]], 4) for p in parts]
+            print('            },')
+        print('        ];')
     else:
         raise ValueError('Invalid type(vectors)')
