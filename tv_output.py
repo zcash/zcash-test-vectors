@@ -10,14 +10,17 @@ def chunk(h):
 
 #
 # JSON (with string comments)
+# If bitcoin_flavoured == True, 32-byte values are reversed
 #
 
-def tv_value_json(value):
+def tv_value_json(value, bitcoin_flavoured):
     if type(value) == bytes:
+        if bitcoin_flavoured and len(value) == 32:
+            value = value[::-1]
         value = hexlify(value).decode()
     return value
 
-def tv_json(filename, parts, vectors):
+def tv_json(filename, parts, vectors, bitcoin_flavoured):
     if type(vectors) == type({}):
         vectors = [vectors]
 
@@ -28,7 +31,7 @@ def tv_json(filename, parts, vectors):
         ', '.join([p[0] for p in parts])
     ))
     print('    ' + ',\n    '.join([
-        json.dumps([tv_value_json(v[p[0]]) for p in parts]) for v in vectors
+        json.dumps([tv_value_json(v[p[0]], bitcoin_flavoured) for p in parts]) for v in vectors
     ]))
     print(']')
 
@@ -89,11 +92,11 @@ def tv_rust(filename, parts, vectors):
 
 def render_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--target', choices=['json', 'rust'], default='rust')
+    parser.add_argument('-t', '--target', choices=['zcash', 'rust'], default='rust')
     return parser.parse_args()
 
 def render_tv(args, filename, parts, vectors):
     if args.target == 'rust':
         tv_rust(filename, parts, vectors)
-    elif args.target == 'json':
-        tv_json(filename, parts, vectors)
+    elif args.target == 'zcash':
+        tv_json(filename, parts, vectors, True)
