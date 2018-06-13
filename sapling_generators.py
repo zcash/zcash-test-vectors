@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-from binascii import hexlify
 from pyblake2 import blake2s
 
 from sapling_jubjub import Point, JUBJUB_COFACTOR
-from sapling_utils import chunk
+from tv_output import render_args, render_tv
 
 # First 64 bytes of the BLAKE2s input during group hash.
 # This is chosen to be some random string that we couldn't have
@@ -51,44 +50,26 @@ VALUE_COMMITMENT_RANDOMNESS_BASE = find_group_hash(b'Zcash_cv', b'r')
 
 
 def main():
-    print('''
-        struct SaplingGenerators {
-            skb: [u8; 32],
-            pkb: [u8; 32],
-            npb: [u8; 32],
-            wprb: [u8; 32],
-            vcvb: [u8; 32],
-            vcrb: [u8; 32],
-        };
-
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_generators.py
-        let sapling_generators = SaplingGenerators {
-            skb: [
-                %s
-            ],
-            pkb: [
-                %s
-            ],
-            npb: [
-                %s
-            ],
-            wprb: [
-                %s
-            ],
-            vcvb: [
-                %s
-            ],
-            vcrb: [
-                %s
-            ],
-        };''' % (
-            chunk(hexlify(bytes(SPENDING_KEY_BASE))),
-            chunk(hexlify(bytes(PROVING_KEY_BASE))),
-            chunk(hexlify(bytes(NOTE_POSITION_BASE))),
-            chunk(hexlify(bytes(WINDOWED_PEDERSEN_RANDOMNESS_BASE))),
-            chunk(hexlify(bytes(VALUE_COMMITMENT_VALUE_BASE))),
-            chunk(hexlify(bytes(VALUE_COMMITMENT_RANDOMNESS_BASE))),
-        ))
+    render_tv(
+        render_args(),
+        'sapling_generators',
+        (
+            ('skb', '[u8; 32]'),
+            ('pkb', '[u8; 32]'),
+            ('npb', '[u8; 32]'),
+            ('wprb', '[u8; 32]'),
+            ('vcvb', '[u8; 32]'),
+            ('vcrb', '[u8; 32]'),
+        ),
+        {
+            'skb': bytes(SPENDING_KEY_BASE),
+            'pkb': bytes(PROVING_KEY_BASE),
+            'npb': bytes(NOTE_POSITION_BASE),
+            'wprb': bytes(WINDOWED_PEDERSEN_RANDOMNESS_BASE),
+            'vcvb': bytes(VALUE_COMMITMENT_VALUE_BASE),
+            'vcrb': bytes(VALUE_COMMITMENT_RANDOMNESS_BASE),
+        },
+    )
 
 
 if __name__ == '__main__':

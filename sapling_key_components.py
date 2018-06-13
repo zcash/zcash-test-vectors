@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-from binascii import hexlify
 from pyblake2 import blake2b, blake2s
 
 from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
 from sapling_jubjub import Fr
 from sapling_merkle_tree import MERKLE_DEPTH
 from sapling_notes import note_commit, note_nullifier
-from sapling_utils import chunk, leos2bsp, leos2ip
+from sapling_utils import leos2bsp, leos2ip
+from tv_output import render_args, render_tv
 
 #
 # Utilities
@@ -91,26 +91,9 @@ class SpendingKey(object):
 
 
 def main():
-    print('''
-        struct TestVector {
-            sk: [u8; 32],
-            ask: [u8; 32],
-            nsk: [u8; 32],
-            ovk: [u8; 32],
-            ak: [u8; 32],
-            nk: [u8; 32],
-            ivk: [u8; 32],
-            default_d: [u8; 11],
-            default_pk_d: [u8; 32],
-            note_v: u64,
-            note_r: [u8; 32],
-            note_cm: [u8; 32],
-            note_pos: u64,
-            note_nf: [u8; 32],
-        };
+    args = render_args()
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_key_components.py
-        let test_vectors = vec![''')
+    test_vectors = []
     for i in range(0, 10):
         sk = SpendingKey(bytes([i] * 32))
         note_v = (2548793025584392057432895043257984320*i) % 2**64
@@ -122,62 +105,44 @@ def main():
             note_v)
         note_pos = (980705743285409327583205473820957432*i) % 2**MERKLE_DEPTH
         note_nf = note_nullifier(sk.nk(), note_cm, Fr(note_pos))
-        print('''            TestVector {
-                sk: [
-                    %s
-                ],
-                ask: [
-                    %s
-                ],
-                nsk: [
-                    %s
-                ],
-                ovk: [
-                    %s
-                ],
-                ak: [
-                    %s
-                ],
-                nk: [
-                    %s
-                ],
-                ivk: [
-                    %s
-                ],
-                default_d: [
-                    %s
-                ],
-                default_pk_d: [
-                    %s
-                ],
-                note_v: %s,
-                note_r: [
-                    %s
-                ],
-                note_cm: [
-                    %s
-                ],
-                note_pos: %s,
-                note_nf: [
-                    %s
-                ],
-            },''' % (
-                chunk(hexlify(sk.data)),
-                chunk(hexlify(bytes(sk.ask()))),
-                chunk(hexlify(bytes(sk.nsk()))),
-                chunk(hexlify(sk.ovk())),
-                chunk(hexlify(bytes(sk.ak()))),
-                chunk(hexlify(bytes(sk.nk()))),
-                chunk(hexlify(bytes(sk.ivk()))),
-                chunk(hexlify(sk.default_d())),
-                chunk(hexlify(bytes(sk.default_pkd()))),
-                note_v,
-                chunk(hexlify(bytes(note_r))),
-                chunk(hexlify(bytes(note_cm.u))),
-                note_pos,
-                chunk(hexlify(note_nf)),
-            ))
-    print('        ];')
+        test_vectors.append({
+            'sk': sk.data,
+            'ask': bytes(sk.ask()),
+            'nsk': bytes(sk.nsk()),
+            'ovk': sk.ovk(),
+            'ak': bytes(sk.ak()),
+            'nk': bytes(sk.nk()),
+            'ivk': bytes(sk.ivk()),
+            'default_d': sk.default_d(),
+            'default_pk_d': bytes(sk.default_pkd()),
+            'note_v': note_v,
+            'note_r': bytes(note_r),
+            'note_cm': bytes(note_cm.u),
+            'note_pos': note_pos,
+            'note_nf': note_nf,
+        })
+
+    render_tv(
+        args,
+        'sapling_key_components',
+        (
+            ('sk', '[u8; 32]'),
+            ('ask', '[u8; 32]'),
+            ('nsk', '[u8; 32]'),
+            ('ovk', '[u8; 32]'),
+            ('ak', '[u8; 32]'),
+            ('nk', '[u8; 32]'),
+            ('ivk', '[u8; 32]'),
+            ('default_d', '[u8; 11]'),
+            ('default_pk_d', '[u8; 32]'),
+            ('note_v', 'u64'),
+            ('note_r', '[u8; 32]'),
+            ('note_cm', '[u8; 32]'),
+            ('note_pos', 'u64'),
+            ('note_nf', '[u8; 32]'),
+        ),
+        test_vectors,
+    )
 
 
 if __name__ == '__main__':
