@@ -37,9 +37,14 @@ def getHashOutputs(tx):
         digest.update(bytes(x))
     return digest.digest()
 
+def getHashJoinSplits(tx):
+    digest = blake2b(digest_size=32, person=b'ZcashJSplitsHash')
+    for jsdesc in tx.vJoinSplit:
+        digest.update(bytes(jsdesc))
+    digest.update(tx.joinSplitPubKey)
+    return digest.digest()
 
-# Currently assumes the nHashType is SIGHASHALL
-# and that there are no joinSplits
+
 def signature_hash(scriptCode, tx, nIn, nHashType, amount, consensusBranchId):
     hashPrevouts = b'\x00'*32
     hashSequence = b'\x00'*32
@@ -62,6 +67,9 @@ def signature_hash(scriptCode, tx, nIn, nHashType, amount, consensusBranchId):
         digest = blake2b(digest_size=32, person=b'ZcashOutputsHash')
         digest.update(bytes(tx.vout[nIn]))
         hashOutputs = digest.digest()
+
+    if len(tx.vJoinSplit) > 0:
+        hashJoinSplits = getHashJoinSplits(tx)
 
     digest = blake2b(
         digest_size=32,

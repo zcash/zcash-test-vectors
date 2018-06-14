@@ -8,6 +8,66 @@ OVERWINTER_VERSION_GROUP_ID = 0x03C48270
 OVERWINTER_TX_VERSION = 3
 
 
+# BN254 encoding of G1 elements. p[1] is big-endian.
+def pack_g1(p):
+    return struct.pack('B', 0x02 | (1 if p[0] else 0)) + p[1]
+
+# BN254 encoding of G2 elements. p[1] is big-endian.
+def pack_g2(p):
+    return struct.pack('B', 0x0a | (1 if p[0] else 0)) + p[1]
+
+class PHGRProof(object):
+    def __init__(self, rand):
+        self.g_A = (rand.bool(), rand.b(32))
+        self.g_A_prime = (rand.bool(), rand.b(32))
+        self.g_B = (rand.bool(), rand.b(64))
+        self.g_B_prime = (rand.bool(), rand.b(32))
+        self.g_C = (rand.bool(), rand.b(32))
+        self.g_C_prime = (rand.bool(), rand.b(32))
+        self.g_K = (rand.bool(), rand.b(32))
+        self.g_H = (rand.bool(), rand.b(32))
+
+    def __bytes__(self):
+        return (
+            pack_g1(self.g_A) +
+            pack_g1(self.g_A_prime) +
+            pack_g2(self.g_B) +
+            pack_g1(self.g_B_prime) +
+            pack_g1(self.g_C) +
+            pack_g1(self.g_C_prime) +
+            pack_g1(self.g_K) +
+            pack_g1(self.g_H)
+        )
+
+
+class JoinSplit(object):
+    def __init__(self, rand):
+        self.vpub_old = 0
+        self.vpub_new = 0
+        self.anchor = rand.b(32)
+        self.nullifiers = (rand.b(32), rand.b(32))
+        self.commitments = (rand.b(32), rand.b(32))
+        self.ephemeralKey = rand.b(32)
+        self.randomSeed = rand.b(32)
+        self.macs = (rand.b(32), rand.b(32))
+        self.proof = PHGRProof(rand)
+        self.ciphertexts = (rand.b(601), rand.b(601))
+
+    def __bytes__(self):
+        return (
+            struct.pack('<Q', self.vpub_old) +
+            struct.pack('<Q', self.vpub_new) +
+            self.anchor +
+            b''.join(self.nullifiers) +
+            b''.join(self.commitments) +
+            self.ephemeralKey +
+            self.randomSeed +
+            b''.join(self.macs) +
+            bytes(self.proof) +
+            b''.join(self.ciphertexts)
+        )
+
+
 RAND_OPCODES = [
     0x00, # OP_FALSE,
     0x51, # OP_1,
@@ -85,6 +145,14 @@ class Transaction(object):
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
 
+        self.vJoinSplit = []
+        if self.nVersion >= 2:
+            for i in range(rand.u8() % 3):
+                self.vJoinSplit.append(JoinSplit(rand))
+            if len(self.vJoinSplit) > 0:
+                self.joinSplitPubKey = rand.b(32) # Potentially invalid
+                self.joinSplitSig = rand.b(64) # Invalid
+
     def header(self):
         return self.nVersion | (1 << 31 if self.fOverwintered else 0)
 
@@ -112,6 +180,11 @@ class Transaction(object):
             ret += struct.pack('<I', self.nExpiryHeight)
 
         if self.nVersion >= 2:
-            ret += struct.pack('b', 0)
+            ret += struct.pack('b', len(self.vJoinSplit))
+            for jsdesc in self.vJoinSplit:
+                ret += bytes(jsdesc)
+            if len(self.vJoinSplit) > 0:
+                ret += self.joinSplitPubKey
+                ret += self.joinSplitSig
 
         return ret
