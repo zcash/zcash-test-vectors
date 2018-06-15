@@ -43,7 +43,7 @@ def tv_json(filename, parts, vectors, bitcoin_flavoured):
         ', '.join([p[0] for p in parts])
     ))
     print('    ' + ',\n    '.join([
-        json.dumps([tv_value_json(v[p[0]], bitcoin_flavoured) for p in parts]) for v in vectors
+        json.dumps([tv_value_json(v[p[0]], p[1].get('bitcoin_flavoured', bitcoin_flavoured)) for p in parts]) for v in vectors
     ]))
     print(']')
 
@@ -93,7 +93,7 @@ def tv_part_rust(name, value, indent=3):
 
 def tv_rust(filename, parts, vectors):
     print('        struct TestVector {')
-    for p in parts: print('            %s: %s,' % p)
+    for p in parts: print('            %s: %s,' % (p[0], p[1]['rust']))
     print('''        };
 
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py''' % (
@@ -124,6 +124,9 @@ def render_args():
     return parser.parse_args()
 
 def render_tv(args, filename, parts, vectors):
+    # Convert older format
+    parts = [(p[0], p[1] if type(p[1]) == type({}) else {'rust': p[1]}) for p in parts]
+
     if args.target == 'rust':
         tv_rust(filename, parts, vectors)
     elif args.target == 'zcash':

@@ -149,7 +149,7 @@ def main():
         args,
         'zip_0143',
         (
-            ('tx', 'Vec<u8>'),
+            ('tx', {'rust': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('scriptCode', 'Vec<u8>'),
             ('nIn', 'u32'),
             ('nHashType', 'u32'),
