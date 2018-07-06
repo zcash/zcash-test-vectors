@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import struct
 
+from zc_utils import write_compact_size
+
 MAX_MONEY = 21000000 * 100000000
 TX_EXPIRY_HEIGHT_THRESHOLD = 500000000
 
@@ -89,7 +91,7 @@ class Script(object):
         return self._script
 
     def __bytes__(self):
-        return struct.pack('b', len(self._script)) + self._script
+        return write_compact_size(len(self._script)) + self._script
 
 
 class OutPoint(object):
@@ -167,11 +169,11 @@ class Transaction(object):
             self.nVersionGroupId == OVERWINTER_VERSION_GROUP_ID and \
             self.nVersion == OVERWINTER_TX_VERSION
 
-        ret += struct.pack('b', len(self.vin))
+        ret += write_compact_size(len(self.vin))
         for x in self.vin:
             ret += bytes(x)
 
-        ret += struct.pack('b', len(self.vout))
+        ret += write_compact_size(len(self.vout))
         for x in self.vout:
             ret += bytes(x)
 
@@ -180,7 +182,7 @@ class Transaction(object):
             ret += struct.pack('<I', self.nExpiryHeight)
 
         if self.nVersion >= 2:
-            ret += struct.pack('b', len(self.vJoinSplit))
+            ret += write_compact_size(len(self.vJoinSplit))
             for jsdesc in self.vJoinSplit:
                 ret += bytes(jsdesc)
             if len(self.vJoinSplit) > 0:
