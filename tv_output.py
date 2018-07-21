@@ -120,7 +120,7 @@ def tv_rust(filename, parts, vectors):
 
 def render_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--target', choices=['zcash', 'rust'], default='rust')
+    parser.add_argument('-t', '--target', choices=['zcash', 'json', 'rust'], default='rust')
     return parser.parse_args()
 
 def render_tv(args, filename, parts, vectors):
@@ -128,3 +128,5 @@ def render_tv(args, filename, parts, vectors):
         tv_rust(filename, parts, vectors)
     elif args.target == 'zcash':
         tv_json(filename, parts, vectors, True)
+    elif args.target == 'json':
+        tv_json(filename, parts, vectors, False)
