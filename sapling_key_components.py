@@ -51,22 +51,8 @@ def cached(f):
         return self._cached[f]
     return wrapper
 
-class SpendingKey(object):
-    def __init__(self, data):
-        self.data = data
 
-    @cached
-    def ask(self):
-        return to_scalar(prf_expand(self.data, b'\0'))
-
-    @cached
-    def nsk(self):
-        return to_scalar(prf_expand(self.data, b'\1'))
-
-    @cached
-    def ovk(self):
-        return prf_expand(self.data, b'\2')[:32]
-
+class DerivedAkNk(object):
     @cached
     def ak(self):
         return SPENDING_KEY_BASE * self.ask()
@@ -75,9 +61,28 @@ class SpendingKey(object):
     def nk(self):
         return PROVING_KEY_BASE * self.nsk()
 
+
+class DerivedIvk(object):
     @cached
     def ivk(self):
         return Fr(crh_ivk(bytes(self.ak()), bytes(self.nk())))
+
+
+class SpendingKey(DerivedAkNk, DerivedIvk):
+    def __init__(self, data):
+        self.data = data
+
+    @cached
+    def ask(self):
+        return to_scalar(prf_expand(self.data, b'\x00'))
+
+    @cached
+    def nsk(self):
+        return to_scalar(prf_expand(self.data, b'\x01'))
+
+    @cached
+    def ovk(self):
+        return prf_expand(self.data, b'\x02')[:32]
 
     @cached
     def default_d(self):
