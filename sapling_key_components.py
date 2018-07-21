@@ -35,6 +35,8 @@ def crh_ivk(ak, nk):
     ivk = digest.digest()
     return leos2ip(ivk) % 2**251
 
+def diversify_hash(d):
+    return group_hash(b'Zcash_gd', d)
 
 #
 # Key components
@@ -82,14 +84,14 @@ class SpendingKey(object):
         i = 0
         while True:
             d = prf_expand(self.data, bytes([3, i]))[:11]
-            if group_hash(b'Zcash_gd', d):
+            if diversify_hash(d):
                 return d
             i += 1
             assert i < 256
 
     @cached
     def default_pkd(self):
-        return group_hash(b'Zcash_gd', self.default_d()) * self.ivk()
+        return diversify_hash(self.default_d()) * self.ivk()
 
 
 def main():
@@ -102,7 +104,7 @@ def main():
         note_r = Fr(8890123457840276890326754358439057438290574382905).exp(i+1)
         note_cm = note_commit(
             note_r,
-            leos2bsp(bytes(group_hash(b'Zcash_gd', sk.default_d()))),
+            leos2bsp(bytes(diversify_hash(sk.default_d()))),
             leos2bsp(bytes(sk.default_pkd())),
             note_v)
         note_pos = (980705743285409327583205473820957432*i) % 2**MERKLE_DEPTH
