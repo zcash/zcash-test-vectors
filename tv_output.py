@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+
 import argparse
 from binascii import hexlify
 import json

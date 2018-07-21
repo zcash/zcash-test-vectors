@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+
 from binascii import unhexlify
 
 from sapling_pedersen import pedersen_hash

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 def cldiv(n, divisor):
     return (n + (divisor - 1)) // divisor

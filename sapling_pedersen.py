@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+
 from sapling_generators import (
     find_group_hash,
     NOTE_POSITION_BASE,

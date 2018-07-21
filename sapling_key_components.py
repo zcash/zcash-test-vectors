@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+
 from pyblake2 import blake2b, blake2s
 
 from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
