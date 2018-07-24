@@ -4,8 +4,8 @@ import json
 
 
 def chunk(h):
-    h = str(h, 'utf-8')
-    return '0x' + ', 0x'.join([h[i:i+2] for i in range(0, len(h), 2)])
+    hstr = str(h, 'utf-8')
+    return '0x' + ', 0x'.join([hstr[i:i+2] for i in range(0, len(hstr), 2)])
 
 
 #
