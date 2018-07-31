@@ -30,7 +30,7 @@ def ff1_aes256_encrypt(key, tweak, x):
     n = len(x)
     t = len(tweak)
     assert minlen <= n and n <= maxlen
-    assert len(tweak) <= maxTlen
+    assert t <= maxTlen
 
     u = n//2; v = n-u
     assert u == v
@@ -39,7 +39,7 @@ def ff1_aes256_encrypt(key, tweak, x):
     b = cldiv(v, 8)
     d = 4*cldiv(b, 4) + 4
     assert d <= 16
-    P = bytes([1, 2, 1, 0, 0, radix, 10, u % 256, 0, 0, 0, n, 0, 0, 0, len(tweak)])
+    P = bytes([1, 2, 1, 0, 0, radix, 10, u % 256, 0, 0, 0, n, 0, 0, 0, t])
     for i in range(10):
         Q = tweak + b'\0'*((-t-b-1) % 16) + bytes([i]) + bebs2osp(B)
         y = beos2ip(aes_cbcmac(key, P + Q)[:d])
@@ -54,7 +54,7 @@ def ff1_aes256_decrypt(key, tweak, x):
     n = len(x)
     t = len(tweak)
     assert minlen <= n and n <= maxlen
-    assert len(tweak) <= maxTlen
+    assert t <= maxTlen
 
     u = n//2; v = n-u
     assert u == v
@@ -63,7 +63,7 @@ def ff1_aes256_decrypt(key, tweak, x):
     b = cldiv(v, 8)
     d = 4*cldiv(b, 4) + 4
     assert d <= 16
-    P = bytes([1, 2, 1, 0, 0, radix, 10, u % 256, 0, 0, 0, n, 0, 0, 0, len(tweak)])
+    P = bytes([1, 2, 1, 0, 0, radix, 10, u % 256, 0, 0, 0, n, 0, 0, 0, t])
     for i in range(9, -1, -1):
         Q = tweak + b'\0'*((-t-b-1) % 16) + bytes([i]) + bebs2osp(A)
         y = beos2ip(aes_cbcmac(key, P + Q)[:d])
