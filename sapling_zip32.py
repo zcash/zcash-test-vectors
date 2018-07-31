@@ -83,7 +83,7 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
         return True
 
     def __bytes__(self):
-        return (i2leosp(32, self.depth()) +
+        return (i2leosp(8, self.depth()) +
                 self.parent_tag() +
                 i2leosp(32, self.i()) +
                 self.c() +
@@ -137,7 +137,7 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         return False
 
     def __bytes__(self):
-        return (i2leosp(32, self.depth()) +
+        return (i2leosp(8, self.depth()) +
                 self.parent_tag() +
                 i2leosp(32, self.i()) +
                 self.c() +
