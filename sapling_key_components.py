@@ -204,6 +204,12 @@ def main():
             note_v)
         note_pos = (980705743285409327583205473820957432*i) % 2**MERKLE_DEPTH
         note_nf = note_nullifier(sk.nk(), note_cm, Fr(note_pos))
+
+        full_viewing_key = sk.full_viewing_key()
+        default_addr = sk.default_address()
+        assert full_viewing_key == sk.expanded_spending_key().full_viewing_key()
+        assert default_addr == full_viewing_key.incoming_viewing_key().address(sk.default_d())
+
         test_vectors.append({
             'sk': sk.data,
             'ask': bytes(sk.ask()),
