@@ -49,14 +49,13 @@ def bebs2osp(bits, m=None):
     bits = [0] * (8 * cldiv(l, 8) - l) + bits
     return bytes([bebs2ip(bits[i:i + 8]) for i in range(0, len(bits), 8)])
 
-def beos2bsp(buf):
-    return sum([[(c >> (7-i)) & 1 for i in range(8)] for c in buf], [])
-
 assert i2leosp(5, 7) == lebs2osp(i2lebsp(5, 7))
 assert i2leosp(32, 1234567890) == lebs2osp(i2lebsp(32, 1234567890))
 
 assert i2beosp(5, 7) == bebs2osp(i2bebsp(5, 7))
 assert i2beosp(32, 1234567890) == bebs2osp(i2bebsp(32, 1234567890))
+
+assert leos2ip(bytes(range(256))) == lebs2ip(leos2bsp(bytes(range(256))))
 
 assert bebs2ip(i2bebsp(5, 7)) == 7
 try:
