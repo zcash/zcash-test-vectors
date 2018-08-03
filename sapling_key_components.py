@@ -126,7 +126,7 @@ def main():
             'default_pk_d': bytes(sk.default_pkd()),
             'note_v': note_v,
             'note_r': bytes(note_r),
-            'note_cm': bytes(note_cm.u),
+            'note_cmu': bytes(note_cm.u),
             'note_pos': note_pos,
             'note_nf': note_nf,
         })
@@ -146,7 +146,7 @@ def main():
             ('default_pk_d', '[u8; 32]'),
             ('note_v', 'u64'),
             ('note_r', '[u8; 32]'),
-            ('note_cm', '[u8; 32]'),
+            ('note_cmu', '[u8; 32]'),
             ('note_pos', 'u64'),
             ('note_nf', '[u8; 32]'),
         ),
