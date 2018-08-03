@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+
 from pyblake2 import blake2b, blake2s
 
 from sapling_generators import PROVING_KEY_BASE, SPENDING_KEY_BASE, group_hash
@@ -33,6 +35,8 @@ def crh_ivk(ak, nk):
     ivk = digest.digest()
     return leos2ip(ivk) % 2**251
 
+def diversify_hash(d):
+    return group_hash(b'Zcash_gd', d)
 
 #
 # Key components
@@ -47,22 +51,8 @@ def cached(f):
         return self._cached[f]
     return wrapper
 
-class SpendingKey(object):
-    def __init__(self, data):
-        self.data = data
 
-    @cached
-    def ask(self):
-        return to_scalar(prf_expand(self.data, b'\0'))
-
-    @cached
-    def nsk(self):
-        return to_scalar(prf_expand(self.data, b'\1'))
-
-    @cached
-    def ovk(self):
-        return prf_expand(self.data, b'\2')[:32]
-
+class DerivedAkNk(object):
     @cached
     def ak(self):
         return SPENDING_KEY_BASE * self.ask()
@@ -71,23 +61,42 @@ class SpendingKey(object):
     def nk(self):
         return PROVING_KEY_BASE * self.nsk()
 
+
+class DerivedIvk(object):
     @cached
     def ivk(self):
         return Fr(crh_ivk(bytes(self.ak()), bytes(self.nk())))
+
+
+class SpendingKey(DerivedAkNk, DerivedIvk):
+    def __init__(self, data):
+        self.data = data
+
+    @cached
+    def ask(self):
+        return to_scalar(prf_expand(self.data, b'\x00'))
+
+    @cached
+    def nsk(self):
+        return to_scalar(prf_expand(self.data, b'\x01'))
+
+    @cached
+    def ovk(self):
+        return prf_expand(self.data, b'\x02')[:32]
 
     @cached
     def default_d(self):
         i = 0
         while True:
             d = prf_expand(self.data, bytes([3, i]))[:11]
-            if group_hash(b'Zcash_gd', d):
+            if diversify_hash(d):
                 return d
             i += 1
             assert i < 256
 
     @cached
     def default_pkd(self):
-        return group_hash(b'Zcash_gd', self.default_d()) * self.ivk()
+        return diversify_hash(self.default_d()) * self.ivk()
 
 
 def main():
@@ -100,7 +109,7 @@ def main():
         note_r = Fr(8890123457840276890326754358439057438290574382905).exp(i+1)
         note_cm = note_commit(
             note_r,
-            leos2bsp(bytes(group_hash(b'Zcash_gd', sk.default_d()))),
+            leos2bsp(bytes(diversify_hash(sk.default_d()))),
             leos2bsp(bytes(sk.default_pkd())),
             note_v)
         note_pos = (980705743285409327583205473820957432*i) % 2**MERKLE_DEPTH

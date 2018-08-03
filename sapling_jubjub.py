@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+
 from sapling_utils import i2lebsp, leos2ip, i2leosp
 
 q_j = 52435875175126190479447740508185965837690552500527637822603658699938581184513
