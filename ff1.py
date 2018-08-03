@@ -74,12 +74,25 @@ def ff1_aes256_decrypt(key, tweak, x):
     return A + B
 
 def test_ff1():
-    tweak = b''
-    key = unhexlify("2B7E151628AED2A6ABF7158809CF4F3CEF4359D8D580AA4F7F036D6F04FC6A94")
-    x = [0, 1]*44
-
     # Test vectors consistent with the Java implementation at
     # <https://git.code.sf.net/p/format-preserving-encryption/code>.
+
+    key = unhexlify("2B7E151628AED2A6ABF7158809CF4F3CEF4359D8D580AA4F7F036D6F04FC6A94")
+
+    tweak = b''
+    x = [0]*88
+    ct = ff1_aes256_encrypt(key, tweak, x)
+    assert ''.join(map(str, ct)) == "0000100100110101011101111111110011000001101100111110011101110101011010100100010011001111", ct
+    pt = ff1_aes256_decrypt(key, tweak, ct)
+    assert pt == x, (ct, pt)
+
+    x = list(map(int, "0000100100110101011101111111110011000001101100111110011101110101011010100100010011001111"))
+    ct = ff1_aes256_encrypt(key, tweak, x)
+    assert ''.join(map(str, ct)) == "1101101011010001100011110000010011001111110110011101010110100001111001000101011111011000", ct
+    pt = ff1_aes256_decrypt(key, tweak, ct)
+    assert pt == x, (ct, pt)
+
+    x = [0, 1]*44
     ct = ff1_aes256_encrypt(key, tweak, x)
     assert ''.join(map(str, ct)) == "0000111101000001111011010111011111110001100101000000001101101110100010010111001100100110", ct
     pt = ff1_aes256_decrypt(key, tweak, ct)
