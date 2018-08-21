@@ -63,6 +63,17 @@ def tv_bytes_rust(name, value, pad):
         pad,
     ))
 
+def tv_vec_bytes_rust(name, value, pad):
+    print('''%s%s: vec![
+    %s%s
+%s],''' % (
+        pad,
+        name,
+        pad,
+        chunk(hexlify(value)),
+        pad,
+    ))
+
 def tv_option_bytes_rust(name, value, pad):
     if value:
         print('''%s%s: Some([
@@ -80,10 +91,13 @@ def tv_option_bytes_rust(name, value, pad):
 def tv_int_rust(name, value, pad):
     print('%s%s: %d,' % (pad, name, value))
 
-def tv_part_rust(name, value, indent=3):
+def tv_part_rust(name, value, typ, indent=3):
     pad = '    ' * indent
     if type(value) == bytes:
-        tv_bytes_rust(name, value, pad)
+        if typ == 'Vec<u8>':
+            tv_vec_bytes_rust(name, value, pad)
+        else:
+            tv_bytes_rust(name, value, pad)
     elif isinstance(value, Some) or value is None:
         tv_option_bytes_rust(name, value, pad)
     elif type(value) == int:
@@ -101,13 +115,13 @@ def tv_rust(filename, parts, vectors):
         ))
     if type(vectors) == type({}):
         print('        let test_vector = TestVector {')
-        for p in parts: tv_part_rust(p[0], vectors[p[0]])
+        for p in parts: tv_part_rust(p[0], vectors[p[0]], p[1]['rust'])
         print('        };')
     elif type(vectors) == type([]):
         print('        let test_vectors = vec![')
         for vector in vectors:
             print('            TestVector {')
-            for p in parts: tv_part_rust(p[0], vector[p[0]], 4)
+            for p in parts: tv_part_rust(p[0], vector[p[0]], p[1]['rust'], 4)
             print('            },')
         print('        ];')
     else:
