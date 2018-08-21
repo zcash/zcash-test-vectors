@@ -8,7 +8,7 @@ from transaction import (
     Script,
     Transaction,
 )
-from tv_output import render_args, render_tv
+from tv_output import render_args, render_tv, Some
 from tv_rand import Rand
 
 
@@ -17,7 +17,7 @@ SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
 SIGHASH_ANYONECANPAY = 0x80
 
-NOT_AN_INPUT = -1 # For portability of the test vectors
+NOT_AN_INPUT = -1 # For portability of the test vectors; replaced with None for Rust
 
 def getHashPrevouts(tx):
     digest = blake2b(digest_size=32, person=b'ZcashPrevoutHash')
@@ -149,9 +149,12 @@ def main():
         args,
         'zip_0143',
         (
-            ('tx', {'rust': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('tx', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('script_code', 'Vec<u8>'),
-            ('transparent_input', 'u32'),
+            ('transparent_input', {
+                'rust_type': 'Option<u32>',
+                'rust_fmt': lambda x: None if x == -1 else Some(x),
+                }),
             ('hash_type', 'u32'),
             ('amount', 'u64'),
             ('consensus_branch_id', 'u32'),
