@@ -137,11 +137,11 @@ def main():
 
         test_vectors.append({
             'tx': bytes(tx),
-            'scriptCode': scriptCode.raw(),
-            'nIn': nIn,
-            'nHashType': nHashType,
+            'script_code': scriptCode.raw(),
+            'transparent_input': nIn,
+            'hash_type': nHashType,
             'amount': amount,
-            'consensusBranchId': consensusBranchId,
+            'consensus_branch_id': consensusBranchId,
             'sighash': sighash,
         })
 
@@ -150,11 +150,11 @@ def main():
         'zip_0143',
         (
             ('tx', {'rust': 'Vec<u8>', 'bitcoin_flavoured': False}),
-            ('scriptCode', 'Vec<u8>'),
-            ('nIn', 'u32'),
-            ('nHashType', 'u32'),
+            ('script_code', 'Vec<u8>'),
+            ('transparent_input', 'u32'),
+            ('hash_type', 'u32'),
             ('amount', 'u64'),
-            ('consensusBranchId', 'u32'),
+            ('consensus_branch_id', 'u32'),
             ('sighash', '[u8; 32]'),
         ),
         test_vectors,
