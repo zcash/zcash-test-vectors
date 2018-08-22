@@ -43,7 +43,7 @@ def tv_json(filename, parts, vectors, bitcoin_flavoured):
         ', '.join([p[0] for p in parts])
     ))
     print('    ' + ',\n    '.join([
-        json.dumps([tv_value_json(v[p[0]], bitcoin_flavoured) for p in parts]) for v in vectors
+        json.dumps([tv_value_json(v[p[0]], p[1].get('bitcoin_flavoured', bitcoin_flavoured)) for p in parts]) for v in vectors
     ]))
     print(']')
 
@@ -54,6 +54,17 @@ def tv_json(filename, parts, vectors, bitcoin_flavoured):
 
 def tv_bytes_rust(name, value, pad):
     print('''%s%s: [
+    %s%s
+%s],''' % (
+        pad,
+        name,
+        pad,
+        chunk(hexlify(value)),
+        pad,
+    ))
+
+def tv_vec_bytes_rust(name, value, pad):
+    print('''%s%s: vec![
     %s%s
 %s],''' % (
         pad,
@@ -77,15 +88,44 @@ def tv_option_bytes_rust(name, value, pad):
     else:
         print('%s%s: None,' % (pad, name))
 
+def tv_option_vec_bytes_rust(name, value, pad):
+    if value:
+        print('''%s%s: Some(vec![
+    %s%s
+%s]),''' % (
+            pad,
+            name,
+            pad,
+            chunk(hexlify(value.thing)),
+            pad,
+        ))
+    else:
+        print('%s%s: None,' % (pad, name))
+
 def tv_int_rust(name, value, pad):
     print('%s%s: %d,' % (pad, name, value))
 
-def tv_part_rust(name, value, indent=3):
+def tv_option_int_rust(name, value, pad):
+    if value:
+        print('%s%s: Some(%d),' % (pad, name, value.thing))
+    else:
+        print('%s%s: None,' % (pad, name))
+
+def tv_part_rust(name, value, config, indent=3):
+    if 'rust_fmt' in config:
+        value = config['rust_fmt'](value)
+
     pad = '    ' * indent
-    if type(value) == bytes:
-        tv_bytes_rust(name, value, pad)
-    elif isinstance(value, Some) or value is None:
+    if config['rust_type'] == 'Option<Vec<u8>>':
+        tv_option_vec_bytes_rust(name, value, pad)
+    elif config['rust_type'] == 'Vec<u8>':
+        tv_vec_bytes_rust(name, value, pad)
+    elif config['rust_type'].startswith('Option<['):
         tv_option_bytes_rust(name, value, pad)
+    elif type(value) == bytes:
+        tv_bytes_rust(name, value, pad)
+    elif config['rust_type'].startswith('Option<'):
+        tv_option_int_rust(name, value, pad)
     elif type(value) == int:
         tv_int_rust(name, value, pad)
     else:
@@ -93,7 +133,7 @@ def tv_part_rust(name, value, indent=3):
 
 def tv_rust(filename, parts, vectors):
     print('        struct TestVector {')
-    for p in parts: print('            %s: %s,' % p)
+    for p in parts: print('            %s: %s,' % (p[0], p[1]['rust_type']))
     print('''        };
 
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py''' % (
@@ -101,13 +141,13 @@ def tv_rust(filename, parts, vectors):
         ))
     if type(vectors) == type({}):
         print('        let test_vector = TestVector {')
-        for p in parts: tv_part_rust(p[0], vectors[p[0]])
+        for p in parts: tv_part_rust(p[0], vectors[p[0]], p[1])
         print('        };')
     elif type(vectors) == type([]):
         print('        let test_vectors = vec![')
         for vector in vectors:
             print('            TestVector {')
-            for p in parts: tv_part_rust(p[0], vector[p[0]], 4)
+            for p in parts: tv_part_rust(p[0], vector[p[0]], p[1], 4)
             print('            },')
         print('        ];')
     else:
@@ -124,6 +164,9 @@ def render_args():
     return parser.parse_args()
 
 def render_tv(args, filename, parts, vectors):
+    # Convert older format
+    parts = [(p[0], p[1] if type(p[1]) == type({}) else {'rust_type': p[1]}) for p in parts]
+
     if args.target == 'rust':
         tv_rust(filename, parts, vectors)
     elif args.target == 'zcash':
