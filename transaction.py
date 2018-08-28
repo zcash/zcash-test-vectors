@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import struct
 
+from sapling_generators import find_group_hash, SPENDING_KEY_BASE
+from sapling_jubjub import Fq
+from sapling_utils import leos2ip
 from zc_utils import write_compact_size
 
 MAX_MONEY = 21000000 * 100000000
@@ -9,6 +12,24 @@ TX_EXPIRY_HEIGHT_THRESHOLD = 500000000
 OVERWINTER_VERSION_GROUP_ID = 0x03C48270
 OVERWINTER_TX_VERSION = 3
 
+SAPLING_VERSION_GROUP_ID = 0x892F2085
+SAPLING_TX_VERSION = 4
+
+# Sapling note magic values, copied from src/zcash/Zcash.h
+NOTEENCRYPTION_AUTH_BYTES = 16
+ZC_NOTEPLAINTEXT_LEADING = 1
+ZC_V_SIZE = 8
+ZC_RHO_SIZE = 32
+ZC_R_SIZE = 32
+ZC_MEMO_SIZE = 512
+ZC_DIVERSIFIER_SIZE = 11
+ZC_JUBJUB_POINT_SIZE = 32
+ZC_JUBJUB_SCALAR_SIZE = 32
+ZC_NOTEPLAINTEXT_SIZE = ZC_NOTEPLAINTEXT_LEADING + ZC_V_SIZE + ZC_RHO_SIZE + ZC_R_SIZE + ZC_MEMO_SIZE
+ZC_SAPLING_ENCPLAINTEXT_SIZE = ZC_NOTEPLAINTEXT_LEADING + ZC_DIVERSIFIER_SIZE + ZC_V_SIZE + ZC_R_SIZE + ZC_MEMO_SIZE
+ZC_SAPLING_OUTPLAINTEXT_SIZE = ZC_JUBJUB_POINT_SIZE + ZC_JUBJUB_SCALAR_SIZE
+ZC_SAPLING_ENCCIPHERTEXT_SIZE = ZC_SAPLING_ENCPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
+ZC_SAPLING_OUTCIPHERTEXT_SIZE = ZC_SAPLING_OUTPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
 
 # BN254 encoding of G1 elements. p[1] is big-endian.
 def pack_g1(p):
@@ -41,9 +62,59 @@ class PHGRProof(object):
             pack_g1(self.g_H)
         )
 
+class GrothProof(object):
+    def __init__(self, rand):
+        self.g_A = rand.b(48)
+        self.g_B = rand.b(96)
+        self.g_C = rand.b(48)
+
+    def __bytes__(self):
+        return (
+            self.g_A +
+            self.g_B +
+            self.g_C
+        )
+
+class SpendDescription(object):
+    def __init__(self, rand):
+        self.cv = find_group_hash(b'TVRandPt', rand.b(32))
+        self.anchor = Fq(leos2ip(rand.b(32)))
+        self.nullifier = rand.b(32)
+        self.rk = rand.b(32)
+        self.proof = GrothProof(rand)
+        self.spendAuthSig = rand.b(64) # Invalid
+
+    def __bytes__(self):
+        return (
+            bytes(self.cv) +
+            bytes(self.anchor) +
+            self.nullifier +
+            self.rk +
+            bytes(self.proof) +
+            self.spendAuthSig
+        )
+
+class OutputDescription(object):
+    def __init__(self, rand):
+        self.cv = find_group_hash(b'TVRandPt', rand.b(32))
+        self.cmu = Fq(leos2ip(rand.b(32)))
+        self.ephemeralKey = find_group_hash(b'TVRandPt', rand.b(32))
+        self.encCiphertext = rand.b(ZC_SAPLING_ENCCIPHERTEXT_SIZE)
+        self.outCipherText = rand.b(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
+        self.proof = GrothProof(rand)
+
+    def __bytes__(self):
+        return (
+            bytes(self.cv) +
+            bytes(self.cmu) +
+            bytes(self.ephemeralKey) +
+            self.encCiphertext +
+            self.outCipherText +
+            bytes(self.proof)
+        )
 
 class JoinSplit(object):
-    def __init__(self, rand):
+    def __init__(self, rand, fUseGroth = False):
         self.vpub_old = 0
         self.vpub_new = 0
         self.anchor = rand.b(32)
@@ -52,7 +123,7 @@ class JoinSplit(object):
         self.ephemeralKey = rand.b(32)
         self.randomSeed = rand.b(32)
         self.macs = (rand.b(32), rand.b(32))
-        self.proof = PHGRProof(rand)
+        self.proof = GrothProof(rand) if fUseGroth else PHGRProof(rand)
         self.ciphertexts = (rand.b(601), rand.b(601))
 
     def __bytes__(self):
@@ -132,6 +203,10 @@ class Transaction(object):
             self.fOverwintered = True
             self.nVersionGroupId = OVERWINTER_VERSION_GROUP_ID
             self.nVersion = OVERWINTER_TX_VERSION
+        elif version == SAPLING_TX_VERSION:
+            self.fOverwintered = True
+            self.nVersionGroupId = SAPLING_VERSION_GROUP_ID
+            self.nVersion = SAPLING_TX_VERSION
         else:
             self.fOverwintered = False
             self.nVersion = rand.u32() & ((1 << 31) - 1)
@@ -146,14 +221,25 @@ class Transaction(object):
 
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
+        self.valueBalance = rand.u64() % (MAX_MONEY + 1)
+
+        self.vShieldedSpends = []
+        self.vShieldedOutputs = []
+        if self.nVersion >= SAPLING_TX_VERSION:
+            for _ in range(rand.u8() % 5):
+                self.vShieldedSpends.append(SpendDescription(rand))
+            for _ in range(rand.u8() % 5):
+                self.vShieldedOutputs.append(OutputDescription(rand))
 
         self.vJoinSplit = []
         if self.nVersion >= 2:
             for i in range(rand.u8() % 3):
-                self.vJoinSplit.append(JoinSplit(rand))
+                self.vJoinSplit.append(JoinSplit(rand, self.fOverwintered and self.nVersion >= SAPLING_TX_VERSION))
             if len(self.vJoinSplit) > 0:
                 self.joinSplitPubKey = rand.b(32) # Potentially invalid
                 self.joinSplitSig = rand.b(64) # Invalid
+
+        self.bindingSig = rand.b(64) # Invalid
 
     def header(self):
         return self.nVersion | (1 << 31 if self.fOverwintered else 0)
@@ -169,6 +255,11 @@ class Transaction(object):
             self.nVersionGroupId == OVERWINTER_VERSION_GROUP_ID and \
             self.nVersion == OVERWINTER_TX_VERSION
 
+        isSaplingV4 = \
+            self.fOverwintered and \
+            self.nVersionGroupId == SAPLING_VERSION_GROUP_ID and \
+            self.nVersion == SAPLING_TX_VERSION
+
         ret += write_compact_size(len(self.vin))
         for x in self.vin:
             ret += bytes(x)
@@ -178,8 +269,17 @@ class Transaction(object):
             ret += bytes(x)
 
         ret += struct.pack('<I', self.nLockTime)
-        if isOverwinterV3:
+        if isOverwinterV3 or isSaplingV4:
             ret += struct.pack('<I', self.nExpiryHeight)
+
+        if isSaplingV4:
+            ret += struct.pack('<Q', self.valueBalance)
+            ret += write_compact_size(len(self.vShieldedSpends))
+            for desc in self.vShieldedSpends:
+                ret += bytes(desc)
+            ret += write_compact_size(len(self.vShieldedOutputs))
+            for desc in self.vShieldedOutputs:
+                ret += bytes(desc)
 
         if self.nVersion >= 2:
             ret += write_compact_size(len(self.vJoinSplit))
@@ -188,5 +288,8 @@ class Transaction(object):
             if len(self.vJoinSplit) > 0:
                 ret += self.joinSplitPubKey
                 ret += self.joinSplitSig
+
+        if isSaplingV4 and not (len(self.vShieldedSpends) == 0 and len(self.vShieldedOutputs) == 0):
+            ret += self.bindingSig
 
         return ret

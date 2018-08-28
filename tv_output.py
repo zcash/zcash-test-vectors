@@ -8,7 +8,8 @@ import json
 
 def chunk(h):
     hstr = str(h, 'utf-8')
-    return '0x' + ', 0x'.join([hstr[i:i+2] for i in range(0, len(hstr), 2)])
+    hstr = ', 0x'.join([hstr[i:i+2] for i in range(0, len(hstr), 2)])
+    return '0x' + hstr if hstr else ''
 
 class Some(object):
     def __init__(self, thing):
