@@ -143,6 +143,14 @@ JUBJUB_COFACTOR = Fr(8)
 
 class Point(object):
     @staticmethod
+    def rand(rand):
+        while True:
+            data = rand.b(32)
+            p = Point.from_bytes(data)
+            if p:
+                return p
+
+    @staticmethod
     def from_bytes(buf):
         assert len(buf) == 32
         u_sign = buf[31] >> 7

@@ -31,7 +31,7 @@ def getHashShieldedSpends(tx):
         digest.update(bytes(desc.cv))
         digest.update(bytes(desc.anchor))
         digest.update(desc.nullifier)
-        digest.update(desc.rk)
+        digest.update(bytes(desc.rk))
         digest.update(bytes(desc.proof))
     return digest.digest()
 
