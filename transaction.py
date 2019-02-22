@@ -221,7 +221,8 @@ class Transaction(object):
 
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
-        self.valueBalance = rand.u64() % (MAX_MONEY + 1)
+        if self.nVersion >= SAPLING_TX_VERSION:
+            self.valueBalance = rand.u64() % (MAX_MONEY + 1)
 
         self.vShieldedSpends = []
         self.vShieldedOutputs = []
@@ -239,7 +240,8 @@ class Transaction(object):
                 self.joinSplitPubKey = rand.b(32) # Potentially invalid
                 self.joinSplitSig = rand.b(64) # Invalid
 
-        self.bindingSig = rand.b(64) # Invalid
+        if self.nVersion >= SAPLING_TX_VERSION:
+            self.bindingSig = rand.b(64) # Invalid
 
     def header(self):
         return self.nVersion | (1 << 31 if self.fOverwintered else 0)
