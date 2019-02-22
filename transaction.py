@@ -2,7 +2,7 @@
 import struct
 
 from sapling_generators import find_group_hash, SPENDING_KEY_BASE
-from sapling_jubjub import Fq
+from sapling_jubjub import Fq, Point
 from sapling_utils import leos2ip
 from zc_utils import write_compact_size
 
@@ -80,7 +80,7 @@ class SpendDescription(object):
         self.cv = find_group_hash(b'TVRandPt', rand.b(32))
         self.anchor = Fq(leos2ip(rand.b(32)))
         self.nullifier = rand.b(32)
-        self.rk = rand.b(32)
+        self.rk = Point.rand(rand)
         self.proof = GrothProof(rand)
         self.spendAuthSig = rand.b(64) # Invalid
 
@@ -89,7 +89,7 @@ class SpendDescription(object):
             bytes(self.cv) +
             bytes(self.anchor) +
             self.nullifier +
-            self.rk +
+            bytes(self.rk) +
             bytes(self.proof) +
             self.spendAuthSig
         )
@@ -221,7 +221,8 @@ class Transaction(object):
 
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
-        self.valueBalance = rand.u64() % (MAX_MONEY + 1)
+        if self.nVersion >= SAPLING_TX_VERSION:
+            self.valueBalance = rand.u64() % (MAX_MONEY + 1)
 
         self.vShieldedSpends = []
         self.vShieldedOutputs = []
@@ -239,7 +240,8 @@ class Transaction(object):
                 self.joinSplitPubKey = rand.b(32) # Potentially invalid
                 self.joinSplitSig = rand.b(64) # Invalid
 
-        self.bindingSig = rand.b(64) # Invalid
+        if self.nVersion >= SAPLING_TX_VERSION:
+            self.bindingSig = rand.b(64) # Invalid
 
     def header(self):
         return self.nVersion | (1 << 31 if self.fOverwintered else 0)

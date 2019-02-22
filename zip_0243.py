@@ -31,7 +31,7 @@ def getHashShieldedSpends(tx):
         digest.update(bytes(desc.cv))
         digest.update(bytes(desc.anchor))
         digest.update(desc.nullifier)
-        digest.update(desc.rk)
+        digest.update(bytes(desc.rk))
         digest.update(bytes(desc.proof))
     return digest.digest()
 
@@ -163,7 +163,7 @@ def main():
                 'rust_fmt': lambda x: None if x == -1 else Some(x),
                 }),
             ('hash_type', 'u32'),
-            ('amount', 'u64'),
+            ('amount', 'i64'),
             ('consensus_branch_id', 'u32'),
             ('sighash', '[u8; 32]'),
         ),
