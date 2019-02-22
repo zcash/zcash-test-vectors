@@ -23,7 +23,7 @@ def group_hash(D, M):
     digest.update(URS)
     digest.update(M)
     p = Point.from_bytes(digest.digest())
-    if not p:
+    if p is None:
         return None
     q = p * JUBJUB_COFACTOR
     if q == Point.ZERO:
@@ -34,7 +34,7 @@ def find_group_hash(D, M):
     i = 0
     while True:
         p = group_hash(D, M + bytes([i]))
-        if p:
+        if p is not None:
             return p
         i += 1
         assert i < 256

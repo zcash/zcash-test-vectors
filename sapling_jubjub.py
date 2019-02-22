@@ -147,7 +147,7 @@ class Point(object):
         while True:
             data = rand.b(32)
             p = Point.from_bytes(data)
-            if p:
+            if p is not None:
                 return p
 
     @staticmethod
@@ -164,7 +164,7 @@ class Point(object):
         u2 = (vv - Fq.ONE) / (vv * JUBJUB_D - JUBJUB_A)
 
         u = u2.sqrt()
-        if not u:
+        if u is None:
             return None
 
         if u.s % 2 != u_sign:
