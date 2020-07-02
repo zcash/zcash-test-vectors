@@ -102,10 +102,12 @@ class SpendingKey(DerivedAkNk, DerivedIvk):
 def main():
     args = render_args()
 
+    max_money = 2100000000000000
+
     test_vectors = []
     for i in range(0, 10):
         sk = SpendingKey(bytes([i] * 32))
-        note_v = (2548793025584392057432895043257984320*i) % 2**64
+        note_v = (2548793025584392057432895043257984320*i) % max_money
         note_r = Fr(8890123457840276890326754358439057438290574382905).exp(i+1)
         note_cm = note_commit(
             note_r,
