@@ -22,6 +22,9 @@ class FieldElement(object):
         self.s = s % modulus
         self.m = modulus
 
+    def __neg__(self):
+        return self.t(-self.s)
+
     def __add__(self, a):
         return self.t(self.s + a.s)
 
