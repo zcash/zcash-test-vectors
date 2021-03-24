@@ -36,6 +36,10 @@ class Fp(FieldElement):
     def __str__(self):
         return 'Fp(%s)' % self.s
 
+    def sgn0(self):
+        # https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-10#section-4.1
+        return (self.s % 2) == 1
+
     def sqrt(self):
         # Tonelli-Shank's algorithm for p mod 16 = 1
         # https://eprint.iacr.org/2012/685.pdf (page 12, algorithm 5)

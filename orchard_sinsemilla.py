@@ -3,8 +3,11 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 import math
 
+import orchard_iso_pallas
+
 from pyblake2 import blake2b, blake2s
 from orchard_pallas import Fp, p, q, PALLAS_B
+from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
 from sapling_utils import i2beosp, cldiv, beos2ip
 from binascii import hexlify
 
@@ -127,81 +130,66 @@ def hash_to_field(msg, dst):
 
 def map_to_curve_simple_swu(u):
 
+    zero = Fp(0)
+    assert zero.inv() == Fp(0)
 
-    A = 0
-    B = PALLAS_B
+    A = PALLAS_ISO_A
+    B = PALLAS_ISO_B
     Z = Fp(-13, False)
-    c1 = 
+    c1 = -B / A
+    c2 = Fp(-1)
 
     tv1 = Z * u.exp(2)
     tv2 = tv1.exp(2)
     x1 = tv1 + tv2
 
     x1 = x1.inv()
-    e1 = x1 == 0
-    x1 = x1 + 1
+    e1 = x1 == Fp(0)
+    x1 = x1 + Fp(1)
 
     if e1:
         x1 = c2
     else:
         x1 = x1
 
-    # got up to here, need to set c1 but A=0
-    # I think we need to use iso-P not P
-
     x1 = x1 * c1      # x1 = (-B / A) * (1 + (1 / (Z^2 * u^4 + Z * u^2)))
-    gx1 = x1^2
+    gx1 = x1.exp(2)
     gx1 = gx1 + A
     gx1 = gx1 * x1
     gx1 = gx1 + B             # gx1 = g(x1) = x1^3 + A * x1 + B
     x2 = tv1 * x1            # x2 = Z * u^2 * x1
     tv2 = tv1 * tv2
     gx2 = gx1 * tv2           # gx2 = (Z * u^2)^3 * gx1
-    e2 = is_square(gx1)
-    x = CMOV(x2, x1, e2)    # If is_square(gx1), x = x1, else x = x2
-    y2 = CMOV(gx2, gx1, e2)  # If is_square(gx1), y2 = gx1, else y2 = gx2
-    y = sqrt(y2)
-    e3 = sgn0(u) == sgn0(y)  # Fix sign of y
-    y = CMOV(-y, y, e3)
 
-    return (x, y)
+    e2 = (gx1.sqrt() != None)
 
-# map_to_curve_simple_swu(u)
-# 
-# Input: u, an element of F.
-# Output: (x, y), a point on E.
-# 
-# Constants:
-# 1.  c1 = -B / A
-# 2.  c2 = -1 / Z
-# 
-# Steps:
-# 1.  tv1 = Z * u^2
-# 2.  tv2 = tv1^2
-# 3.   x1 = tv1 + tv2
-# 4.   x1 = inv0(x1)
-# 5.   e1 = x1 == 0
-# 6.   x1 = x1 + 1
-# 7.   x1 = CMOV(x1, c2, e1)    # If (tv1 + tv2) == 0, set x1 = -1 / Z
-# 8.   x1 = x1 * c1      # x1 = (-B / A) * (1 + (1 / (Z^2 * u^4 + Z * u^2)))
-# 9.  gx1 = x1^2
-# 10. gx1 = gx1 + A
-# 11. gx1 = gx1 * x1
-# 12. gx1 = gx1 + B             # gx1 = g(x1) = x1^3 + A * x1 + B
-# 13.  x2 = tv1 * x1            # x2 = Z * u^2 * x1
-# 14. tv2 = tv1 * tv2
-# 15. gx2 = gx1 * tv2           # gx2 = (Z * u^2)^3 * gx1
-# 16.  e2 = is_square(gx1)
-# 17.   x = CMOV(x2, x1, e2)    # If is_square(gx1), x = x1, else x = x2
-# 18.  y2 = CMOV(gx2, gx1, e2)  # If is_square(gx1), y2 = gx1, else y2 = gx2
-# 19.   y = sqrt(y2)
-# 20.  e3 = sgn0(u) == sgn0(y)  # Fix sign of y
-# 21.   y = CMOV(-y, y, e3)
-# 22. return (x, y)
+    x = x1 if e2 else x2    # If is_square(gx1), x = x1, else x = x2
+    y2 = gx1 if e2 else gx2  # If is_square(gx1), y2 = gx1, else y2 = gx2
+    y = y2.sqrt()
 
+    e3 = u.sgn0() == y.sgn0()
+
+    y = y if e3 else -y  #y = CMOV(-y, y, e3)
+
+    return orchard_iso_pallas.Point(x, y)
+
+
+def group_hash(d, m):
+    dst = d + b"-" + b"pallas" + b"_XMD:BLAKE2b_SSWU_RO_"
+
+    elems = hash_to_field(m, dst)
+    assert len(elems) == 2
+
+    q = [map_to_curve_simple_swu(elems[0]), map_to_curve_simple_swu(elems[1]) ]
+
+    return (q[0] + q[1]).iso_map()
 
 if __name__ == "__main__":
-    x = expand_message_xmd(b"nothing", b"dst", 128)
-    y = hash_to_field(b"nothing", b"nothing")
-    print(hexlify(x))
-    print(str(y[0]), str(y[1]))
+
+    gh = group_hash(b"whatever", b"whatever2")
+    print(gh)
+
+    #x = expand_message_xmd(b"nothing", b"dst", 128)
+    #y = hash_to_field(b"nothing", b"nothing")
+    #print(hexlify(x))
+    #print(str(y[0]), str(y[1]))
