@@ -8,8 +8,9 @@ import orchard_iso_pallas
 from pyblake2 import blake2b, blake2s
 from orchard_pallas import Fp, p, q, PALLAS_B
 from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
-from sapling_utils import i2beosp, cldiv, beos2ip
+from sapling_utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
 from binascii import hexlify
+from bitstring import BitArray
 
 # https://stackoverflow.com/questions/2612720/how-to-do-bitwise-exclusive-or-of-two-strings-in-python
 def sxor(s1,s2):    
@@ -161,7 +162,7 @@ def map_to_curve_simple_swu(u):
     tv2 = tv1 * tv2
     gx2 = gx1 * tv2           # gx2 = (Z * u^2)^3 * gx1
 
-    e2 = (gx1.sqrt() != None)
+    e2 = (gx1.sqrt() is not None)
 
     x = x1 if e2 else x2    # If is_square(gx1), x = x1, else x = x2
     y2 = gx1 if e2 else gx2  # If is_square(gx1), y2 = gx1, else y2 = gx2
@@ -184,9 +185,43 @@ def group_hash(d, m):
 
     return (q[0] + q[1]).iso_map()
 
-if __name__ == "__main__":
+SINSEMILLA_K = 10
 
-    gh = group_hash(b"whatever", b"whatever2")
+def pad(n, m):
+    padding_needed = n * SINSEMILLA_K - m.len
+    zeros = BitArray('0b' + ('0' * padding_needed))
+    m = m + zeros
+
+    pieces = []
+    for i in range(0, n):
+        pieces.append(
+            lebs2ip(m[i*SINSEMILLA_K:i*(SINSEMILLA_K + 1)])
+        )
+
+    return pieces      
+
+
+# note: m is a bitarray
+def sinsemilla_hash_to_point(d, m):
+
+    n = cldiv(m.len, SINSEMILLA_K)
+    m = pad(n, m)
+    acc = group_hash(b"z.cash:SinsemillaQ", d)
+
+    for m_i in m:
+        acc = acc + group_hash(b"z.cash:SinsemillaS", i2leosp(32, m_i)) + acc
+    
+    return acc
+
+def sinsemilla_hash(d, m):
+    return sinsemilla_hash_to_point(d, m).extract()
+
+def sinsemilla_hash_bytes(d, m_bytes):
+    # TODO: make sure it's not parsing it as hex
+    return sinsemilla_hash(d, BitArray(m_bytes))
+
+if __name__ == "__main__":
+    gh = sinsemilla_hash_bytes(b"whatever", b"whatever2")
     print(gh)
 
     #x = expand_message_xmd(b"nothing", b"dst", 128)

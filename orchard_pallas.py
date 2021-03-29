@@ -189,6 +189,10 @@ class Point(object):
         x = λ*λ - self.x - self.x
         y = λ*(self.x - x) - self.y
         return Point(x, y)
+    
+    def extract(self):
+        assert not self.is_identity
+        return self.x
 
     def __mul__(self, s):
         s = format(s.s, '0256b')
