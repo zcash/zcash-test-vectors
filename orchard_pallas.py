@@ -196,7 +196,8 @@ class Point(object):
         return Point(x, y)
     
     def extract(self):
-        assert not self.is_identity
+        if self.is_identity:
+            return 0
         return self.x
 
     def __mul__(self, s):

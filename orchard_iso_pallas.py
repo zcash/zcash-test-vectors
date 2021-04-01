@@ -35,7 +35,7 @@ class Point(object):
             return None
 
         if y.s % 2 != y_sign:
-            y = Fp.ZERO - y
+            y = -y
 
         return Point(x, y)
 

@@ -44,10 +44,7 @@ def expand_message_xmd(msg, dst, len_in_bytes):
     assert len(b[1]) == b_in_bytes
 
     for i in range(2, ell + 1):
-        bi_input = b"\x00" * b_in_bytes
-
-        for j in range(0, i):
-            bi_input = sxor(bi_input, b[j])
+        bi_input = sxor(b[0], b[i-1])
 
         assert len(bi_input) == b_in_bytes
 
@@ -59,7 +56,7 @@ def expand_message_xmd(msg, dst, len_in_bytes):
         b.append(bi_ctx.digest())
         assert len(b[i]) == b_in_bytes
 
-    return b''.join(b)[0:len_in_bytes]
+    return b''.join(b[1:])[0:len_in_bytes]
 
 def hash_to_field(msg, dst):
     k = 256
@@ -79,7 +76,7 @@ def hash_to_field(msg, dst):
             tv = uniform_bytes[elm_offset:elm_offset+L]
             elements.append(Fp(beos2ip(tv), False))
     
-    assert len(elements) == 2
+    assert len(elements) == count
 
     return elements
 
@@ -166,10 +163,10 @@ def sinsemilla_hash_to_point(d, m):
 def sinsemilla_hash(d, m):
     return sinsemilla_hash_to_point(d, m).extract()
 
-# m_bytes MUST be a b"byte string", otherwise it could be parsed as hex!
 def sinsemilla_hash_bytes(d, m_bytes):
+    assert isinstance(m_bytes, bytes)
     return sinsemilla_hash(d, BitArray(m_bytes))
 
 if __name__ == "__main__":
-    sh = sinsemilla_hash_bytes(b"whatever", b"whatever2")
+    sh = sinsemilla_hash_bytes(b"z.cash:test", b"Trans rights now!")
     print(sh)
