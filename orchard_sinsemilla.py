@@ -13,7 +13,7 @@ from binascii import hexlify
 from bitstring import BitArray
 
 # https://stackoverflow.com/questions/2612720/how-to-do-bitwise-exclusive-or-of-two-strings-in-python
-def sxor(s1,s2):    
+def sxor(s1,s2):
     return bytes([a ^ b for a,b in zip(s1,s2)])
 
 def expand_message_xmd(msg, dst, len_in_bytes):
@@ -75,7 +75,7 @@ def hash_to_field(msg, dst):
             elm_offset = L * (j + i * m)
             tv = uniform_bytes[elm_offset:elm_offset+L]
             elements.append(Fp(beos2ip(tv), False))
-    
+
     assert len(elements) == count
 
     return elements
@@ -148,7 +148,7 @@ def pad(n, m):
             lebs2ip(m[i*SINSEMILLA_K:i*(SINSEMILLA_K + 1)])
         )
 
-    return pieces      
+    return pieces
 
 def sinsemilla_hash_to_point(d, m):
     n = cldiv(m.len, SINSEMILLA_K)
