@@ -6,7 +6,7 @@ import math
 import orchard_iso_pallas
 
 from pyblake2 import blake2b, blake2s
-from orchard_pallas import Fp, p, q, PALLAS_B
+from orchard_pallas import Fp, p, q, PALLAS_B, Point
 from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
 from sapling_utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
 from binascii import hexlify
@@ -139,25 +139,28 @@ SINSEMILLA_K = 10
 
 def pad(n, m):
     padding_needed = n * SINSEMILLA_K - m.len
-    zeros = BitArray('0b' + ('0' * padding_needed))
+    zeros = BitArray(bin='0' * padding_needed)
     m = m + zeros
 
     pieces = []
-    for i in range(0, n):
+    for i in range(n):
         pieces.append(
-            lebs2ip(m[i*SINSEMILLA_K:i*(SINSEMILLA_K + 1)])
+            lebs2ip(m[i*SINSEMILLA_K : (i+1)*SINSEMILLA_K])
         )
 
     return pieces
 
 def sinsemilla_hash_to_point(d, m):
+    assert isinstance(m, BitArray)
     n = cldiv(m.len, SINSEMILLA_K)
     m = pad(n, m)
     acc = group_hash(b"z.cash:SinsemillaQ", d)
+    #print("acc", acc)
 
     for m_i in m:
         acc = acc + group_hash(b"z.cash:SinsemillaS", i2leosp(32, m_i)) + acc
-    
+        #print("acc", acc)
+
     return acc
 
 def sinsemilla_hash(d, m):
@@ -168,5 +171,12 @@ def sinsemilla_hash_bytes(d, m_bytes):
     return sinsemilla_hash(d, BitArray(m_bytes))
 
 if __name__ == "__main__":
-    sh = sinsemilla_hash_bytes(b"z.cash:test", b"Trans rights now!")
-    print(sh)
+    # This is the Pallas test vector from the Sage and Rust code (in affine coordinates).
+    gh = group_hash(b"z.cash:test", b"Trans rights now!")
+    assert gh == Point(Fp(10899331951394555178876036573383466686793225972744812919361819919497009261523),
+                       Fp(851679174277466283220362715537906858808436854303373129825287392516025427980))
+
+    # 40 bits, so no padding
+    sh = sinsemilla_hash_to_point(b"z.cash:test-Sinsemilla", BitArray(bin='0001011010100110001101100011011011110110'))
+    assert sh == Point(Fp(19681977528872088480295086998934490146368213853811658798708435106473481753752),
+                       Fp(14670850419772526047574141291705097968771694788047376346841674072293161339903))
