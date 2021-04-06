@@ -197,7 +197,7 @@ class Point(object):
     
     def extract(self):
         if self.is_identity:
-            return 0
+            return Fp.ZERO
         return self.x
 
     def __mul__(self, s):
