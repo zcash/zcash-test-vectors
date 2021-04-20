@@ -18,6 +18,7 @@ assert (p - 1) == (1 << S) * T
 tm1d2 = 0x2000000000000000000000000000000011234c7e04a67c8dcc969876
 assert (T - 1) // 2 == tm1d2
 
+// 5^T (mod p)
 ROOT_OF_UNITY = 0x2bce74deac30ebda362120830561f81aea322bf2b7bb7584bdad6fabd87ea32f
 
 
