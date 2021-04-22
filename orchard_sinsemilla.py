@@ -166,10 +166,6 @@ def sinsemilla_hash_to_point(d, m):
 def sinsemilla_hash(d, m):
     return sinsemilla_hash_to_point(d, m).extract()
 
-def sinsemilla_hash_bytes(d, m_bytes):
-    assert isinstance(m_bytes, bytes)
-    return sinsemilla_hash(d, BitArray(m_bytes))
-
 if __name__ == "__main__":
     # This is the Pallas test vector from the Sage and Rust code (in affine coordinates).
     gh = group_hash(b"z.cash:test", b"Trans rights now!")
