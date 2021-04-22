@@ -115,8 +115,8 @@ def map_to_curve_simple_swu(u):
     e2 = (gx1.sqrt() is not None)
 
     x = x1 if e2 else x2    # If is_square(gx1), x = x1, else x = x2
-    y2 = gx1 if e2 else gx2  # If is_square(gx1), y2 = gx1, else y2 = gx2
-    y = y2.sqrt()
+    yy = gx1 if e2 else gx2  # If is_square(gx1), yy = gx1, else yy = gx2
+    y = yy.sqrt()
 
     e3 = u.sgn0() == y.sgn0()
 
