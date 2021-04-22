@@ -38,7 +38,7 @@ def expand_message_xmd(msg, dst, len_in_bytes):
     b.append(b0_ctx.digest())
     assert len(b[0]) == b_in_bytes
 
-    b1_ctx = blake2b(digest_size=64, person=i2beosp(128,0))
+    b1_ctx = blake2b(digest_size=b_in_bytes, person=i2beosp(128,0))
     b1_ctx.update(b[0] + i2beosp(8, 1) + dst_prime)
     b.append(b1_ctx.digest())
     assert len(b[1]) == b_in_bytes
