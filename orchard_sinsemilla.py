@@ -33,7 +33,7 @@ def expand_message_xmd(msg, dst, len_in_bytes):
 
     b = []
 
-    b0_ctx = blake2b(digest_size=64, person=i2beosp(128,0))
+    b0_ctx = blake2b(digest_size=b_in_bytes, person=i2beosp(128,0))
     b0_ctx.update(msg_prime)
     b.append(b0_ctx.digest())
     assert len(b[0]) == b_in_bytes
