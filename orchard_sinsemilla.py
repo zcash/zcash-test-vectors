@@ -50,7 +50,7 @@ def expand_message_xmd(msg, dst, len_in_bytes):
 
         bi_input += i2beosp(8, i) + dst_prime
 
-        bi_ctx = blake2b(digest_size=64, person=i2beosp(128,0))
+        bi_ctx = blake2b(digest_size=b_in_bytes, person=i2beosp(128,0))
         bi_ctx.update(bi_input)
 
         b.append(bi_ctx.digest())
