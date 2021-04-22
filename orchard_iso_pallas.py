@@ -160,6 +160,8 @@ class Point(object):
 
 Point.ZERO = Point.identity()
 
+# This is an arbitrarily-chosen generator for testing purposes only, NOT a
+# formally-selected common generator for iso-Pallas.
 x = Fp(2)
 y2 = x * x * x + PALLAS_ISO_A * x + PALLAS_ISO_B
 y = y2.sqrt()
