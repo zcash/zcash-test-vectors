@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 import struct
 
+from orchard_pallas import (
+    Fp as PallasBase,
+    Scalar as PallasScalar,
+)
+from orchard_sinsemilla import group_hash as pallas_group_hash
 from sapling_generators import find_group_hash, SPENDING_KEY_BASE
-from sapling_jubjub import Fq, Point
+from sapling_jubjub import (
+    Fq,
+    Point,
+    Fr as JubjubScalar,
+)
 from utils import leos2ip
 from zc_utils import write_compact_size
 
@@ -14,6 +23,9 @@ OVERWINTER_TX_VERSION = 3
 
 SAPLING_VERSION_GROUP_ID = 0x892F2085
 SAPLING_TX_VERSION = 4
+
+NU5_VERSION_GROUP_ID = 0x26A7270A
+NU5_TX_VERSION = 5
 
 # Sapling note magic values, copied from src/zcash/Zcash.h
 NOTEENCRYPTION_AUTH_BYTES = 16
@@ -75,14 +87,43 @@ class GrothProof(object):
             self.g_C
         )
 
-class SpendDescription(object):
+class RedJubjubSignature(object):
     def __init__(self, rand):
+        self.R = find_group_hash(b'TVRandPt', rand.b(32))
+        self.S = JubjubScalar(leos2ip(rand.b(32)))
+
+    def __bytes__(self):
+        return (
+            bytes(self.R) +
+            bytes(self.S)
+        )
+
+class RedPallasSignature(object):
+    def __init__(self, rand):
+        self.R = pallas_group_hash(b'TVRandPt', rand.b(32))
+        self.S = PallasScalar(leos2ip(rand.b(32)))
+
+    def __bytes__(self):
+        return (
+            bytes(self.R) +
+            bytes(self.S)
+        )
+
+class SpendDescription(object):
+    def __init__(self, rand, anchor=None):
         self.cv = find_group_hash(b'TVRandPt', rand.b(32))
-        self.anchor = Fq(leos2ip(rand.b(32)))
+        self.anchor = Fq(leos2ip(rand.b(32))) if anchor is None else anchor
         self.nullifier = rand.b(32)
         self.rk = Point.rand(rand)
         self.proof = GrothProof(rand)
-        self.spendAuthSig = rand.b(64) # Invalid
+        self.spendAuthSig = rand.b(64) if anchor is None else RedJubjubSignature(rand) # Invalid
+
+    def bytes_v5(self):
+        return (
+            bytes(self.cv) +
+            self.nullifier +
+            bytes(self.rk)
+        )
 
     def __bytes__(self):
         return (
@@ -103,14 +144,41 @@ class OutputDescription(object):
         self.outCipherText = rand.b(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
         self.proof = GrothProof(rand)
 
-    def __bytes__(self):
+    def bytes_v5(self):
         return (
             bytes(self.cv) +
             bytes(self.cmu) +
             bytes(self.ephemeralKey) +
             self.encCiphertext +
-            self.outCipherText +
+            self.outCipherText
+        )
+
+    def __bytes__(self):
+        return (
+            self.bytes_v5() +
             bytes(self.proof)
+        )
+
+class OrchardActionDescription(object):
+    def __init__(self, rand):
+        self.cv = pallas_group_hash(b'TVRandPt', rand.b(32))
+        self.nullifier = PallasBase(leos2ip(rand.b(32)))
+        self.rk = pallas_group_hash(b'TVRandPt', rand.b(32))
+        self.cmx = PallasBase(leos2ip(rand.b(32)))
+        self.ephemeralKey = pallas_group_hash(b'TVRandPt', rand.b(32))
+        self.encCiphertext = rand.b(ZC_SAPLING_ENCCIPHERTEXT_SIZE)
+        self.outCiphertext = rand.b(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
+        self.spendAuthSig = RedPallasSignature(rand)
+
+    def __bytes__(self):
+        return (
+            bytes(self.cv) +
+            bytes(self.nullifier) +
+            bytes(self.rk) +
+            bytes(self.cmx) +
+            bytes(self.ephemeralKey) +
+            self.encCiphertext +
+            self.outCiphertext
         )
 
 class JoinSplit(object):
@@ -197,7 +265,7 @@ class TxOut(object):
         return struct.pack('<Q', self.nValue) + bytes(self.scriptPubKey)
 
 
-class Transaction(object):
+class LegacyTransaction(object):
     def __init__(self, rand, version):
         if version == OVERWINTER_TX_VERSION:
             self.fOverwintered = True
@@ -295,3 +363,138 @@ class Transaction(object):
             ret += self.bindingSig
 
         return ret
+
+
+class TransactionV5(object):
+    def __init__(self, rand, consensus_branch_id):
+        # Decide which transaction parts will be generated.
+        flip_coins = rand.u8()
+        have_transparent_in = (flip_coins >> 0) % 2
+        have_transparent_out = (flip_coins >> 1) % 2
+        have_sapling = (flip_coins >> 2) % 2
+        have_orchard = (flip_coins >> 3) % 2
+
+        # Common Transaction Fields
+        self.nVersionGroupId = NU5_VERSION_GROUP_ID
+        self.nConsensusBranchId = consensus_branch_id
+        self.nLockTime = rand.u32()
+        self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
+
+        # Transparent Transaction Fields
+        self.vin = []
+        self.vout = []
+        if have_transparent_in:
+            for _ in range((rand.u8() % 3) + 1):
+                self.vin.append(TxIn(rand))
+        if have_transparent_out:
+            for _ in range((rand.u8() % 3) + 1):
+                self.vout.append(TxOut(rand))
+
+        # Sapling Transaction Fields
+        self.vSpendsSapling = []
+        self.vOutputsSapling = []
+        if have_sapling:
+            self.anchorSapling = Fq(leos2ip(rand.b(32)))
+            for _ in range(rand.u8() % 3):
+                self.vSpendsSapling.append(SpendDescription(rand, self.anchorSapling))
+            for _ in range(rand.u8() % 3):
+                self.vOutputsSapling.append(OutputDescription(rand))
+            self.valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
+            self.bindingSigSapling = RedJubjubSignature(rand)
+        else:
+            # If valueBalanceSapling is not present in the serialized transaction, then
+            # v^balanceSapling is defined to be 0.
+            self.valueBalanceSapling = 0
+
+        # Orchard Transaction Fields
+        self.vActionsOrchard = []
+        if have_orchard:
+            for _ in range(rand.u8() % 5):
+                self.vActionsOrchard.append(OrchardActionDescription(rand))
+            self.flagsOrchard = rand.u8() & 3 # Only two flag bits are currently defined.
+            self.valueBalanceOrchard = rand.u64() % (MAX_MONEY + 1)
+            self.anchorOrchard = PallasBase(leos2ip(rand.b(32)))
+            self.proofsOrchard = rand.b(rand.u8() + 32) # Proof will always contain at least one element
+            self.bindingSigOrchard = RedPallasSignature(rand)
+        else:
+            # If valueBalanceOrchard is not present in the serialized transaction, then
+            # v^balanceOrchard is defined to be 0.
+            self.valueBalanceOrchard = 0
+
+    def header(self):
+        return NU5_TX_VERSION | (1 << 31)
+
+    # TODO: Update ZIP 225 to document endianness
+    def __bytes__(self):
+        ret = b''
+
+        # Common Transaction Fields
+        ret += struct.pack('<I', self.header())
+        ret += struct.pack('<I', self.nVersionGroupId)
+        ret += struct.pack('<I', self.nConsensusBranchId)
+        ret += struct.pack('<I', self.nLockTime)
+        ret += struct.pack('<I', self.nExpiryHeight)
+
+        # Transparent Transaction Fields
+        ret += write_compact_size(len(self.vin))
+        for x in self.vin:
+            ret += bytes(x)
+        ret += write_compact_size(len(self.vout))
+        for x in self.vout:
+            ret += bytes(x)
+
+        # Sapling Transaction Fields
+        hasSapling = len(self.vSpendsSapling) + len(self.vOutputsSapling) > 0
+        ret += write_compact_size(len(self.vSpendsSapling))
+        for desc in self.vSpendsSapling:
+            ret += desc.bytes_v5()
+        ret += write_compact_size(len(self.vOutputsSapling))
+        for desc in self.vOutputsSapling:
+            ret += desc.bytes_v5()
+        if hasSapling:
+            ret += struct.pack('<Q', self.valueBalanceSapling)
+        if len(self.vSpendsSapling) > 0:
+            ret += bytes(self.anchorSapling)
+            # Not explicitly gated in the protocol spec, but if the gate
+            # were inactive then these loops would be empty by definition.
+            for desc in self.vSpendsSapling: # vSpendProofsSapling
+                ret += bytes(desc.proof)
+            for desc in self.vSpendsSapling: # vSpendAuthSigsSapling
+                ret += bytes(desc.spendAuthSig)
+        for desc in self.vOutputsSapling: # vOutputProofsSapling
+            ret += bytes(desc.proof)
+        if hasSapling:
+            ret += bytes(self.bindingSigSapling)
+
+        # Orchard Transaction Fields
+        ret += write_compact_size(len(self.vActionsOrchard))
+        if len(self.vActionsOrchard) > 0:
+            # Not explicitly gated in the protocol spec, but if the gate
+            # were inactive then these loops would be empty by definition.
+            for desc in self.vActionsOrchard:
+                ret += bytes(desc) # Excludes spendAuthSig
+            ret += struct.pack('B', self.flagsOrchard)
+            ret += struct.pack('<Q', self.valueBalanceOrchard)
+            ret += bytes(self.anchorOrchard)
+            ret += write_compact_size(len(self.proofsOrchard))
+            ret += self.proofsOrchard
+            for desc in self.vActionsOrchard:
+                ret += bytes(desc.spendAuthSig)
+            ret += bytes(self.bindingSigOrchard)
+
+        return ret
+
+
+class Transaction(object):
+    def __init__(self, rand, version, consensus_branch_id=None):
+        if version == NU5_TX_VERSION:
+            assert consensus_branch_id is not None
+            self.inner = TransactionV5(rand, consensus_branch_id)
+        else:
+            self.inner = LegacyTransaction(rand, version)
+
+    def __getattr__(self, item):
+        return getattr(self.inner, item)
+
+    def __bytes__(self):
+        return bytes(self.inner)
