@@ -66,7 +66,7 @@ def hash_to_field(msg, dst):
     L = cldiv(math.ceil(math.log2(p)) + k, 8)
     assert L == 512/8
 
-    len_in_bytes = count * 1 * L
+    len_in_bytes = count * m * L
     uniform_bytes = expand_message_xmd(msg, dst, len_in_bytes)
 
     elements = []
