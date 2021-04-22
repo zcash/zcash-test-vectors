@@ -88,7 +88,7 @@ def map_to_curve_simple_swu(u):
     B = PALLAS_ISO_B
     Z = Fp(-13, False)
     c1 = -B / A
-    c2 = Fp(-1)
+    c2 = Fp(-1) / Z
 
     tv1 = Z * u.exp(2)
     tv2 = tv1.exp(2)
