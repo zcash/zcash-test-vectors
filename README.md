@@ -2,7 +2,7 @@
 
 Code to generate test vectors for various parts of Zcash.
 
-Requires `pyblake2`.
+Requires `pyblake2` and `bitstring`.
 
 `sapling_note_encryption.py` also requires `chacha20poly1305`.
 
