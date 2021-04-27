@@ -7,27 +7,26 @@ import orchard_iso_pallas
 
 from orchard_pallas import Fp, Point
 from sapling_utils import cldiv, lebs2ip, i2leosp
-from bitstring import BitArray
 from orchard_group_hash import group_hash
 
 SINSEMILLA_K = 10
 
+# Interprets a string or a list as a sequence of bits.
+def str_to_bits(s):
+    for c in s:
+        assert c in ['0', '1', 0, 1, False, True]
+    # Regular Python truthiness is fine here except for bool('0') == True.
+    return [c != '0' and bool(c) for c in s]
+
 def pad(n, m):
-    padding_needed = n * SINSEMILLA_K - m.len
-    zeros = BitArray(bin='0' * padding_needed)
-    m = m + zeros
+    padding_needed = n * SINSEMILLA_K - len(m)
+    zeros = [0] * padding_needed
+    m = list(m) + zeros
 
-    pieces = []
-    for i in range(n):
-        pieces.append(
-            lebs2ip(m[i*SINSEMILLA_K : (i+1)*SINSEMILLA_K])
-        )
-
-    return pieces
+    return [lebs2ip(str_to_bits(m[i*SINSEMILLA_K : (i+1)*SINSEMILLA_K])) for i in range(n)]
 
 def sinsemilla_hash_to_point(d, m):
-    assert isinstance(m, BitArray)
-    n = cldiv(m.len, SINSEMILLA_K)
+    n = cldiv(len(m), SINSEMILLA_K)
     m = pad(n, m)
     acc = group_hash(b"z.cash:SinsemillaQ", d)
 
@@ -48,6 +47,6 @@ if __name__ == "__main__":
                        Fp(851679174277466283220362715537906858808436854303373129825287392516025427980))
 
     # 40 bits, so no padding
-    sh = sinsemilla_hash_to_point(b"z.cash:test-Sinsemilla", BitArray(bin='0001011010100110001101100011011011110110'))
+    sh = sinsemilla_hash_to_point(b"z.cash:test-Sinsemilla", '0001011010100110001101100011011011110110')
     assert sh == Point(Fp(19681977528872088480295086998934490146368213853811658798708435106473481753752),
                        Fp(14670850419772526047574141291705097968771694788047376346841674072293161339903))
