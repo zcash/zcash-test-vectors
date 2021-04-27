@@ -155,11 +155,11 @@ def sinsemilla_hash_to_point(d, m):
     n = cldiv(m.len, SINSEMILLA_K)
     m = pad(n, m)
     acc = group_hash(b"z.cash:SinsemillaQ", d)
-    #print("acc", acc)
 
     for m_i in m:
-        acc = acc + group_hash(b"z.cash:SinsemillaS", i2leosp(32, m_i)) + acc
-        #print("acc", acc)
+        acc = acc.checked_incomplete_add(
+            group_hash(b"z.cash:SinsemillaS", i2leosp(32, m_i))
+        ).checked_incomplete_add(acc)
 
     return acc
 

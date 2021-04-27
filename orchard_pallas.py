@@ -182,6 +182,13 @@ class Point(object):
             else:
                 return self.double()
 
+    def checked_incomplete_add(self, a):
+        assert self != a
+        assert self != -a
+        assert self != Point.identity()
+        assert self != Point.identity()
+        return self + a
+
     def __sub__(self, a):
         return (-a) + self
 
