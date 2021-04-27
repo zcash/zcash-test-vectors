@@ -136,6 +136,35 @@ def group_hash(d, m):
 
 
 def main():
+    map_to_curve_test_vectors = [
+        (Fp(0), orchard_iso_pallas.Point(Fp(19938918781445865934736160264407396416050199005817793816893455093350997047296),
+                                         Fp(1448774895934493446148762800986014913165975534940595774801697325542407056356))),
+        (Fp(1), orchard_iso_pallas.Point(Fp(5290181550357368025040301950220623271393946308300025648720253222947454165280),
+                                         Fp(24520995241805476578231005891941079870703368870355132644748659103632565232759))),
+        (Fp(0x123456789abcdef123456789abcdef123456789abcdef123456789abcdef0123),
+                orchard_iso_pallas.Point(Fp(16711718778908753690082328243251803703269853000652055785581237369882690082595),
+                                         Fp(1764705856161931038824461929646873031992914829456409784642560948827969833589))),
+    ]
+
+    for (u, point) in map_to_curve_test_vectors:
+        P = map_to_curve_simple_swu(u)
+        assert P == point
+
+    print("map_to_curve_simple_swu (Pallas):")
+    render_tv(
+        render_args(),
+        'orchard_group_hash',
+        (
+            ('u', '[u8; 32]'),
+            ('point', '[u8; 32]'),
+        ),
+        [{
+            'u': bytes(u),
+            'point': bytes(point),
+        } for (u, point) in map_to_curve_test_vectors],
+    )
+    print("")
+
     group_hash_test_vectors = [
         # This is the Pallas test vector from the Sage and Rust code (in affine coordinates).
         (b"z.cash:test", b"Trans rights now!", Point(Fp(10899331951394555178876036573383466686793225972744812919361819919497009261523),
