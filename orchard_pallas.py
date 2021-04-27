@@ -186,7 +186,7 @@ class Point(object):
         assert self != a
         assert self != -a
         assert self != Point.identity()
-        assert self != Point.identity()
+        assert a != Point.identity()
         return self + a
 
     def __sub__(self, a):
