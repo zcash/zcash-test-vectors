@@ -17,16 +17,16 @@ NULLIFIER_K_BASE = group_hash(b'z.cash:Orchard', b'K')
 VALUE_COMMITMENT_VALUE_BASE = group_hash(b'z.cash:Orchard-cv', b'v')
 VALUE_COMMITMENT_RANDOMNESS_BASE = group_hash(b'z.cash:Orchard-cv', b'r')
 
-# Used in SinsemillaCommit (https://zips.z.cash/protocol/nu5.pdf#sinsemillacommitments)
+# Used in SinsemillaCommit (https://zips.z.cash/protocol/nu5.pdf#concretesinsemillacommit)
 NOTE_COMMITMENT_BASE = group_hash(b'z.cash:Orchard-NoteCommit-r', b'')
-NOTE_COMMITMENT_Q = group_hash(b'z.cash:Orchard-NoteCommit-M', b'')
+NOTE_COMMITMENT_Q = group_hash(b'z.cash:SinsemillaQ', b'z.cash:Orchard-NoteCommit-M')
 
-# Used in SinsemillaShortCommit (https://zips.z.cash/protocol/nu5.pdf#sinsemillacommitments)
+# Used in SinsemillaShortCommit (https://zips.z.cash/protocol/nu5.pdf#concretesinsemillacommit)
 IVK_COMMITMENT_BASE = group_hash(b'z.cash:Orchard-CommitIvk-r', b'')
-IVK_COMMITMENT_Q = group_hash(b'z.cash:Orchard-CommitIvk-M', b'')
+IVK_COMMITMENT_Q = group_hash(b'z.cash:SinsemillaQ', b'z.cash:Orchard-CommitIvk-M')
 
 # Used in SinsemillaHash (https://zips.z.cash/protocol/nu5.pdf#orchardmerklecrh)
-MERKLE_CRH_Q = group_hash(b'z.cash:Orchard-MerkleCRH', b'')
+MERKLE_CRH_Q = group_hash(b'z.cash:SinsemillaQ', b'z.cash:Orchard-MerkleCRH')
 
 def main():
     render_tv(
