@@ -122,7 +122,7 @@ def map_to_curve_simple_swu(u):
 
     y = y if e3 else -y  #y = CMOV(-y, y, e3)
 
-    return orchard_iso_pallas.Point(x, y).iso_map()
+    return orchard_iso_pallas.Point(x, y)
 
 def group_hash(d, m):
     dst = d + b"-" + b"pallas" + b"_XMD:BLAKE2b_SSWU_RO_"
@@ -130,7 +130,7 @@ def group_hash(d, m):
     elems = hash_to_field(m, dst)
     assert len(elems) == 2
 
-    q = [map_to_curve_simple_swu(elems[0]), map_to_curve_simple_swu(elems[1])]
+    q = [map_to_curve_simple_swu(elems[0]).iso_map(), map_to_curve_simple_swu(elems[1]).iso_map()]
 
     return q[0] + q[1]
 
