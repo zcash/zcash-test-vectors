@@ -136,21 +136,17 @@ def group_hash(d, m):
 
 
 def main():
-    test_vectors = [
-        (b"z.cash:test", b"Trans rights now!"),
+    group_hash_test_vectors = [
+        # This is the Pallas test vector from the Sage and Rust code (in affine coordinates).
+        (b"z.cash:test", b"Trans rights now!", Point(Fp(10899331951394555178876036573383466686793225972744812919361819919497009261523),
+                                                     Fp(851679174277466283220362715537906858808436854303373129825287392516025427980))),
     ]
 
-    # This is the Pallas test vector from the Sage and Rust code (in affine coordinates).
-    gh = group_hash(test_vectors[0][0], test_vectors[0][1])
-    assert gh == Point(Fp(10899331951394555178876036573383466686793225972744812919361819919497009261523),
-                       Fp(851679174277466283220362715537906858808436854303373129825287392516025427980))
+    for (domain, msg, point) in group_hash_test_vectors:
+        gh = group_hash(domain, msg)
+        assert gh == point
 
-    test_vectors = [{
-        'domain': domain,
-        'msg': msg,
-        'point': bytes(group_hash(domain, msg)),
-    } for (domain, msg) in test_vectors]
-
+    print("group_hash (Pallas):")
     render_tv(
         render_args(),
         'orchard_group_hash',
@@ -159,8 +155,13 @@ def main():
             ('msg', 'Vec<u8>'),
             ('point', '[u8; 32]'),
         ),
-        test_vectors,
+        [{
+            'domain': domain,
+            'msg': msg,
+            'point': bytes(point),
+        } for (domain, msg, point) in group_hash_test_vectors],
     )
+    print("")
 
 
 if __name__ == "__main__":
