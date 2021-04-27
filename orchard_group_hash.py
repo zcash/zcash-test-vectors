@@ -9,6 +9,7 @@ from pyblake2 import blake2b
 from orchard_pallas import Fp, p, q, PALLAS_B, Point
 from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
 from sapling_utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
+from tv_output import render_args, render_tv
 
 # https://stackoverflow.com/questions/2612720/how-to-do-bitwise-exclusive-or-of-two-strings-in-python
 def sxor(s1,s2):
@@ -132,3 +133,35 @@ def group_hash(d, m):
     q = [map_to_curve_simple_swu(elems[0]), map_to_curve_simple_swu(elems[1])]
 
     return q[0] + q[1]
+
+
+def main():
+    test_vectors = [
+        (b"z.cash:test", b"Trans rights now!"),
+    ]
+
+    # This is the Pallas test vector from the Sage and Rust code (in affine coordinates).
+    gh = group_hash(test_vectors[0][0], test_vectors[0][1])
+    assert gh == Point(Fp(10899331951394555178876036573383466686793225972744812919361819919497009261523),
+                       Fp(851679174277466283220362715537906858808436854303373129825287392516025427980))
+
+    test_vectors = [{
+        'domain': domain,
+        'msg': msg,
+        'point': bytes(group_hash(domain, msg)),
+    } for (domain, msg) in test_vectors]
+
+    render_tv(
+        render_args(),
+        'orchard_group_hash',
+        (
+            ('domain', 'Vec<u8>'),
+            ('msg', 'Vec<u8>'),
+            ('point', '[u8; 32]'),
+        ),
+        test_vectors,
+    )
+
+
+if __name__ == "__main__":
+    main()

@@ -8,6 +8,7 @@ import orchard_iso_pallas
 from orchard_pallas import Fp, Point
 from sapling_utils import cldiv, lebs2ip, i2leosp
 from orchard_group_hash import group_hash
+from tv_output import render_args, render_tv
 
 SINSEMILLA_K = 10
 
@@ -40,13 +41,39 @@ def sinsemilla_hash_to_point(d, m):
 def sinsemilla_hash(d, m):
     return sinsemilla_hash_to_point(d, m).extract()
 
-if __name__ == "__main__":
-    # This is the Pallas test vector from the Sage and Rust code (in affine coordinates).
-    gh = group_hash(b"z.cash:test", b"Trans rights now!")
-    assert gh == Point(Fp(10899331951394555178876036573383466686793225972744812919361819919497009261523),
-                       Fp(851679174277466283220362715537906858808436854303373129825287392516025427980))
 
-    # 40 bits, so no padding
-    sh = sinsemilla_hash_to_point(b"z.cash:test-Sinsemilla", '0001011010100110001101100011011011110110')
+def main():
+    test_vectors = [
+        # 40 bits, so no padding
+        (b"z.cash:test-Sinsemilla", [0,0,0,1,0,1,1,0,1,0,1,0,0,1,1,0,0,0,1,1,0,1,1,0,0,0,1,1,0,1,1,0,1,1,1,1,0,1,1,0]),
+    ]
+
+    sh = sinsemilla_hash_to_point(test_vectors[0][0], test_vectors[0][1])
     assert sh == Point(Fp(19681977528872088480295086998934490146368213853811658798708435106473481753752),
                        Fp(14670850419772526047574141291705097968771694788047376346841674072293161339903))
+
+    test_vectors = [{
+        'domain': domain,
+        'msg': msg,
+        'point': bytes(sinsemilla_hash_to_point(domain, msg)),
+        'hash': bytes(sinsemilla_hash(domain, msg)),
+    } for (domain, msg) in test_vectors]
+
+    render_tv(
+        render_args(),
+        'orchard_sinsemilla',
+        (
+            ('domain', 'Vec<u8>'),
+            ('msg', {
+                'rust_type': 'Vec<bool>',
+                'rust_fmt': lambda x: str_to_bits(x),
+            }),
+            ('point', '[u8; 32]'),
+            ('hash', '[u8; 32]'),
+        ),
+        test_vectors,
+    )
+
+
+if __name__ == "__main__":
+    main()
