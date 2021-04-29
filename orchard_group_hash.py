@@ -10,6 +10,7 @@ from orchard_pallas import Fp, p, q, PALLAS_B, Point
 from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
 from sapling_utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
 from tv_output import render_args, render_tv
+from tv_rand import Rand
 
 # https://stackoverflow.com/questions/2612720/how-to-do-bitwise-exclusive-or-of-two-strings-in-python
 def sxor(s1,s2):
@@ -147,6 +148,25 @@ def main():
         assert gh == point
 
     test_vectors = [(domain, msg) for (domain, msg, _) in fixed_test_vectors]
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    # Generate test vectors with the following properties:
+    # - One of two domains.
+    # - Random message lengths between 0 and 255 bytes.
+    # - Random message contents.
+    for _ in range(10):
+        domain = b"z.cash:test-longer" if rand.bool() else b"z.cash:test"
+        msg_len = rand.u8()
+        msg = bytes([rand.u8() for _ in range(msg_len)])
+        test_vectors.append((domain, msg))
 
     render_tv(
         render_args(),

@@ -9,6 +9,7 @@ from orchard_pallas import Fp, Point
 from sapling_utils import cldiv, lebs2ip, i2leosp
 from orchard_group_hash import group_hash
 from tv_output import render_args, render_tv
+from tv_rand import Rand
 
 SINSEMILLA_K = 10
 
@@ -51,6 +52,25 @@ def main():
     sh = sinsemilla_hash_to_point(test_vectors[0][0], test_vectors[0][1])
     assert sh == Point(Fp(19681977528872088480295086998934490146368213853811658798708435106473481753752),
                        Fp(14670850419772526047574141291705097968771694788047376346841674072293161339903))
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    # Generate test vectors with the following properties:
+    # - One of two domains.
+    # - Random message lengths between 0 and 255 bytes.
+    # - Random message bits.
+    for _ in range(10):
+        domain = b"z.cash:test-Sinsemilla-longer" if rand.bool() else b"z.cash:test-Sinsemilla"
+        msg_len = rand.u8()
+        msg = bytes([rand.bool() for _ in range(msg_len)])
+        test_vectors.append((domain, msg))
 
     test_vectors = [{
         'domain': domain,

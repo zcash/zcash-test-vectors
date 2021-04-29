@@ -3,7 +3,9 @@
 from orchard_group_hash import map_to_curve_simple_swu
 from orchard_iso_pallas import Point as IsoPoint
 from orchard_pallas import Fp
+from sapling_utils import leos2ip
 from tv_output import render_args, render_tv
+from tv_rand import Rand
 
 
 def main():
@@ -22,6 +24,19 @@ def main():
         assert P == point
 
     test_vectors = [u for (u, _) in fixed_test_vectors]
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    # Generate random test vectors
+    for _ in range(10):
+        test_vectors.append(Fp(leos2ip(rand.b(32))))
 
     render_tv(
         render_args(),
