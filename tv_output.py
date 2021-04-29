@@ -75,6 +75,17 @@ def tv_vec_bytes_rust(name, value, pad):
         pad,
     ))
 
+def tv_vec_bool_rust(name, value, pad):
+    print('''%s%s: vec![
+    %s%s
+%s],''' % (
+        pad,
+        name,
+        pad,
+        ', '.join(['true' if x else 'false' for x in value]),
+        pad,
+    ))
+
 def tv_option_bytes_rust(name, value, pad):
     if value:
         print('''%s%s: Some([
@@ -121,6 +132,8 @@ def tv_part_rust(name, value, config, indent=3):
         tv_option_vec_bytes_rust(name, value, pad)
     elif config['rust_type'] == 'Vec<u8>':
         tv_vec_bytes_rust(name, value, pad)
+    elif config['rust_type'] == 'Vec<bool>':
+        tv_vec_bool_rust(name, value, pad)
     elif config['rust_type'].startswith('Option<['):
         tv_option_bytes_rust(name, value, pad)
     elif type(value) == bytes:

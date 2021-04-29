@@ -113,7 +113,7 @@ def main():
     for i in range(10):
         tx = Transaction(rand, OVERWINTER_TX_VERSION)
         scriptCode = Script(rand)
-        nIn = rand.u8() % (len(tx.vin) + 1)
+        nIn = rand.i8() % (len(tx.vin) + 1)
         if nIn == len(tx.vin):
             nIn = NOT_AN_INPUT
         nHashType = SIGHASH_ALL if nIn == NOT_AN_INPUT else rand.a([

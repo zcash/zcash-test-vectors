@@ -37,6 +37,10 @@ class Fp(FieldElement):
     def __str__(self):
         return 'Fp(%s)' % self.s
 
+    def sgn0(self):
+        # https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-10#section-4.1
+        return (self.s % 2) == 1
+
     def sqrt(self):
         # Tonelli-Shank's algorithm for p mod 16 = 1
         # https://eprint.iacr.org/2012/685.pdf (page 12, algorithm 5)
@@ -138,14 +142,19 @@ class Point(object):
 
         return Point(x, y)
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, is_identity=False):
         self.x = x
         self.y = y
-        self.is_identity = False
+        self.is_identity = is_identity
+
+        if is_identity:
+            assert self.x == Fp.ZERO
+            assert self.y == Fp.ZERO
+        else:
+            assert self.y * self.y == self.x * self.x * self.x + PALLAS_B
 
     def identity():
-        p = Point(Fp.ZERO, Fp.ZERO)
-        p.is_identity = True
+        p = Point(Fp.ZERO, Fp.ZERO, True)
         return p
 
     def __neg__(self):
@@ -174,6 +183,13 @@ class Point(object):
             else:
                 return self.double()
 
+    def checked_incomplete_add(self, a):
+        assert self != a
+        assert self != -a
+        assert self != Point.identity()
+        assert a != Point.identity()
+        return self + a
+
     def __sub__(self, a):
         return (-a) + self
 
@@ -186,6 +202,11 @@ class Point(object):
         x = λ*λ - self.x - self.x
         y = λ*(self.x - x) - self.y
         return Point(x, y)
+    
+    def extract(self):
+        if self.is_identity:
+            return Fp.ZERO
+        return self.x
 
     def __mul__(self, s):
         s = format(s.s, '0256b')
