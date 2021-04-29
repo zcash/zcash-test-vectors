@@ -155,7 +155,7 @@ RAND_OPCODES = [
 class Script(object):
     def __init__(self, rand):
         self._script = bytes([
-            rand.a(RAND_OPCODES) for i in range(rand.u8() % 10)
+            rand.a(RAND_OPCODES) for i in range(rand.i8() % 10)
         ])
 
     def raw(self):
@@ -212,11 +212,11 @@ class Transaction(object):
             self.nVersion = rand.u32() & ((1 << 31) - 1)
 
         self.vin = []
-        for i in range(rand.u8() % 3):
+        for i in range(rand.i8() % 3):
             self.vin.append(TxIn(rand))
 
         self.vout = []
-        for i in range(rand.u8() % 3):
+        for i in range(rand.i8() % 3):
             self.vout.append(TxOut(rand))
 
         self.nLockTime = rand.u32()
@@ -227,14 +227,14 @@ class Transaction(object):
         self.vShieldedSpends = []
         self.vShieldedOutputs = []
         if self.nVersion >= SAPLING_TX_VERSION:
-            for _ in range(rand.u8() % 5):
+            for _ in range(rand.i8() % 5):
                 self.vShieldedSpends.append(SpendDescription(rand))
-            for _ in range(rand.u8() % 5):
+            for _ in range(rand.i8() % 5):
                 self.vShieldedOutputs.append(OutputDescription(rand))
 
         self.vJoinSplit = []
         if self.nVersion >= 2:
-            for i in range(rand.u8() % 3):
+            for i in range(rand.i8() % 3):
                 self.vJoinSplit.append(JoinSplit(rand, self.fOverwintered and self.nVersion >= SAPLING_TX_VERSION))
             if len(self.vJoinSplit) > 0:
                 self.joinSplitPubKey = rand.b(32) # Potentially invalid

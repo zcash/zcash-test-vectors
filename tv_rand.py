@@ -12,8 +12,11 @@ class Rand(object):
     def v(self, l, f):
         return struct.unpack(f, self.b(l))[0]
 
-    def u8(self):
+    def i8(self):
         return self.v(1, 'b')
+
+    def u8(self):
+        return self.v(1, 'B')
 
     def u32(self):
         return self.v(4, '<I')
