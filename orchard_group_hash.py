@@ -99,10 +99,7 @@ def map_to_curve_simple_swu(u):
     e1 = x1 == Fp(0)
     x1 = x1 + Fp(1)
 
-    if e1:
-        x1 = c2
-    else:
-        x1 = x1
+    x1 = c2 if e1 else x1    # If (tv1 + tv2) == 0, set x1 = -1 / Z
 
     x1 = x1 * c1      # x1 = (-B / A) * (1 + (1 / (Z^2 * u^4 + Z * u^2)))
     gx1 = x1.exp(2)

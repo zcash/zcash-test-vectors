@@ -97,6 +97,7 @@ class Point(object):
         elif a.is_identity:
             return self
         else:
+            # Hüseyin Hışıl. “Elliptic Curves, Group Law, and Efficient Computation”. PhD thesis.
             # <https://core.ac.uk/download/pdf/10898289.pdf> section 4.1
             (x1, y1) = (self.x, self.y)
             (x2, y2) = (a.x, a.y)
@@ -119,6 +120,7 @@ class Point(object):
         if self.is_identity:
             return self
 
+        # Hüseyin Hışıl. “Elliptic Curves, Group Law, and Efficient Computation”. PhD thesis.
         # <https://core.ac.uk/download/pdf/10898289.pdf> section 4.1
         λ = (Fp(3) * self.x * self.x + PALLAS_ISO_A) / (self.y + self.y)
         x3 = λ*λ - self.x - self.x
