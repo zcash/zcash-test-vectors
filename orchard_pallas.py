@@ -31,6 +31,9 @@ class Fp(FieldElement):
     def from_bytes(buf):
         return Fp(leos2ip(buf), strict=True)
 
+    def random(randbytes):
+        return Fp(leos2ip(randbytes(32)), strict=False)
+
     def __init__(self, s, strict=False):
         FieldElement.__init__(self, Fp, s, p, strict=strict)
 
@@ -89,6 +92,13 @@ class Scalar(FieldElement):
 
     def __str__(self):
         return 'Scalar(%s)' % self.s
+
+    @staticmethod
+    def from_bytes(buf):
+        return Scalar(leos2ip(buf), strict=True)
+
+    def random(randbytes):
+        return Scalar(leos2ip(randbytes(32)), strict=False)
 
 Fp.ZERO = Fp(0)
 Fp.ONE = Fp(1)
