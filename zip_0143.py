@@ -19,20 +19,20 @@ SIGHASH_ANYONECANPAY = 0x80
 
 NOT_AN_INPUT = -1 # For portability of the test vectors; replaced with None for Rust
 
-def getHashPrevouts(tx):
-    digest = blake2b(digest_size=32, person=b'ZcashPrevoutHash')
+def getHashPrevouts(tx, person=b'ZcashPrevoutHash'):
+    digest = blake2b(digest_size=32, person=person)
     for x in tx.vin:
         digest.update(bytes(x.prevout))
     return digest.digest()
 
-def getHashSequence(tx):
-    digest = blake2b(digest_size=32, person=b'ZcashSequencHash')
+def getHashSequence(tx, person=b'ZcashSequencHash'):
+    digest = blake2b(digest_size=32, person=person)
     for x in tx.vin:
         digest.update(struct.pack('<I', x.nSequence))
     return digest.digest()
 
-def getHashOutputs(tx):
-    digest = blake2b(digest_size=32, person=b'ZcashOutputsHash')
+def getHashOutputs(tx, person=b'ZcashOutputsHash'):
+    digest = blake2b(digest_size=32, person=person)
     for x in tx.vout:
         digest.update(bytes(x))
     return digest.digest()
