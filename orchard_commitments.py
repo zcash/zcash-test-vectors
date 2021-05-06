@@ -23,8 +23,9 @@ def rcv_trapdoor(randbytes):
 
 # https://zips.z.cash/protocol/nu5.pdf#concretesinsemillacommit
 def sinsemilla_commit(r: Scalar, D, M):
+    assert isinstance(r, Scalar)
     return sinsemilla_hash_to_point(D + b"-M", M).checked_incomplete_add(
-        r * group_hash(D + b"-r", "")
+        group_hash(D + b"-r", b"") * r
     )
 
 def sinsemilla_short_commit(r: Scalar, D, M):
@@ -34,20 +35,20 @@ def sinsemilla_short_commit(r: Scalar, D, M):
 def note_commit(rcm, g_d, pk_d, v, rho, psi):
     return sinsemilla_commit(
         rcm,
-        "z.cash: Orchard-NoteCommit",
-        g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho) + i2lebsp(L_ORCHARD_BASE, psi)
+        b"z.cash: Orchard-NoteCommit",
+        g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho.s) + i2lebsp(L_ORCHARD_BASE, psi.s)
     )
 
 def rcm_trapdoor(randbytes):
     return Scalar.random(randbytes)
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardnotecommit
-def commit_ivk(rivk, ak, nk):
-    return sinsemilla_short_commit(
+def commit_ivk(rivk: Scalar, ak: Fp, nk: Fp):
+    return Scalar(sinsemilla_short_commit(
         rivk,
-        "z.cash: Orchard-CommitIvk",
-        i2lebsp(L_ORCHARD_BASE, ak) + i2lebsp(L_ORCHARD_BASE, nk)
-    )
+        b"z.cash: Orchard-CommitIvk",
+        i2lebsp(L_ORCHARD_BASE, ak.s) + i2lebsp(L_ORCHARD_BASE, nk.s)
+    ).s)
 
 def rivk_trapdoor(randbytes):
     return Scalar.random(randbytes)

@@ -16,7 +16,9 @@ from tv_rand import Rand
 def sxor(s1,s2):
     return bytes([a ^ b for a,b in zip(s1,s2)])
 
-def expand_message_xmd(msg, dst, len_in_bytes):
+def expand_message_xmd(msg: bytes, dst: bytes, len_in_bytes: int):
+    assert isinstance(msg, bytes)
+    assert isinstance(dst, bytes)
     assert len(dst) <= 255
 
     b_in_bytes = 64 # hash function output size
