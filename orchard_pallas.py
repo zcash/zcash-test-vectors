@@ -109,16 +109,17 @@ class Scalar(FieldElement):
                 pass
 
 
-Fp.ZERO = Fp(0)
-Fp.ONE = Fp(1)
-Fp.MINUS_ONE = Fp(-1)
+for F in (Fp, Scalar):
+    F.ZERO = F(0)
+    F.ONE = F(1)
+    F.MINUS_ONE = F(-1)
 
-assert Fp.ZERO + Fp.ZERO == Fp.ZERO
-assert Fp.ZERO + Fp.ONE == Fp.ONE
-assert Fp.ONE + Fp.ZERO == Fp.ONE
-assert Fp.ZERO - Fp.ONE == Fp.MINUS_ONE
-assert Fp.ZERO * Fp.ONE == Fp.ZERO
-assert Fp.ONE * Fp.ZERO == Fp.ZERO
+    assert F.ZERO + F.ZERO == F.ZERO
+    assert F.ZERO + F.ONE == F.ONE
+    assert F.ONE + F.ZERO == F.ONE
+    assert F.ZERO - F.ONE == F.MINUS_ONE
+    assert F.ZERO * F.ONE == F.ZERO
+    assert F.ONE * F.ZERO == F.ZERO
 
 
 #
