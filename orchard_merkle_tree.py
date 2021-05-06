@@ -17,7 +17,7 @@ def merkle_crh(layer, left, right):
     assert layer < MERKLE_DEPTH
     assert len(left) == L_MERKLE
     assert len(right) == L_MERKLE
-    l = i2lebsp(6, MERKLE_DEPTH - 1 - layer)
+    l = i2lebsp(10, MERKLE_DEPTH - 1 - layer)
     return sinsemilla_hash(b"z.cash:Orchard-MerkleCRH", l + left + right)
 
 left = unhexlify("87a086ae7d2252d58729b30263fb7b66308bf94ef59a76c9c86e7ea016536505")[::-1]
@@ -27,6 +27,6 @@ left = leos2bsp(left)[:L_MERKLE]
 right = leos2bsp(right)[:L_MERKLE]
 
 # parent = merkle_crh(MERKLE_DEPTH - 1 - 25, left, right)
-parent = Fp(17261766847362299889572407272882432634088514578301422827180452043349931590033)
+parent = Fp(626278560043615083774572461435172561667439770708282630516615972307985967801)
 assert merkle_crh(MERKLE_DEPTH - 1 - 25, left, right) == parent
 assert merkle_crh(MERKLE_DEPTH - 1 - 26, left, right) != parent
