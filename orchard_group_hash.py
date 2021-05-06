@@ -8,7 +8,7 @@ import orchard_iso_pallas
 from pyblake2 import blake2b
 from orchard_pallas import Fp, p, q, PALLAS_B, Point
 from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
-from sapling_utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
+from utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
 from tv_output import render_args, render_tv
 from tv_rand import Rand
 

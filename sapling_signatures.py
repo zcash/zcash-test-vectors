@@ -7,7 +7,7 @@ from pyblake2 import blake2b
 from sapling_generators import SPENDING_KEY_BASE
 from sapling_jubjub import Fr, Point, r_j
 from sapling_key_components import to_scalar
-from sapling_utils import cldiv, leos2ip
+from utils import cldiv, leos2ip
 from tv_output import render_args, render_tv
 
 

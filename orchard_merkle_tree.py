@@ -6,7 +6,7 @@ from binascii import unhexlify
 from orchard_pallas import Fp
 from orchard_sinsemilla import sinsemilla_hash
 
-from sapling_utils import i2lebsp, leos2bsp
+from utils import i2lebsp, leos2bsp
 
 # https://zips.z.cash/protocol/nu5.pdf#constants
 MERKLE_DEPTH = 32

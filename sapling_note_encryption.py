@@ -10,7 +10,7 @@ from sapling_generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RAN
 from sapling_jubjub import Fr, JUBJUB_COFACTOR
 from sapling_key_components import SpendingKey, diversify_hash
 from sapling_notes import note_commit
-from sapling_utils import leos2bsp, leos2ip
+from utils import leos2bsp, leos2ip
 from tv_output import render_args, render_tv
 
 
