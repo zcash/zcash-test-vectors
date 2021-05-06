@@ -32,7 +32,11 @@ class Fp(FieldElement):
         return Fp(leos2ip(buf), strict=True)
 
     def random(randbytes):
-        return Fp(leos2ip(randbytes(32)), strict=False)
+        while True:
+            try:
+                return Fp(leos2ip(randbytes(32)), strict=True)
+            except ValueError:
+                pass
 
     def __init__(self, s, strict=False):
         FieldElement.__init__(self, Fp, s, p, strict=strict)
@@ -98,7 +102,12 @@ class Scalar(FieldElement):
         return Scalar(leos2ip(buf), strict=True)
 
     def random(randbytes):
-        return Scalar(leos2ip(randbytes(32)), strict=False)
+        while True:
+            try:
+                return Scalar(leos2ip(randbytes(32)), strict=True)
+            except ValueError:
+                pass
+
 
 Fp.ZERO = Fp(0)
 Fp.ONE = Fp(1)
