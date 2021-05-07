@@ -142,6 +142,20 @@ def tv_part_rust(name, value, config, indent=3):
         tv_option_int_rust(name, value, pad)
     elif type(value) == int:
         tv_int_rust(name, value, pad)
+    elif type(value) == list:
+        print('''%s%s: [''' % (
+                pad,
+                name,
+            ))
+        for item in value:
+            if type(item) == bytes:
+                print('''%s[%s],''' % (
+                    '    ' * (indent + 1),
+                    chunk(hexlify(item)),
+                ))
+        print('''%s],''' % (
+                pad,
+            ))
     else:
         raise ValueError('Invalid type(%s): %s' % (name, type(value)))
 
