@@ -1,5 +1,8 @@
 from orchard_pallas import Fp
 import numpy as np
+from sapling_utils import leos2ip
+from tv_output import render_args, render_tv
+from tv_rand import Rand
 
 # Number of full rounds
 R_F = 8
@@ -7,12 +10,6 @@ R_F = 8
 R_P = 58
 # Width
 t = 3
-
-# Initial capacity element
-CAPACITY_ELEMENT = Fp(1 << 65)
-
-def poseidon_hash(x, y):
-    return perm([x, y, CAPACITY_ELEMENT])
 
 def perm(input_words):
     R_f = int(R_F / 2)
@@ -294,6 +291,38 @@ def main():
     ]
 
     assert perm(fixed_test_input) == fixed_test_output
+
+    test_vectors = [fixed_test_input]
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    # Generate random test vectors
+    for _ in range(10):
+        test_vectors.append([
+            Fp(leos2ip(rand.b(32))),
+            Fp(leos2ip(rand.b(32))),
+            Fp(leos2ip(rand.b(32)))
+        ])
+
+    render_tv(
+        render_args(),
+        'poseidon_perm',
+        (
+            ('input', '[[u8; 32]; 3]'),
+            ('output', '[[u8; 32]; 3]'),
+        ),
+        [{
+            'input': list(map(bytes, input)),
+            'output': list(map(bytes, perm(input))),
+        } for input in test_vectors],
+    )
 
 if __name__ == "__main__":
     main()
