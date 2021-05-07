@@ -10,7 +10,7 @@ CAPACITY_ELEMENT = Fp(1 << 65)
 def poseidon_hash(x, y):
     assert isinstance(x, Fp)
     assert isinstance(y, Fp)
-    return perm([x, y, CAPACITY_ELEMENT])
+    return perm([x, y, CAPACITY_ELEMENT])[0]
 
 def main():
     test_vectors = [[Fp.ZERO, Fp(1)]]
@@ -33,14 +33,14 @@ def main():
 
     render_tv(
         render_args(),
-        'poseidon_hash',
+        'orchard_poseidon_hash',
         (
             ('input', '[[u8; 32]; 2]'),
-            ('output', '[[u8; 32]; 3]'),
+            ('output', '[u8; 32]'),
         ),
         [{
             'input': list(map(bytes, input)),
-            'output': list(map(bytes, poseidon_hash(input[0], input[1]))),
+            'output': bytes(poseidon_hash(input[0], input[1])),
         } for input in test_vectors],
     )
 

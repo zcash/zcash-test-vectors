@@ -17,6 +17,7 @@ def perm(input_words):
     round_constants_counter = 0
 
     state_words = list(input_words)
+    assert len(state_words) == t
 
     # First full rounds
     for r in range(0, R_f):
@@ -313,7 +314,7 @@ def main():
 
     render_tv(
         render_args(),
-        'poseidon_perm',
+        'orchard_poseidon',
         (
             ('input', '[[u8; 32]; 3]'),
             ('output', '[[u8; 32]; 3]'),
