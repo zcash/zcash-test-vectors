@@ -18,8 +18,8 @@ def homomorphic_pedersen_commitment(rcv: Scalar, D, v: Scalar):
 def value_commit(rcv: Scalar, v: Scalar):
     return homomorphic_pedersen_commitment(rcv, b"z.cash:Orchard-cv", v)
 
-def rcv_trapdoor(randbytes):
-    return Scalar.random(randbytes)
+def rcv_trapdoor(rand):
+    return Scalar.random(rand)
 
 # https://zips.z.cash/protocol/nu5.pdf#concretesinsemillacommit
 def sinsemilla_commit(r: Scalar, D, M):
@@ -39,8 +39,8 @@ def note_commit(rcm, g_d, pk_d, v, rho, psi):
         g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho.s) + i2lebsp(L_ORCHARD_BASE, psi.s)
     )
 
-def rcm_trapdoor(randbytes):
-    return Scalar.random(randbytes)
+def rcm_trapdoor(rand):
+    return Scalar.random(rand)
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardnotecommit
 def commit_ivk(rivk: Scalar, ak: Fp, nk: Fp):
@@ -50,12 +50,13 @@ def commit_ivk(rivk: Scalar, ak: Fp, nk: Fp):
         i2lebsp(L_ORCHARD_BASE, ak.s) + i2lebsp(L_ORCHARD_BASE, nk.s)
     ).s)
 
-def rivk_trapdoor(randbytes):
-    return Scalar.random(randbytes)
+def rivk_trapdoor(rand):
+    return Scalar.random(rand)
 
 # Test consistency of ValueCommit^{Orchard} with precomputed generators
 def test_value_commit():
     from random import Random
+    from tv_rand import Rand
     from orchard_generators import VALUE_COMMITMENT_RANDOMNESS_BASE, VALUE_COMMITMENT_VALUE_BASE
 
     rng = Random(0xabad533d)
@@ -64,8 +65,9 @@ def test_value_commit():
         while len(ret) < l:
             ret.append(rng.randrange(0, 256))
         return bytes(ret)
+    rand = Rand(randbytes)
 
-    rcv = rcv_trapdoor(randbytes)
+    rcv = rcv_trapdoor(rand)
     v = Scalar(100000000)
 
     assert value_commit(rcv, v) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + VALUE_COMMITMENT_VALUE_BASE * v

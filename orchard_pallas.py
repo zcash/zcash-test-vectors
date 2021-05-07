@@ -31,10 +31,10 @@ class Fp(FieldElement):
     def from_bytes(buf):
         return Fp(leos2ip(buf), strict=True)
 
-    def random(randbytes):
+    def random(rand):
         while True:
             try:
-                return Fp(leos2ip(randbytes(32)), strict=True)
+                return Fp(leos2ip(rand.b(32)), strict=True)
             except ValueError:
                 pass
 
@@ -101,10 +101,10 @@ class Scalar(FieldElement):
     def from_bytes(buf):
         return Scalar(leos2ip(buf), strict=True)
 
-    def random(randbytes):
+    def random(rand):
         while True:
             try:
-                return Scalar(leos2ip(randbytes(32)), strict=True)
+                return Scalar(leos2ip(rand.b(32)), strict=True)
             except ValueError:
                 pass
 
