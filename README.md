@@ -2,9 +2,10 @@
 
 Code to generate test vectors for various parts of Zcash.
 
-Requires `pyblake2`.
-
-`sapling_note_encryption.py` also requires `chacha20poly1305`.
+Requirements:
+- `pyblake2`
+- `chacha20poly1305` (for `sapling_note_encryption.py`).
+- `numpy` (for `orchard_poseidon.py` and dependents).
 
 ## License
 
