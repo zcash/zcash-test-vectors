@@ -43,7 +43,7 @@ def prf_nf_orchard(nk, rho):
 
 def derive_nullifier(nk, rho: Fp, psi: Fp, cm):
     scalar = prf_nf_orchard(nk, rho) + psi  # addition mod p
-    point = NULLIFIER_K_BASE * to_scalar(scalar) + cm
+    point = NULLIFIER_K_BASE * Scalar(scalar.s) + cm
     return point.extract()
 
 #
