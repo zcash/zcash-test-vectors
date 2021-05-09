@@ -3,8 +3,9 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from pyblake2 import blake2b, blake2s
 
-from orchard_generators import SPENDING_KEY_BASE, group_hash
+from orchard_generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
 from orchard_pallas import Fp, Scalar, Point
+from orchard_poseidon_hash import poseidon_hash
 from orchard_merkle_tree import MERKLE_DEPTH
 from orchard_commitments import commit_ivk, note_commit
 from utils import leos2bsp, leos2ip, i2leosp
@@ -25,7 +26,7 @@ def to_base(buf):
 # PRFs and hashes
 #
 
-def prf_expand(sk, t):
+def prf_expand(sk: bytes, t: bytes):
     digest = blake2b(person=b'Zcash_ExpandSeed')
     digest.update(sk)
     digest.update(t)
@@ -36,6 +37,14 @@ def diversify_hash(d):
     if P == Point.identity():
         P = group_hash(b'z.cash:Orchard-gd', b'')
     return P
+
+def prf_nf_orchard(nk, rho):
+    return poseidon_hash(nk, rho)
+
+def derive_nullifier(nk, rho: Fp, psi: Fp, cm):
+    scalar = to_base(prf_nf_orchard(nk, rho)) + psi  # addition mod p
+    point = NULLIFIER_K_BASE * to_scalar(scalar) + cm
+    return point.extract()
 
 #
 # Key components
@@ -101,7 +110,7 @@ def main():
             note_v,
             note_rho,
             note_psi)
-        note_nf = b"0"*32 #note_nullifier(fvk.nk(), note_cm)
+        note_nf = derive_nullifier(fvk.nk, note_rho, note_psi, note_cm)
         test_vectors.append({
             'sk': sk.data,
             'ask': bytes(sk.ask),
@@ -115,7 +124,7 @@ def main():
             'note_v': note_v,
             'note_r': bytes(note_r),
             'note_cmx': bytes(note_cm.extract()),
-            'note_nf': note_nf,
+            'note_nf': bytes(note_nf),
         })
 
     render_tv(
