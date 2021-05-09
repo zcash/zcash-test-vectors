@@ -42,7 +42,7 @@ def prf_nf_orchard(nk, rho):
     return poseidon_hash(nk, rho)
 
 def derive_nullifier(nk, rho: Fp, psi: Fp, cm):
-    scalar = to_base(prf_nf_orchard(nk, rho)) + psi  # addition mod p
+    scalar = prf_nf_orchard(nk, rho) + psi  # addition mod p
     point = NULLIFIER_K_BASE * to_scalar(scalar) + cm
     return point.extract()
 
