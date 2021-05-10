@@ -8,19 +8,9 @@ from orchard_generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
 from orchard_pallas import Fp, Scalar, Point
 from orchard_poseidon_hash import poseidon_hash
 from orchard_commitments import commit_ivk, note_commit
-from utils import leos2bsp, leos2ip, i2leosp, i2lebsp, lebs2osp
+from utils import leos2bsp, i2leosp, i2lebsp, lebs2osp
+from orchard_utils import to_base, to_scalar
 from tv_output import render_args, render_tv
-
-#
-# Utilities
-#
-
-def to_scalar(buf):
-    return Scalar(leos2ip(buf))
-
-def to_base(buf):
-    return Fp(leos2ip(buf))
-
 
 #
 # PRFs and hashes
