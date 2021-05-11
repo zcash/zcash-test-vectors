@@ -87,7 +87,7 @@ class FullViewingKey(object):
         return i2leosp(88, 1337)
 
     def default_pkd(self):
-        return diversify_hash(self.default_d()) * self.ivk()
+        return diversify_hash(self.default_d()) * Scalar(self.ivk().s)
 
 
 def main():
