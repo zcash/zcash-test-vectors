@@ -44,11 +44,11 @@ def rcm_trapdoor(rand):
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardnotecommit
 def commit_ivk(rivk: Scalar, ak: Fp, nk: Fp):
-    return Scalar(sinsemilla_short_commit(
+    return sinsemilla_short_commit(
         rivk,
         b"z.cash: Orchard-CommitIvk",
         i2lebsp(L_ORCHARD_BASE, ak.s) + i2lebsp(L_ORCHARD_BASE, nk.s)
-    ).s)
+    )
 
 def rivk_trapdoor(rand):
     return Scalar.random(rand)

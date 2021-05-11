@@ -229,6 +229,7 @@ class Point(object):
         return self.x
 
     def __mul__(self, s):
+        assert isinstance(s, Scalar)
         s = format(s.s, '0256b')
         ret = self.ZERO
         for c in s:
