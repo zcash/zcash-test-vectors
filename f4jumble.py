@@ -99,7 +99,9 @@ def main():
         16448,
     ]:
         M = rand.b(l_M)
-        assert f4jumble_inv(f4jumble(M)) == M
+        jumbled = f4jumble(M)
+        assert len(jumbled) == len(M)
+        assert f4jumble_inv(jumbled) == M
         test_vectors.append(M)
 
     test_vectors = [{
