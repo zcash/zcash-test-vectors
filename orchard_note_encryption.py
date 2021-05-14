@@ -9,8 +9,8 @@ from tv_output import render_args, render_tv
 from tv_rand import Rand
 
 from orchard_generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
-from orchard_pallas import Scalar
-from orchard_commitments import note_commit, rcv_trapdoor
+from orchard_pallas import Point, Scalar
+from orchard_commitments import rcv_trapdoor
 from orchard_key_components import diversify_hash, prf_expand, FullViewingKey, SpendingKey
 from orchard_note import OrchardNote, OrchardNotePlaintext
 from orchard_utils import to_scalar
@@ -74,7 +74,9 @@ class OrchardNoteEncryption(object):
         np = note.note_plaintext(memo)
         esk = OrchardKeyAgreement.esk(np.rseed, note.rho)
         p_enc = bytes(np)
+
         epk = OrchardKeyAgreement.derive_public(esk, g_d_new)
+        ephemeral_key = bytes(epk)
         shared_secret = OrchardKeyAgreement.agree(esk, pk_d_new)
         k_enc = kdf_orchard(shared_secret, epk)
         c_enc = OrchardSym.encrypt(k_enc, p_enc)
@@ -84,18 +86,106 @@ class OrchardNoteEncryption(object):
             op = self._random.b(64)
         else:
             cv = bytes(cv_new)
-            cmx = bytes(cm_new.x)
-            ephemeral_key = bytes(epk)
+            cmx = bytes(cm_new.extract())
             ock = prf_ock_orchard(ovk, cv, cmx, ephemeral_key)
             op = bytes(pk_d_new) + bytes(esk)
 
         c_out = OrchardSym.encrypt(ock, op)
 
+        self.esk = esk
+        self.shared_secret = shared_secret
+        self.k_enc = k_enc
+        self.p_enc = p_enc
+        self.ock = ock
+        self.op = op
+
+        return TransmittedNoteCipherText(
+            epk, c_enc, c_out
+        )
+
+class TransmittedNoteCipherText(object):
+    def __init__(self, epk, c_enc, c_out):
         self.epk = epk
         self.c_enc = c_enc
         self.c_out = c_out
 
-        return (esk, epk, shared_secret, k_enc, p_enc, c_enc, ock, op, c_out)
+    def decrypt_using_ivk(self, ivk: Scalar, rho, cm_star):
+        epk = self.epk
+        if not epk:
+            return None
+
+        shared_secret = OrchardKeyAgreement.agree(ivk, epk)
+        k_enc = kdf_orchard(shared_secret, epk)
+        p_enc = OrchardSym.decrypt(k_enc, self.c_enc)
+        if not p_enc:
+            return None
+
+        leadbyte = p_enc[0]
+        assert(leadbyte == 2)
+        np = OrchardNotePlaintext(
+            p_enc[1:12],   # d
+            Scalar.from_bytes(p_enc[12:20]),  # v
+            p_enc[20:52],  # rseed
+            p_enc[52:564], # memo
+        )
+
+        g_d = diversify_hash(np.d)
+        pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
+        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+
+        esk = OrchardKeyAgreement.esk(np.rseed, rho)
+        if OrchardKeyAgreement.derive_public(esk, g_d) != epk:
+            return None
+
+        cm = note.note_commitment()
+        if not cm:
+            return None
+        if cm != cm_star:
+            return None
+
+        return (note, np.memo)
+
+    def decrypt_using_fvk(self, fvk, rseed, rho, cv, cm_star):
+        ock = prf_ock_orchard(fvk.ovk, bytes(cv), bytes(cm_star.extract()), bytes(self.epk))
+        op = OrchardSym.decrypt(ock, self.c_out)
+        if not op:
+            return None
+
+        (pk_d_star, esk) = (op[0:32], op[32:64])
+        esk = Scalar.from_bytes(esk)
+        pk_d = Point.from_bytes(pk_d_star)
+        if bytes(pk_d) != pk_d_star:
+            return None
+        if OrchardKeyAgreement.esk(rseed, rho) != esk:
+            return None
+
+        shared_secret = OrchardKeyAgreement.agree(esk, pk_d)
+        k_enc = kdf_orchard(shared_secret, self.epk)
+        p_enc = OrchardSym.decrypt(k_enc, self.c_enc)
+        if not p_enc:
+            return None
+
+        leadbyte = p_enc[0]
+        assert(leadbyte == 2)
+        np = OrchardNotePlaintext(
+            p_enc[1:12],   # d
+            Scalar.from_bytes(p_enc[12:20]),  # v
+            p_enc[20:52],  # rseed
+            p_enc[52:564], # memo
+        )
+        g_d = diversify_hash(np.d)
+        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+
+        cm = note.note_commitment()
+        if not cm:
+            return None
+        if cm != cm_star:
+            return None
+
+        if OrchardKeyAgreement.derive_public(esk, g_d) != self.epk:
+            return None
+
+        return (note, np.memo)
 
 def main():
     args = render_args()
@@ -112,16 +202,21 @@ def main():
     ne = OrchardNoteEncryption(rand)
 
     test_vectors = []
-    for i in range(0, 10):
-        sk = SpendingKey(bytes([i] * 32))
-        fvk = FullViewingKey(sk)
-        pk_d = fvk.default_pkd()
-        g_d = diversify_hash(fvk.default_d())
+    for _ in range(0, 10):
+        sender_sk = SpendingKey(rand.b(32))
+        sender_fvk = FullViewingKey(sender_sk)
+
+        receiver_sk = SpendingKey(rand.b(32))
+        receiver_fvk = FullViewingKey(receiver_sk)
+        ivk = receiver_fvk.ivk()
+        d = receiver_fvk.default_d()
+        pk_d = receiver_fvk.default_pkd()
+        g_d = diversify_hash(d)
 
         rseed = ne.rseed()
         memo = rand.b(512)
         np = OrchardNotePlaintext(
-            fvk.default_d(),
+            d,
             Scalar(rand.u64() % (MAX_MONEY + 1)),
             rseed,
             memo
@@ -131,42 +226,42 @@ def main():
         cv = VALUE_COMMITMENT_VALUE_BASE * np.v + VALUE_COMMITMENT_RANDOMNESS_BASE * rcv
 
         rho = np.dummy_nullifier(rand)
-        note = OrchardNote(fvk.default_d(), pk_d, np.v, rho, rseed)
-        cm = note_commit(
-            note.rcm,
-            leos2bsp(bytes(g_d)),
-            leos2bsp(bytes(pk_d)),
-            np.v.s,
-            rho,
-            note.psi
+        note = OrchardNote(d, pk_d, np.v, rho, rseed)
+        cm = note.note_commitment()
+
+        transmitted_note_ciphertext = ne.encrypt(note, memo, pk_d, g_d, cv, cm, sender_fvk.ovk)
+
+        (note_using_ivk, memo_using_ivk) = transmitted_note_ciphertext.decrypt_using_ivk(
+            Scalar(ivk.s), rho, cm
+        )
+        (note_using_fvk, memo_using_fvk) = transmitted_note_ciphertext.decrypt_using_fvk(
+            sender_fvk, rseed, rho, cv, cm
         )
 
-        (
-            esk, epk,
-            shared_secret,
-            k_enc, p_enc, c_enc,
-            ock, op, c_out,
-        ) = ne.encrypt(note, memo, pk_d, g_d, cv, cm, fvk.ovk)
+        assert(bytes(note_using_ivk) == bytes(note_using_fvk))
+        assert(memo_using_ivk == memo_using_fvk)
+        assert(bytes(note_using_ivk) == bytes(note))
+        assert(memo_using_ivk == memo)
 
         test_vectors.append({
-            'ovk': fvk.ovk,
-            'ivk': bytes(fvk.ivk()),
-            'default_d': fvk.default_d(),
+            'ovk': sender_fvk.ovk,
+            'ivk': bytes(ivk),
+            'default_d': d,
             'default_pk_d': bytes(pk_d),
             'v': np.v.s,
             'rcm': bytes(note.rcm),
             'memo': np.memo,
             'cv': bytes(cv),
-            'cmx': bytes(cm.x),
-            'esk': bytes(esk),
-            'epk': bytes(epk),
-            'shared_secret': bytes(shared_secret),
-            'k_enc': k_enc,
-            'p_enc': p_enc,
-            'c_enc': c_enc,
-            'ock': ock,
-            'op': op,
-            'c_out': c_out,
+            'cmx': bytes(cm.extract()),
+            'esk': bytes(ne.esk),
+            'epk': bytes(transmitted_note_ciphertext.epk),
+            'shared_secret': bytes(ne.shared_secret),
+            'k_enc': ne.k_enc,
+            'p_enc': ne.p_enc,
+            'c_enc': transmitted_note_ciphertext.c_enc,
+            'ock': ne.ock,
+            'op': ne.op,
+            'c_out': transmitted_note_ciphertext.c_out,
         })
 
     render_tv(
