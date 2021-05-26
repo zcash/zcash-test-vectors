@@ -6,7 +6,7 @@ from transaction import (
     MAX_MONEY,
     NU5_TX_VERSION,
     Script,
-    Transaction,
+    TransactionV5,
 )
 from tv_output import render_args, render_tv, Some
 from tv_rand import Rand
@@ -266,7 +266,7 @@ def main():
 
     test_vectors = []
     for _ in range(10):
-        tx = Transaction(rand, NU5_TX_VERSION, consensusBranchId)
+        tx = TransactionV5(rand, consensusBranchId)
         txid = txid_digest(tx)
 
         # If there are any transparent inputs, derive a corresponding transparent sighash.

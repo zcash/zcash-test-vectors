@@ -3,10 +3,10 @@ from pyblake2 import blake2b
 import struct
 
 from transaction import (
+    LegacyTransaction,
     MAX_MONEY,
     OVERWINTER_TX_VERSION,
     Script,
-    Transaction,
 )
 from tv_output import render_args, render_tv, Some
 from tv_rand import Rand
@@ -111,7 +111,7 @@ def main():
 
     test_vectors = []
     for i in range(10):
-        tx = Transaction(rand, OVERWINTER_TX_VERSION)
+        tx = LegacyTransaction(rand, OVERWINTER_TX_VERSION)
         scriptCode = Script(rand)
         nIn = rand.i8() % (len(tx.vin) + 1)
         if nIn == len(tx.vin):
