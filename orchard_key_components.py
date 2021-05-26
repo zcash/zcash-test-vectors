@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from pyblake2 import blake2b, blake2s
+from ff1 import ff1_aes256_encrypt
 
 from orchard_generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
 from orchard_pallas import Fp, Scalar, Point
 from orchard_poseidon_hash import poseidon_hash
-from orchard_merkle_tree import MERKLE_DEPTH
 from orchard_commitments import commit_ivk, note_commit
-from utils import leos2bsp, leos2ip, i2leosp
+from utils import leos2bsp, leos2ip, i2leosp, i2lebsp, lebs2osp
 from tv_output import render_args, render_tv
 
 #
@@ -84,7 +83,8 @@ class FullViewingKey(object):
         return prf_expand(self.data, b'\x02')[:32]
 
     def default_d(self):
-        return i2leosp(88, 1337)
+        index = i2lebsp(88, 0)
+        return lebs2osp(ff1_aes256_encrypt(self.dk, b'', index))
 
     def default_pkd(self):
         return diversify_hash(self.default_d()) * Scalar(self.ivk().s)
