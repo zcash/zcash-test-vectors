@@ -150,7 +150,7 @@ def orchard_actions_noncompact_digest(tx):
 def header_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdHeadersHash')
 
-    digest.update(struct.pack('<I', tx.header()))
+    digest.update(struct.pack('<I', tx.version_bytes()))
     digest.update(struct.pack('<I', tx.nVersionGroupId))
     digest.update(struct.pack('<I', tx.nConsensusBranchId))
     digest.update(struct.pack('<I', tx.nLockTime))

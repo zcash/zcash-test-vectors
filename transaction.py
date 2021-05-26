@@ -311,12 +311,12 @@ class LegacyTransaction(object):
         if self.nVersion >= SAPLING_TX_VERSION:
             self.bindingSig = rand.b(64) # Invalid
 
-    def header(self):
+    def version_bytes(self):
         return self.nVersion | (1 << 31 if self.fOverwintered else 0)
 
     def __bytes__(self):
         ret = b''
-        ret += struct.pack('<I', self.header())
+        ret += struct.pack('<I', self.version_bytes())
         if self.fOverwintered:
             ret += struct.pack('<I', self.nVersionGroupId)
 
@@ -421,7 +421,7 @@ class TransactionV5(object):
             # v^balanceOrchard is defined to be 0.
             self.valueBalanceOrchard = 0
 
-    def header(self):
+    def version_bytes(self):
         return NU5_TX_VERSION | (1 << 31)
 
     # TODO: Update ZIP 225 to document endianness
@@ -429,7 +429,7 @@ class TransactionV5(object):
         ret = b''
 
         # Common Transaction Fields
-        ret += struct.pack('<I', self.header())
+        ret += struct.pack('<I', self.version_bytes())
         ret += struct.pack('<I', self.nVersionGroupId)
         ret += struct.pack('<I', self.nConsensusBranchId)
         ret += struct.pack('<I', self.nLockTime)

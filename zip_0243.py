@@ -80,7 +80,7 @@ def signature_hash(scriptCode, tx, nIn, nHashType, amount, consensusBranchId):
         person=b'ZcashSigHash' + struct.pack('<I', consensusBranchId),
     )
 
-    digest.update(struct.pack('<I', tx.header()))
+    digest.update(struct.pack('<I', tx.version_bytes()))
     digest.update(struct.pack('<I', tx.nVersionGroupId))
     digest.update(hashPrevouts)
     digest.update(hashSequence)
