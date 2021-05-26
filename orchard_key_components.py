@@ -2,6 +2,7 @@
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from ff1 import ff1_aes256_encrypt
+from sapling_key_components import prf_expand
 
 from orchard_generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
 from orchard_pallas import Fp, Scalar, Point
@@ -24,12 +25,6 @@ def to_base(buf):
 #
 # PRFs and hashes
 #
-
-def prf_expand(sk: bytes, t: bytes):
-    digest = blake2b(person=b'Zcash_ExpandSeed')
-    digest.update(sk)
-    digest.update(t)
-    return digest.digest()
 
 def diversify_hash(d):
     P = group_hash(b'z.cash:Orchard-gd', d)
@@ -64,8 +59,7 @@ class SpendingKey:
             self.ask = -self.ask
 
         self.ak = self.akP.extract()
-        if commit_ivk(self.rivk, self.ak, self.nk) is None:
-            raise ValueError("invalid spending key")
+        assert commit_ivk(self.rivk, self.ak, self.nk) is not None
 
 
 class FullViewingKey(object):
@@ -79,33 +73,42 @@ class FullViewingKey(object):
     def ivk(self):
         return commit_ivk(self.rivk, self.ak, self.nk)
 
-    def ovk(self):
-        return prf_expand(self.data, b'\x02')[:32]
-
     def default_d(self):
         index = i2lebsp(88, 0)
         return lebs2osp(ff1_aes256_encrypt(self.dk, b'', index))
 
+    def default_gd(self):
+        return diversify_hash(self.default_d())
+
     def default_pkd(self):
-        return diversify_hash(self.default_d()) * Scalar(self.ivk().s)
+        return self.default_gd() * Scalar(self.ivk().s)
 
 
 def main():
     args = render_args()
 
+    from random import Random
+    from tv_rand import Rand
+
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
     test_vectors = []
-    for i in range(0, 10):
-        sys.stdout.write(".")
-        sys.stdout.flush()
-        sk = SpendingKey(bytes([i] * 32))
+    for _ in range(0, 10):
+        sk = SpendingKey(rand.b(32))
         fvk = FullViewingKey(sk)
-        note_v = (2548793025584392057432895043257984320*i) % 2**64
-        note_r = Scalar(8890123457840276890326754358439057438290574382905).exp(i+1)
-        note_rho = Fp(342358729643275392567239275209835729829*i)
-        note_psi = Fp(432592604358294371936572103719358723958*i)
+        note_v = rand.u64()
+        note_r = Scalar.random(rand)
+        note_rho = Fp.random(rand)
+        note_psi = Fp.random(rand)
         note_cm = note_commit(
             note_r,
-            leos2bsp(bytes(diversify_hash(fvk.default_d()))),
+            leos2bsp(bytes(fvk.default_gd())),
             leos2bsp(bytes(fvk.default_pkd())),
             note_v,
             note_rho,
