@@ -199,21 +199,21 @@ def transparent_sig_digest(tx, nHashType, txin):
 
     digest = blake2b(digest_size=32, person=b'ZTxIdTranspaHash')
 
-    digest.update(prevouts_sig_digest(tx, nHashType, txin))
-    digest.update(sequence_sig_digest(tx, nHashType, txin))
+    digest.update(prevouts_sig_digest(tx, nHashType))
+    digest.update(sequence_sig_digest(tx, nHashType))
     digest.update(outputs_sig_digest(tx, nHashType, txin))
     digest.update(txin_sig_digest(tx, txin))
 
     return digest.digest()
 
-def prevouts_sig_digest(tx, nHashType, txin):
+def prevouts_sig_digest(tx, nHashType):
     # If the SIGHASH_ANYONECANPAY flag is not set:
     if not (nHashType & SIGHASH_ANYONECANPAY):
         return getHashPrevouts(tx, b'ZTxIdPrevoutHash')
     else:
         return blake2b(digest_size=32, person=b'ZTxIdPrevoutHash').digest()
 
-def sequence_sig_digest(tx, nHashType, txin):
+def sequence_sig_digest(tx, nHashType):
     # if the SIGHASH_ANYONECANPAY flag is not set, and the sighash type is neither
     # SIGHASH_SINGLE nor SIGHASH_NONE:
     if (
