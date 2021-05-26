@@ -10,7 +10,7 @@ from tv_rand import Rand
 
 from orchard_generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
 from orchard_pallas import Point, Scalar
-from orchard_commitments import rcv_trapdoor
+from orchard_commitments import rcv_trapdoor, value_commit
 from orchard_key_components import diversify_hash, prf_expand, FullViewingKey, SpendingKey
 from orchard_note import OrchardNote, OrchardNotePlaintext
 from orchard_utils import to_scalar
@@ -20,7 +20,7 @@ from utils import leos2bsp
 def kdf_orchard(shared_secret, ephemeral_key):
     digest = blake2b(digest_size=32, person=b'Zcash_OrchardKDF')
     digest.update(bytes(shared_secret))
-    digest.update(bytes(ephemeral_key))
+    digest.update(ephemeral_key)
     return digest.digest()
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteprfs
@@ -36,7 +36,7 @@ def prf_ock_orchard(ovk, cv, cmx, ephemeral_key):
 class OrchardKeyAgreement(object):
     @staticmethod
     def esk(rseed, rho):
-        return to_scalar(prf_expand(bytes(rseed), b'\x04' + bytes(rho)))
+        return to_scalar(prf_expand(rseed, b'\x04' + bytes(rho)))
 
     @staticmethod
     def derive_public(esk, g_d):
@@ -49,8 +49,8 @@ class OrchardKeyAgreement(object):
 # https://zips.z.cash/protocol/nu5.pdf#concretesym
 class OrchardSym(object):
     @staticmethod
-    def k(random):
-        return random(32)
+    def k(rand):
+        return rand.b(32)
 
     @staticmethod
     def encrypt(key, plaintext):
@@ -64,11 +64,8 @@ class OrchardSym(object):
 
 # https://zips.z.cash/protocol/nu5.pdf#saplingandorchardencrypt
 class OrchardNoteEncryption(object):
-    def __init__(self, random=os.urandom):
-        self._random = random
-
-    def rseed(self):
-        return self._random.b(32)
+    def __init__(self, rand):
+        self._rand = rand
 
     def encrypt(self, note: OrchardNote, memo, pk_d_new, g_d_new, cv_new, cm_new, ovk=None):
         np = note.note_plaintext(memo)
@@ -78,12 +75,12 @@ class OrchardNoteEncryption(object):
         epk = OrchardKeyAgreement.derive_public(esk, g_d_new)
         ephemeral_key = bytes(epk)
         shared_secret = OrchardKeyAgreement.agree(esk, pk_d_new)
-        k_enc = kdf_orchard(shared_secret, epk)
+        k_enc = kdf_orchard(shared_secret, ephemeral_key)
         c_enc = OrchardSym.encrypt(k_enc, p_enc)
 
         if not ovk:
-            ock = OrchardSym.k(self._random)
-            op = self._random.b(64)
+            ock = OrchardSym.k(self._rand)
+            op = self._rand.b(64)
         else:
             cv = bytes(cv_new)
             cmx = bytes(cm_new.extract())
@@ -115,7 +112,8 @@ class TransmittedNoteCipherText(object):
             return None
 
         shared_secret = OrchardKeyAgreement.agree(ivk, epk)
-        k_enc = kdf_orchard(shared_secret, epk)
+        ephemeral_key = bytes(epk)
+        k_enc = kdf_orchard(shared_secret, ephemeral_key)
         p_enc = OrchardSym.decrypt(k_enc, self.c_enc)
         if not p_enc:
             return None
@@ -131,7 +129,7 @@ class TransmittedNoteCipherText(object):
 
         g_d = diversify_hash(np.d)
         pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
-        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v.s, rho, np.rseed)
 
         esk = OrchardKeyAgreement.esk(np.rseed, rho)
         if OrchardKeyAgreement.derive_public(esk, g_d) != epk:
@@ -145,8 +143,8 @@ class TransmittedNoteCipherText(object):
 
         return (note, np.memo)
 
-    def decrypt_using_fvk(self, fvk, rseed, rho, cv, cm_star):
-        ock = prf_ock_orchard(fvk.ovk, bytes(cv), bytes(cm_star.extract()), bytes(self.epk))
+    def decrypt_using_ovk(self, ovk, rseed, rho, cv, cm_star):
+        ock = prf_ock_orchard(ovk, bytes(cv), bytes(cm_star.extract()), bytes(self.epk))
         op = OrchardSym.decrypt(ock, self.c_out)
         if not op:
             return None
@@ -160,7 +158,8 @@ class TransmittedNoteCipherText(object):
             return None
 
         shared_secret = OrchardKeyAgreement.agree(esk, pk_d)
-        k_enc = kdf_orchard(shared_secret, self.epk)
+        ephemeral_key = bytes(self.epk)
+        k_enc = kdf_orchard(shared_secret, ephemeral_key)
         p_enc = OrchardSym.decrypt(k_enc, self.c_enc)
         if not p_enc:
             return None
@@ -174,7 +173,7 @@ class TransmittedNoteCipherText(object):
             p_enc[52:564], # memo
         )
         g_d = diversify_hash(np.d)
-        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v.s, rho, np.rseed)
 
         cm = note.note_commitment()
         if not cm:
@@ -199,12 +198,9 @@ def main():
         return bytes(ret)
     rand = Rand(randbytes)
 
-    ne = OrchardNoteEncryption(rand)
-
     test_vectors = []
     for _ in range(0, 10):
-        sender_sk = SpendingKey(rand.b(32))
-        sender_fvk = FullViewingKey(sender_sk)
+        sender_ovk = rand.b(32)
 
         receiver_sk = SpendingKey(rand.b(32))
         receiver_fvk = FullViewingKey(receiver_sk)
@@ -213,42 +209,44 @@ def main():
         pk_d = receiver_fvk.default_pkd()
         g_d = diversify_hash(d)
 
-        rseed = ne.rseed()
-        memo = rand.b(512)
+        rseed = rand.b(32)
+        memo = b'\xff' + rand.b(511)
         np = OrchardNotePlaintext(
             d,
-            Scalar(rand.u64() % (MAX_MONEY + 1)),
+            rand.u64(),
             rseed,
             memo
         )
 
         rcv = rcv_trapdoor(rand)
-        cv = VALUE_COMMITMENT_VALUE_BASE * np.v + VALUE_COMMITMENT_RANDOMNESS_BASE * rcv
+        cv = value_commit(rcv, Scalar(np.v))
 
         rho = np.dummy_nullifier(rand)
         note = OrchardNote(d, pk_d, np.v, rho, rseed)
         cm = note.note_commitment()
 
-        transmitted_note_ciphertext = ne.encrypt(note, memo, pk_d, g_d, cv, cm, sender_fvk.ovk)
+        ne = OrchardNoteEncryption(rand)
+
+        transmitted_note_ciphertext = ne.encrypt(note, memo, pk_d, g_d, cv, cm, sender_ovk)
 
         (note_using_ivk, memo_using_ivk) = transmitted_note_ciphertext.decrypt_using_ivk(
             Scalar(ivk.s), rho, cm
         )
-        (note_using_fvk, memo_using_fvk) = transmitted_note_ciphertext.decrypt_using_fvk(
-            sender_fvk, rseed, rho, cv, cm
+        (note_using_ovk, memo_using_ovk) = transmitted_note_ciphertext.decrypt_using_ovk(
+            sender_ovk, rseed, rho, cv, cm
         )
 
-        assert(bytes(note_using_ivk) == bytes(note_using_fvk))
-        assert(memo_using_ivk == memo_using_fvk)
-        assert(bytes(note_using_ivk) == bytes(note))
+        assert(note_using_ivk == note_using_ovk)
+        assert(memo_using_ivk == memo_using_ovk)
+        assert(note_using_ivk == note)
         assert(memo_using_ivk == memo)
 
         test_vectors.append({
-            'ovk': sender_fvk.ovk,
+            'ovk': sender_ovk,
             'ivk': bytes(ivk),
             'default_d': d,
             'default_pk_d': bytes(pk_d),
-            'v': np.v.s,
+            'v': np.v,
             'rcm': bytes(note.rcm),
             'memo': np.memo,
             'cv': bytes(cv),

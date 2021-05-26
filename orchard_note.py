@@ -8,7 +8,7 @@ from orchard_utils import to_base, to_scalar
 from utils import leos2bsp
 
 class OrchardNote(object):
-    def __init__(self, d, pk_d, v: Scalar, rho, rseed):
+    def __init__(self, d, pk_d, v, rho, rseed):
         self.d = d
         self.pk_d = pk_d
         self.v = v
@@ -17,25 +17,27 @@ class OrchardNote(object):
         self.rcm = self.rcm(rho)
         self.psi = self.psi(rho)
 
-    def __bytes__(self):
+    def __eq__(self, other):
+        if other is None:
+            return False
         return (
-            self.d +
-            bytes(self.pk_d) +
-            struct.pack('<Q', self.v.s) +
-            bytes(self.rho) +
-            bytes(self.rcm) +
-            bytes(self.psi)
+            self.d == other.d and
+            self.pk_d == other.pk_d and
+            self.v == other.v and
+            self.rho == other.rho and
+            self.rcm == other.rcm and
+            self.psi == other.psi
         )
 
     def rcm(self, rho):
-        return to_scalar(prf_expand(bytes(self.rseed), b'\x05' + bytes(rho)))
+        return to_scalar(prf_expand(self.rseed, b'\x05' + bytes(rho)))
 
     def psi(self, rho):
-        return to_base(prf_expand(bytes(self.rseed), b'\x09' + bytes(rho)))
+        return to_base(prf_expand(self.rseed, b'\x09' + bytes(rho)))
 
     def note_commitment(self):
         g_d = diversify_hash(self.d)
-        return note_commit(self.rcm, leos2bsp(bytes(g_d)), leos2bsp(bytes(self.pk_d)), self.v.s, self.rho, self.psi)
+        return note_commit(self.rcm, leos2bsp(bytes(g_d)), leos2bsp(bytes(self.pk_d)), self.v, self.rho, self.psi)
 
     def note_plaintext(self, memo):
         return OrchardNotePlaintext(self.d, self.v, self.rseed, memo)
@@ -53,7 +55,7 @@ class OrchardNotePlaintext(object):
         return (
             self.leadbyte +
             self.d +
-            struct.pack('<Q', self.v.s) +
+            struct.pack('<Q', self.v) +
             bytes(self.rseed) +
             self.memo
         )
@@ -62,14 +64,13 @@ class OrchardNotePlaintext(object):
         sk = SpendingKey(rand.b(32))
         fvk = FullViewingKey(sk)
         pk_d = fvk.default_pkd()
-        g_d = diversify_hash(fvk.default_d())
+        d = fvk.default_d()
 
-        v = Scalar.ZERO
+        v = 0
 
-        rho = Point.rand(rand)
-        rho_bytes = bytes(rho)
-        rho = rho.extract()
+        rseed = rand.b(32)
+        rho = Point.rand(rand).extract()
 
-        note = OrchardNote(fvk.default_d(), pk_d, v, rho, rho_bytes)
-        cm = note_commit(note.rcm, leos2bsp(bytes(g_d)), leos2bsp(bytes(pk_d)), v.s, rho, note.psi)
+        note = OrchardNote(d, pk_d, v, rho, rseed)
+        cm = note.note_commitment()
         return derive_nullifier(fvk.nk, rho, note.psi, cm)
