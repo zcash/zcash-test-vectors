@@ -56,7 +56,7 @@ class OrchardNotePlaintext(object):
             self.leadbyte +
             self.d +
             struct.pack('<Q', self.v) +
-            bytes(self.rseed) +
+            self.rseed +
             self.memo
         )
 
