@@ -1,6 +1,6 @@
 from orchard_pallas import Fp
 import numpy as np
-from sapling_utils import leos2ip
+from utils import leos2ip
 from tv_output import render_args, render_tv
 from tv_rand import Rand
 

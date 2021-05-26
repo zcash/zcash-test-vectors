@@ -3,7 +3,7 @@
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from sapling_jubjub import FieldElement
-from sapling_utils import leos2ip
+from utils import leos2ip
 
 p = 0x40000000000000000000000000000000224698fc094cf91b992d30ed00000001
 q = 0x40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001
@@ -30,6 +30,13 @@ class Fp(FieldElement):
     @staticmethod
     def from_bytes(buf):
         return Fp(leos2ip(buf), strict=True)
+
+    def random(rand):
+        while True:
+            try:
+                return Fp(leos2ip(rand.b(32)), strict=True)
+            except ValueError:
+                pass
 
     def __init__(self, s, strict=False):
         FieldElement.__init__(self, Fp, s, p, strict=strict)
@@ -90,16 +97,29 @@ class Scalar(FieldElement):
     def __str__(self):
         return 'Scalar(%s)' % self.s
 
-Fp.ZERO = Fp(0)
-Fp.ONE = Fp(1)
-Fp.MINUS_ONE = Fp(-1)
+    @staticmethod
+    def from_bytes(buf):
+        return Scalar(leos2ip(buf), strict=True)
 
-assert Fp.ZERO + Fp.ZERO == Fp.ZERO
-assert Fp.ZERO + Fp.ONE == Fp.ONE
-assert Fp.ONE + Fp.ZERO == Fp.ONE
-assert Fp.ZERO - Fp.ONE == Fp.MINUS_ONE
-assert Fp.ZERO * Fp.ONE == Fp.ZERO
-assert Fp.ONE * Fp.ZERO == Fp.ZERO
+    def random(rand):
+        while True:
+            try:
+                return Scalar(leos2ip(rand.b(32)), strict=True)
+            except ValueError:
+                pass
+
+
+for F in (Fp, Scalar):
+    F.ZERO = F(0)
+    F.ONE = F(1)
+    F.MINUS_ONE = F(-1)
+
+    assert F.ZERO + F.ZERO == F.ZERO
+    assert F.ZERO + F.ONE == F.ONE
+    assert F.ONE + F.ZERO == F.ONE
+    assert F.ZERO - F.ONE == F.MINUS_ONE
+    assert F.ZERO * F.ONE == F.ZERO
+    assert F.ONE * F.ZERO == F.ZERO
 
 
 #
@@ -209,6 +229,7 @@ class Point(object):
         return self.x
 
     def __mul__(self, s):
+        assert isinstance(s, Scalar)
         s = format(s.s, '0256b')
         ret = self.ZERO
         for c in s:

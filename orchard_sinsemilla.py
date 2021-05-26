@@ -6,7 +6,7 @@ import math
 import orchard_iso_pallas
 
 from orchard_pallas import Fp, Point
-from sapling_utils import cldiv, lebs2ip, i2leosp
+from utils import cldiv, lebs2ip, i2leosp
 from orchard_group_hash import group_hash
 from tv_output import render_args, render_tv
 from tv_rand import Rand

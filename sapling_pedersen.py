@@ -7,7 +7,7 @@ from sapling_generators import (
     WINDOWED_PEDERSEN_RANDOMNESS_BASE,
 )
 from sapling_jubjub import Fr, Point
-from sapling_utils import cldiv, i2leosp
+from utils import cldiv, i2leosp
 
 
 #

@@ -3,7 +3,7 @@
 from orchard_group_hash import map_to_curve_simple_swu
 from orchard_iso_pallas import Point as IsoPoint
 from orchard_pallas import Fp
-from sapling_utils import leos2ip
+from utils import leos2ip
 from tv_output import render_args, render_tv
 from tv_rand import Rand
 

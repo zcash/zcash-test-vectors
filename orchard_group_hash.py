@@ -8,7 +8,7 @@ import orchard_iso_pallas
 from pyblake2 import blake2b
 from orchard_pallas import Fp, p, q, PALLAS_B, Point
 from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
-from sapling_utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
+from utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
 from tv_output import render_args, render_tv
 from tv_rand import Rand
 
@@ -16,7 +16,9 @@ from tv_rand import Rand
 def sxor(s1,s2):
     return bytes([a ^ b for a,b in zip(s1,s2)])
 
-def expand_message_xmd(msg, dst, len_in_bytes):
+def expand_message_xmd(msg: bytes, dst: bytes, len_in_bytes: int):
+    assert isinstance(msg, bytes)
+    assert isinstance(dst, bytes)
     assert len(dst) <= 255
 
     b_in_bytes = 64 # hash function output size

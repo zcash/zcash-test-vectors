@@ -3,7 +3,7 @@ import struct
 
 from sapling_generators import find_group_hash, SPENDING_KEY_BASE
 from sapling_jubjub import Fq, Point
-from sapling_utils import leos2ip
+from utils import leos2ip
 from zc_utils import write_compact_size
 
 MAX_MONEY = 21000000 * 100000000

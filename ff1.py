@@ -7,7 +7,7 @@ from binascii import unhexlify, hexlify
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 
-from sapling_utils import bebs2ip, i2bebsp, beos2ip, bebs2osp, cldiv
+from utils import bebs2ip, i2bebsp, beos2ip, bebs2osp, cldiv
 
 # Morris Dworkin
 # NIST Special Publication 800-38G
