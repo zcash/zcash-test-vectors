@@ -14,8 +14,8 @@ class OrchardNote(object):
         self.v = v
         self.rho = rho
         self.rseed = rseed
-        self.rcm = self.rcm(rho)
-        self.psi = self.psi(rho)
+        self.rcm = self.rcm()
+        self.psi = self.psi()
 
     def __eq__(self, other):
         if other is None:
@@ -29,11 +29,11 @@ class OrchardNote(object):
             self.psi == other.psi
         )
 
-    def rcm(self, rho):
-        return to_scalar(prf_expand(self.rseed, b'\x05' + bytes(rho)))
+    def rcm(self):
+        return to_scalar(prf_expand(self.rseed, b'\x05' + bytes(self.rho)))
 
-    def psi(self, rho):
-        return to_base(prf_expand(self.rseed, b'\x09' + bytes(rho)))
+    def psi(self):
+        return to_base(prf_expand(self.rseed, b'\x09' + bytes(self.rho)))
 
     def note_commitment(self):
         g_d = diversify_hash(self.d)
