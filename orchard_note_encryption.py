@@ -78,7 +78,7 @@ class OrchardNoteEncryption(object):
         k_enc = kdf_orchard(shared_secret, ephemeral_key)
         c_enc = OrchardSym.encrypt(k_enc, p_enc)
 
-        if not ovk:
+        if ovk is None:
             ock = OrchardSym.k(self._rand)
             op = self._rand.b(64)
         else:
@@ -108,14 +108,14 @@ class TransmittedNoteCipherText(object):
 
     def decrypt_using_ivk(self, ivk: Scalar, rho, cm_star):
         epk = self.epk
-        if not epk:
+        if epk is None:
             return None
 
         shared_secret = OrchardKeyAgreement.agree(ivk, epk)
         ephemeral_key = bytes(epk)
         k_enc = kdf_orchard(shared_secret, ephemeral_key)
         p_enc = OrchardSym.decrypt(k_enc, self.c_enc)
-        if not p_enc:
+        if p_enc is None:
             return None
 
         leadbyte = p_enc[0]
@@ -136,7 +136,7 @@ class TransmittedNoteCipherText(object):
             return None
 
         cm = note.note_commitment()
-        if not cm:
+        if cm is None:
             return None
         if cm != cm_star:
             return None
@@ -146,7 +146,7 @@ class TransmittedNoteCipherText(object):
     def decrypt_using_ovk(self, ovk, rseed, rho, cv, cm_star):
         ock = prf_ock_orchard(ovk, bytes(cv), bytes(cm_star.extract()), bytes(self.epk))
         op = OrchardSym.decrypt(ock, self.c_out)
-        if not op:
+        if op is None:
             return None
 
         (pk_d_star, esk) = (op[0:32], op[32:64])
@@ -161,7 +161,7 @@ class TransmittedNoteCipherText(object):
         ephemeral_key = bytes(self.epk)
         k_enc = kdf_orchard(shared_secret, ephemeral_key)
         p_enc = OrchardSym.decrypt(k_enc, self.c_enc)
-        if not p_enc:
+        if p_enc is None:
             return None
 
         leadbyte = p_enc[0]
@@ -176,7 +176,7 @@ class TransmittedNoteCipherText(object):
         note = OrchardNote(np.d, pk_d, np.v.s, rho, np.rseed)
 
         cm = note.note_commitment()
-        if not cm:
+        if cm is None:
             return None
         if cm != cm_star:
             return None
