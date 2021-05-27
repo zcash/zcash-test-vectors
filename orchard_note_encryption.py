@@ -142,7 +142,7 @@ class TransmittedNoteCipherText(object):
         cm = note.note_commitment()
         if cm is None:
             return None
-        if cm != cm_star:
+        if cm.extract() != cm_star:
             return None
 
         return (note, np.memo)
@@ -152,7 +152,7 @@ class TransmittedNoteCipherText(object):
         # and to decode epk from it. That is required for consensus compatibility
         # in Sapling decryption before ZIP 216, but the reverse is okay here
         # because Pallas points have no non-canonical encodings.
-        ock = prf_ock_orchard(ovk, bytes(cv), bytes(cm_star.extract()), bytes(self.epk))
+        ock = prf_ock_orchard(ovk, bytes(cv), bytes(cm_star), bytes(self.epk))
         op = OrchardSym.decrypt(ock, self.c_out)
         if op is None:
             return None
@@ -186,7 +186,7 @@ class TransmittedNoteCipherText(object):
         cm = note.note_commitment()
         if cm is None:
             return None
-        if cm != cm_star:
+        if cm.extract() != cm_star:
             return None
 
         if OrchardKeyAgreement.derive_public(esk, g_d) != self.epk:
@@ -238,10 +238,10 @@ def main():
         transmitted_note_ciphertext = ne.encrypt(note, memo, pk_d, g_d, cv, cm, sender_ovk)
 
         (note_using_ivk, memo_using_ivk) = transmitted_note_ciphertext.decrypt_using_ivk(
-            Scalar(ivk.s), rho, cm
+            Scalar(ivk.s), rho, cm.extract()
         )
         (note_using_ovk, memo_using_ovk) = transmitted_note_ciphertext.decrypt_using_ovk(
-            sender_ovk, rho, cv, cm
+            sender_ovk, rho, cv, cm.extract()
         )
 
         assert(note_using_ivk == note_using_ovk)
