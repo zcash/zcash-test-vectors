@@ -147,7 +147,7 @@ class TransmittedNoteCipherText(object):
 
         return (note, np.memo)
 
-    def decrypt_using_ovk(self, ovk, rseed, rho, cv, cm_star):
+    def decrypt_using_ovk(self, ovk, rho, cv, cm_star):
         # The protocol spec says to take `ephemeral_key` as input to decryption
         # and to decode epk from it. That is required for consensus compatibility
         # in Sapling decryption before ZIP 216, but the reverse is okay here
@@ -161,8 +161,6 @@ class TransmittedNoteCipherText(object):
         esk = Scalar.from_bytes(esk)
         pk_d = Point.from_bytes(pk_d_star)
         if bytes(pk_d) != pk_d_star:
-            return None
-        if OrchardKeyAgreement.esk(rseed, rho) != esk:
             return None
 
         shared_secret = OrchardKeyAgreement.agree(esk, pk_d)
@@ -180,6 +178,8 @@ class TransmittedNoteCipherText(object):
             p_enc[20:52],  # rseed
             p_enc[52:564], # memo
         )
+        if OrchardKeyAgreement.esk(np.rseed, rho) != esk:
+            return None
         g_d = diversify_hash(np.d)
         note = OrchardNote(np.d, pk_d, np.v.s, rho, np.rseed)
 
@@ -241,7 +241,7 @@ def main():
             Scalar(ivk.s), rho, cm
         )
         (note_using_ovk, memo_using_ovk) = transmitted_note_ciphertext.decrypt_using_ovk(
-            sender_ovk, rseed, rho, cv, cm
+            sender_ovk, rho, cv, cm
         )
 
         assert(note_using_ivk == note_using_ovk)
