@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+import struct
 
 from chacha20poly1305 import ChaCha20Poly1305
 import os
@@ -126,18 +127,19 @@ class TransmittedNoteCipherText(object):
         assert(leadbyte == 2)
         np = OrchardNotePlaintext(
             p_enc[1:12],   # d
-            struct.unpack('<Q', p_enc[12:20]),  # v
+            struct.unpack('<Q', p_enc[12:20])[0],  # v
             p_enc[20:52],  # rseed
             p_enc[52:564], # memo
         )
 
         g_d = diversify_hash(np.d)
-        pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
-        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
 
         esk = OrchardKeyAgreement.esk(np.rseed, rho)
         if OrchardKeyAgreement.derive_public(esk, g_d) != epk:
             return None
+
+        pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
+        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
 
         cm = note.note_commitment()
         if cm is None:
@@ -152,6 +154,7 @@ class TransmittedNoteCipherText(object):
         # and to decode epk from it. That is required for consensus compatibility
         # in Sapling decryption before ZIP 216, but the reverse is okay here
         # because Pallas points have no non-canonical encodings.
+        ephemeral_key = bytes(self.epk)
         ock = prf_ock_orchard(ovk, bytes(cv), bytes(cm_star), bytes(self.epk))
         op = OrchardSym.decrypt(ock, self.c_out)
         if op is None:
@@ -164,7 +167,6 @@ class TransmittedNoteCipherText(object):
             return None
 
         shared_secret = OrchardKeyAgreement.agree(esk, pk_d)
-        ephemeral_key = bytes(self.epk)
         k_enc = kdf_orchard(shared_secret, ephemeral_key)
         p_enc = OrchardSym.decrypt(k_enc, self.c_enc)
         if p_enc is None:
@@ -174,7 +176,7 @@ class TransmittedNoteCipherText(object):
         assert(leadbyte == 2)
         np = OrchardNotePlaintext(
             p_enc[1:12],   # d
-            struct.unpack('<Q', p_enc[12:20]),  # v
+            struct.unpack('<Q', p_enc[12:20])[0],  # v
             p_enc[20:52],  # rseed
             p_enc[52:564], # memo
         )

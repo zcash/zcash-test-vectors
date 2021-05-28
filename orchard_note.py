@@ -9,6 +9,7 @@ from utils import leos2bsp
 
 class OrchardNote(object):
     def __init__(self, d, pk_d, v, rho, rseed):
+        assert isinstance(v, int)
         self.d = d
         self.pk_d = pk_d
         self.v = v
