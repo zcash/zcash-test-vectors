@@ -126,14 +126,14 @@ class TransmittedNoteCipherText(object):
         assert(leadbyte == 2)
         np = OrchardNotePlaintext(
             p_enc[1:12],   # d
-            Scalar.from_bytes(p_enc[12:20]),  # v
+            struct.unpack('<Q', p_enc[12:20]),  # v
             p_enc[20:52],  # rseed
             p_enc[52:564], # memo
         )
 
         g_d = diversify_hash(np.d)
         pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
-        note = OrchardNote(np.d, pk_d, np.v.s, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
 
         esk = OrchardKeyAgreement.esk(np.rseed, rho)
         if OrchardKeyAgreement.derive_public(esk, g_d) != epk:
@@ -174,14 +174,14 @@ class TransmittedNoteCipherText(object):
         assert(leadbyte == 2)
         np = OrchardNotePlaintext(
             p_enc[1:12],   # d
-            Scalar.from_bytes(p_enc[12:20]),  # v
+            struct.unpack('<Q', p_enc[12:20]),  # v
             p_enc[20:52],  # rseed
             p_enc[52:564], # memo
         )
         if OrchardKeyAgreement.esk(np.rseed, rho) != esk:
             return None
         g_d = diversify_hash(np.d)
-        note = OrchardNote(np.d, pk_d, np.v.s, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
 
         cm = note.note_commitment()
         if cm is None:
