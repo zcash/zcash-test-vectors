@@ -155,7 +155,7 @@ class TransmittedNoteCipherText(object):
         # in Sapling decryption before ZIP 216, but the reverse is okay here
         # because Pallas points have no non-canonical encodings.
         ephemeral_key = bytes(self.epk)
-        ock = prf_ock_orchard(ovk, bytes(cv), bytes(cm_star), bytes(self.epk))
+        ock = prf_ock_orchard(ovk, bytes(cv), bytes(cm_star), ephemeral_key)
         op = OrchardSym.decrypt(ock, self.c_out)
         if op is None:
             return None
