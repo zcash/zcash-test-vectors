@@ -7,20 +7,10 @@ from sapling_key_components import prf_expand
 from orchard_generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
 from orchard_pallas import Fp, Scalar, Point
 from orchard_poseidon_hash import poseidon_hash
-from orchard_commitments import commit_ivk, note_commit
-from utils import leos2bsp, leos2ip, i2leosp, i2lebsp, lebs2osp
+from orchard_commitments import commit_ivk
+from utils import i2leosp, i2lebsp, lebs2osp
+from orchard_utils import to_base, to_scalar
 from tv_output import render_args, render_tv
-
-#
-# Utilities
-#
-
-def to_scalar(buf):
-    return Scalar(leos2ip(buf))
-
-def to_base(buf):
-    return Fp(leos2ip(buf))
-
 
 #
 # PRFs and hashes
@@ -87,6 +77,7 @@ class FullViewingKey(object):
 def main():
     args = render_args()
 
+    from orchard_note import OrchardNote
     from random import Random
     from tv_rand import Rand
 
@@ -102,30 +93,36 @@ def main():
     for _ in range(0, 10):
         sk = SpendingKey(rand.b(32))
         fvk = FullViewingKey(sk)
+        default_d = fvk.default_d()
+        default_pk_d = fvk.default_pkd()
+
         note_v = rand.u64()
-        note_r = Scalar.random(rand)
         note_rho = Fp.random(rand)
-        note_psi = Fp.random(rand)
-        note_cm = note_commit(
-            note_r,
-            leos2bsp(bytes(fvk.default_gd())),
-            leos2bsp(bytes(fvk.default_pkd())),
+        note_rseed = rand.b(32)
+        note = OrchardNote(
+            default_d,
+            default_pk_d,
             note_v,
             note_rho,
-            note_psi)
-        note_nf = derive_nullifier(fvk.nk, note_rho, note_psi, note_cm)
+            note_rseed,
+        )
+        note_cm = note.note_commitment()
+        note_nf = derive_nullifier(fvk.nk, note_rho, note.psi, note_cm)
+
         test_vectors.append({
             'sk': sk.data,
             'ask': bytes(sk.ask),
-            'ovk': fvk.ovk,
-            'rivk': bytes(fvk.rivk),
             'ak': bytes(fvk.ak),
             'nk': bytes(fvk.nk),
+            'rivk': bytes(fvk.rivk),
             'ivk': bytes(fvk.ivk()),
-            'default_d': fvk.default_d(),
-            'default_pk_d': bytes(fvk.default_pkd()),
+            'ovk': fvk.ovk,
+            'dk': fvk.dk,
+            'default_d': default_d,
+            'default_pk_d': bytes(default_pk_d),
             'note_v': note_v,
-            'note_r': bytes(note_r),
+            'note_rho': bytes(note_rho),
+            'note_rseed': bytes(note_rseed),
             'note_cmx': bytes(note_cm.extract()),
             'note_nf': bytes(note_nf),
         })
@@ -136,15 +133,17 @@ def main():
         (
             ('sk', '[u8; 32]'),
             ('ask', '[u8; 32]'),
-            ('ovk', '[u8; 32]'),
-            ('rivk', '[u8; 32]'),
             ('ak', '[u8; 32]'),
             ('nk', '[u8; 32]'),
+            ('rivk', '[u8; 32]'),
             ('ivk', '[u8; 32]'),
+            ('ovk', '[u8; 32]'),
+            ('dk', '[u8; 32]'),
             ('default_d', '[u8; 11]'),
             ('default_pk_d', '[u8; 32]'),
             ('note_v', 'u64'),
-            ('note_r', '[u8; 32]'),
+            ('note_rho', '[u8; 32]'),
+            ('note_rseed', '[u8; 32]'),
             ('note_cmx', '[u8; 32]'),
             ('note_nf', '[u8; 32]'),
         ),
