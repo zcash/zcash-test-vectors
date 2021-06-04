@@ -3,10 +3,10 @@ from pyblake2 import blake2b
 import struct
 
 from transaction import (
+    LegacyTransaction,
     MAX_MONEY,
     OVERWINTER_TX_VERSION,
     Script,
-    Transaction,
 )
 from tv_output import render_args, render_tv, Some
 from tv_rand import Rand
@@ -19,20 +19,20 @@ SIGHASH_ANYONECANPAY = 0x80
 
 NOT_AN_INPUT = -1 # For portability of the test vectors; replaced with None for Rust
 
-def getHashPrevouts(tx):
-    digest = blake2b(digest_size=32, person=b'ZcashPrevoutHash')
+def getHashPrevouts(tx, person=b'ZcashPrevoutHash'):
+    digest = blake2b(digest_size=32, person=person)
     for x in tx.vin:
         digest.update(bytes(x.prevout))
     return digest.digest()
 
-def getHashSequence(tx):
-    digest = blake2b(digest_size=32, person=b'ZcashSequencHash')
+def getHashSequence(tx, person=b'ZcashSequencHash'):
+    digest = blake2b(digest_size=32, person=person)
     for x in tx.vin:
         digest.update(struct.pack('<I', x.nSequence))
     return digest.digest()
 
-def getHashOutputs(tx):
-    digest = blake2b(digest_size=32, person=b'ZcashOutputsHash')
+def getHashOutputs(tx, person=b'ZcashOutputsHash'):
+    digest = blake2b(digest_size=32, person=person)
     for x in tx.vout:
         digest.update(bytes(x))
     return digest.digest()
@@ -76,7 +76,7 @@ def signature_hash(scriptCode, tx, nIn, nHashType, amount, consensusBranchId):
         person=b'ZcashSigHash' + struct.pack('<I', consensusBranchId),
     )
 
-    digest.update(struct.pack('<I', tx.header()))
+    digest.update(struct.pack('<I', tx.version_bytes()))
     digest.update(struct.pack('<I', tx.nVersionGroupId))
     digest.update(hashPrevouts)
     digest.update(hashSequence)
@@ -111,7 +111,7 @@ def main():
 
     test_vectors = []
     for i in range(10):
-        tx = Transaction(rand, OVERWINTER_TX_VERSION)
+        tx = LegacyTransaction(rand, OVERWINTER_TX_VERSION)
         scriptCode = Script(rand)
         nIn = rand.i8() % (len(tx.vin) + 1)
         if nIn == len(tx.vin):

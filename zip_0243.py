@@ -3,10 +3,10 @@ from pyblake2 import blake2b
 import struct
 
 from transaction import (
+    LegacyTransaction,
     MAX_MONEY,
     SAPLING_TX_VERSION,
     Script,
-    Transaction,
 )
 from tv_output import render_args, render_tv, Some
 from tv_rand import Rand
@@ -80,7 +80,7 @@ def signature_hash(scriptCode, tx, nIn, nHashType, amount, consensusBranchId):
         person=b'ZcashSigHash' + struct.pack('<I', consensusBranchId),
     )
 
-    digest.update(struct.pack('<I', tx.header()))
+    digest.update(struct.pack('<I', tx.version_bytes()))
     digest.update(struct.pack('<I', tx.nVersionGroupId))
     digest.update(hashPrevouts)
     digest.update(hashSequence)
@@ -118,7 +118,7 @@ def main():
 
     test_vectors = []
     for _ in range(10):
-        tx = Transaction(rand, SAPLING_TX_VERSION)
+        tx = LegacyTransaction(rand, SAPLING_TX_VERSION)
         scriptCode = Script(rand)
         nIn = rand.i8() % (len(tx.vin) + 1)
         if nIn == len(tx.vin):
