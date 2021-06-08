@@ -33,6 +33,12 @@ def transparent_digest(tx):
 
     return digest.digest()
 
+def transparent_scripts_digest(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxAuthTransHash')
+    for x in tx.vin:
+        digest.update(bytes(x.scriptSig))
+    return digest.digest()
+
 # Sapling
 
 def sapling_digest(tx):
@@ -42,6 +48,20 @@ def sapling_digest(tx):
         digest.update(sapling_spends_digest(tx))
         digest.update(sapling_outputs_digest(tx))
         digest.update(struct.pack('<Q', tx.valueBalanceSapling))
+
+    return digest.digest()
+
+def sapling_auth_digest(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxAuthSapliHash')
+
+    if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
+        for desc in tx.vSpendsSapling:
+            digest.update(bytes(desc.proof))
+        for desc in tx.vSpendsSapling:
+            digest.update(bytes(desc.spendAuthSig))
+        for desc in tx.vOutputsSapling:
+            digest.update(bytes(desc.proof))
+        digest.update(bytes(tx.bindingSigSapling))
 
     return digest.digest()
 
@@ -119,6 +139,17 @@ def orchard_digest(tx):
 
     return digest.digest()
 
+def orchard_auth_digest(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxAuthOrchaHash')
+
+    if len(tx.vActionsOrchard) > 0:
+        digest.update(tx.proofsOrchard)
+        for desc in tx.vActionsOrchard:
+            digest.update(bytes(desc.spendAuthSig))
+        digest.update(bytes(tx.bindingSigOrchard))
+
+    return digest.digest()
+
 # - Actions
 
 def orchard_actions_compact_digest(tx):
@@ -168,6 +199,20 @@ def txid_digest(tx):
     digest.update(transparent_digest(tx))
     digest.update(sapling_digest(tx))
     digest.update(orchard_digest(tx))
+
+    return digest.digest()
+
+# Authorizing Data Commitment
+
+def auth_digest(tx):
+    digest = blake2b(
+        digest_size=32,
+        person=b'ZTxAuthHash_' + struct.pack('<I', tx.nConsensusBranchId),
+    )
+
+    digest.update(transparent_scripts_digest(tx))
+    digest.update(sapling_auth_digest(tx))
+    digest.update(orchard_auth_digest(tx))
 
     return digest.digest()
 
@@ -268,6 +313,7 @@ def main():
     for _ in range(10):
         tx = TransactionV5(rand, consensusBranchId)
         txid = txid_digest(tx)
+        auth = auth_digest(tx)
 
         # If there are any transparent inputs, derive a corresponding transparent sighash.
         if len(tx.vin) > 0:
@@ -290,6 +336,7 @@ def main():
         test_vectors.append({
             'tx': bytes(tx),
             'txid': txid,
+            'auth_digest': auth,
             'transparent_input': None if txin is None else txin.nIn,
             'script_code': None if txin is None else txin.scriptCode.raw(),
             'amount': None if txin is None else txin.amount,
@@ -307,6 +354,7 @@ def main():
         (
             ('tx', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('txid', '[u8; 32]'),
+            ('auth_digest', '[u8; 32]'),
             ('transparent_input', {
                 'rust_type': 'Option<u32>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
