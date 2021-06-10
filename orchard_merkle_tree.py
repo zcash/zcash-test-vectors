@@ -11,6 +11,7 @@ from utils import i2lebsp, leos2bsp
 # https://zips.z.cash/protocol/nu5.pdf#constants
 MERKLE_DEPTH = 32
 L_MERKLE = 255
+UNCOMMITTED_ORCHARD = Fp(2)
 
 # https://zips.z.cash/protocol/nu5.pdf#orchardmerklecrh
 def merkle_crh(layer, left, right):
@@ -30,3 +31,10 @@ right = leos2bsp(right)[:L_MERKLE]
 parent = Fp(626278560043615083774572461435172561667439770708282630516615972307985967801)
 assert merkle_crh(MERKLE_DEPTH - 1 - 25, left, right) == parent
 assert merkle_crh(MERKLE_DEPTH - 1 - 26, left, right) != parent
+
+def empty_roots():
+    empty_roots = [UNCOMMITTED_ORCHARD]
+    for layer in range(0, MERKLE_DEPTH)[::-1]:
+        bits = i2lebsp(L_MERKLE, empty_roots[-1].s)
+        empty_roots.append(merkle_crh(layer, bits, bits))
+    return empty_roots
