@@ -49,16 +49,10 @@ def decode_unified(addr_str):
             assert [1, 2, 3].count(b) > 0, "receiver type " + str(b) + " not recognized"
             s = 1
         elif s == 1:
-            receiver_len = b
-            if receiver_type == 1:
-                assert receiver_len == 20
-            elif receiver_type == 2:
-                assert receiver_len == 43
-            elif receiver_type == 3:
-                assert receiver_len == 43
-            else:
-                assert False, "incorrect receiver length"
-            s = 2
+          receiver_len = b
+          expected_len == {1: 20, 2: 43, 3: 43}.get(receiver_type)
+            if expected_len is not None:
+                assert receiver_len == expected_len, "incorrect receiver length"
         elif s == 2:
             if len(acc) < receiver_len:
                 acc.append(b)
