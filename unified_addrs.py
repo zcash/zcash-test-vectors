@@ -13,18 +13,25 @@ from f4jumble import f4jumble, f4jumble_inv
 import sapling_key_components
 import orchard_key_components
 
+def tlv(typecode, value):
+    return b"".join([bytes([typecode, len(value)]), value])
+
 def encode_unified(receivers):
     orchard_receiver = b""
-    if receivers['orchard']:
-        orchard_receiver = b"".join([b"\x03", len(receivers['orchard']).to_bytes(1, byteorder='little'), receivers['orchard']])
+    if receivers[0]:
+        orchard_receiver = tlv(0x03, receivers[0])
 
     sapling_receiver = b""
-    if receivers['sapling']:
-        sapling_receiver = b"".join([b"\x02", len(receivers['sapling']).to_bytes(1, byteorder='little'), receivers['sapling']])
+    if receivers[1]:
+        sapling_receiver = tlv(0x02, receivers[1])
 
     t_receiver = b""
-    if receivers['transparent']:
-        t_receiver = b"".join([b"\x01", len(receivers['transparent']).to_bytes(1, byteorder='little'), receivers['transparent']])
+    if receivers[2][1]:
+        if receivers[2][0]:
+            typecode = 0x00
+        else:
+            typecode = 0x01
+        t_receiver = tlv(typecode, receivers[2][1])
 
     r_bytes = b"".join([orchard_receiver, sapling_receiver, t_receiver, bytes(16)])
     converted = convertbits(f4jumble(r_bytes), 8, 5)
@@ -46,19 +53,19 @@ def decode_unified(addr_str):
     for b in decoded:
         if s == 0:
             receiver_type = b
-            assert [1, 2, 3].count(b) > 0, "receiver type " + str(b) + " not recognized"
             s = 1
         elif s == 1:
-          receiver_len = b
-          expected_len == {1: 20, 2: 43, 3: 43}.get(receiver_type)
+            receiver_len = b
+            expected_len = {0: 20, 1: 20, 2: 43, 3: 43}.get(receiver_type)
             if expected_len is not None:
                 assert receiver_len == expected_len, "incorrect receiver length"
+            s = 2
         elif s == 2:
             if len(acc) < receiver_len:
                 acc.append(b)
             
             if len(acc) == receiver_len:
-                if receiver_type == 1:
+                if receiver_type == 0 or receiver_type == 1:
                     assert not ('transparent' in result), "duplicate transparent receiver detected"
                     assert len(acc) == 20
                     result['transparent'] = bytes(acc)
@@ -120,17 +127,17 @@ def main():
         else: 
             orchard_raw_addr = None
 
-        receivers = {
-            'orchard': orchard_raw_addr, 
-            'sapling': sapling_raw_addr, 
-            'transparent': t_addr
-        }
+        receivers = [
+            orchard_raw_addr, 
+            sapling_raw_addr, 
+            (rand.bool(), t_addr)
+        ]
         ua = encode_unified(receivers)
 
         decoded = decode_unified(ua)
-        assert decoded.get('orchard') == receivers.get('orchard')
-        assert decoded.get('sapling') == receivers.get('sapling')
-        assert decoded.get('transparent') == receivers.get('transparent')
+        assert decoded.get('orchard') == orchard_raw_addr
+        assert decoded.get('sapling') == sapling_raw_addr
+        assert decoded.get('transparent') == t_addr
 
         test_vectors.append({
             't_addr_bytes': t_addr,
@@ -144,15 +151,15 @@ def main():
         'unified_address',
         (
             ('t_addr_bytes', {
-                'rust_type': 'Option<[u8; 22]>',
+                'rust_type': 'Option<[u8; 20]>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
             }),
             ('sapling_raw_addr', {
-                'rust_type': 'Option<[u8; 22]>',
+                'rust_type': 'Option<[u8; 43]>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
             }),
             ('orchard_raw_addr', {
-                'rust_type': 'Option<[u8; 22]>',
+                'rust_type': 'Option<[u8; 43]>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
             }),
             ('unified_addr', 'Vec<u8>')
