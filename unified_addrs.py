@@ -127,10 +127,11 @@ def main():
         else: 
             orchard_raw_addr = None
 
+        is_p2pkh = rand.bool()
         receivers = [
             orchard_raw_addr, 
             sapling_raw_addr, 
-            (rand.bool(), t_addr)
+            (is_p2pkh, t_addr)
         ]
         ua = encode_unified(receivers)
 
@@ -140,7 +141,8 @@ def main():
         assert decoded.get('transparent') == t_addr
 
         test_vectors.append({
-            't_addr_bytes': t_addr,
+            'p2pkh_bytes': t_addr if is_p2pkh else None,
+            'p2sh_bytes': None if is_p2pkh else t_addr,
             'sapling_raw_addr': sapling_raw_addr,
             'orchard_raw_addr': orchard_raw_addr,
             'unified_addr': ua.encode()
@@ -150,7 +152,11 @@ def main():
         args,
         'unified_address',
         (
-            ('t_addr_bytes', {
+            ('p2pkh_bytes', {
+                'rust_type': 'Option<[u8; 20]>',
+                'rust_fmt': lambda x: None if x is None else Some(x),
+            }),
+            ('p2sh_bytes', {
                 'rust_type': 'Option<[u8; 20]>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
             }),
@@ -170,4 +176,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
