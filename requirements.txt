@@ -1,0 +1,6 @@
+cffi==1.14.5
+chacha20poly1305==0.0.3
+cryptography==3.4.7
+numpy==1.21.0
+pyblake2==1.1.2
+pycparser==2.20
