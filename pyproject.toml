@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "zcash-test-vectors"
+version = "0.1.0"
+description = "Zcash test vectors"
+authors = [
+]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+repository = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+documentation = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+numpy = "1.21.0"
+chacha20poly1305 = "0.0.3"
+pyblake2 = "1.1.2"
