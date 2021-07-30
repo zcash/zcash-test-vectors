@@ -16,6 +16,10 @@ import orchard_key_components
 def tlv(typecode, value):
     return b"".join([bytes([typecode, len(value)]), value])
 
+def padding(hrp):
+    assert(len(hrp) <= 16)
+    return bytes(hrp, "utf8") + bytes(16 - len(hrp))
+
 def encode_unified(receivers):
     orchard_receiver = b""
     if receivers[0]:
@@ -33,9 +37,11 @@ def encode_unified(receivers):
             typecode = 0x01
         t_receiver = tlv(typecode, receivers[2][1])
 
-    r_bytes = b"".join([orchard_receiver, sapling_receiver, t_receiver, bytes(16)])
+    hrp = "u"
+
+    r_bytes = b"".join([orchard_receiver, sapling_receiver, t_receiver, padding(hrp)])
     converted = convertbits(f4jumble(r_bytes), 8, 5)
-    return bech32_encode("u", converted, Encoding.BECH32M)
+    return bech32_encode(hrp, converted, Encoding.BECH32M)
 
 def decode_unified(addr_str):
     (hrp, data, encoding) = bech32_decode(addr_str)
@@ -43,8 +49,8 @@ def decode_unified(addr_str):
 
     decoded = f4jumble_inv(bytes(convertbits(data, 5, 8, False)))
     suffix = decoded[-16:]
-    # check trailing zero bytes
-    assert suffix == bytes(16)
+    # check trailing padding bytes
+    assert suffix == padding(hrp)
     decoded = decoded[:-16]
 
     s = 0
