@@ -58,14 +58,10 @@ def decode_unified(addr_str):
     result = {}
     while len(rest) > 0:
         if s == 0:
-            (receiver_type, receiver_type_len) = parse_compact_size(rest)
-            rest = rest[receiver_type_len:]
-
+            (receiver_type, rest) = parse_compact_size(rest)
             s = 1
         elif s == 1:
-            (receiver_len, receiver_len_len) = parse_compact_size(rest)
-            rest = rest[receiver_len_len:]
-
+            (receiver_len, rest) = parse_compact_size(rest)
             expected_len = {0: 20, 1: 20, 2: 43, 3: 43}.get(receiver_type)
             if expected_len is not None:
                 assert receiver_len == expected_len, "incorrect receiver length"

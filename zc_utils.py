@@ -14,22 +14,22 @@ def parse_compact_size(rest):
     assert len(rest) >= 1
     b = rest[0]
     if b < 253:
-        return (b, 1)
+        return (b, rest[1:])
     elif b == 253:
         assert len(rest) >= 3
-        return (struct.unpack('<H', rest[1:3])[0], 3)
+        return (struct.unpack('<H', rest[1:3])[0], rest[3:])
     elif b == 254:
         assert len(rest) >= 5
-        return (struct.unpack('<I', rest[1:5])[0], 5)
+        return (struct.unpack('<I', rest[1:5])[0], rest[5:])
     else:
         assert len(rest) >= 9
-        return (struct.unpack('<Q', rest[1:9])[0], 9)
+        return (struct.unpack('<Q', rest[1:9])[0], rest[9:])
 
 
 def test_round_trip(n, encoding):
     assert write_compact_size(n) == encoding
-    assert parse_compact_size(encoding) == (n, len(encoding))
-    assert parse_compact_size(encoding + b'\x2a') == (n, len(encoding))
+    assert parse_compact_size(encoding) == (n, b'')
+    assert parse_compact_size(encoding + b'*') == (n, b'*')
     try:
         parse_compact_size(encoding[:-1])
     except AssertionError:
