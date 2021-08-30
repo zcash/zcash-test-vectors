@@ -17,25 +17,34 @@ def parse_compact_size(rest):
         return (b, rest[1:])
     elif b == 253:
         assert len(rest) >= 3
-        return (struct.unpack('<H', rest[1:3])[0], rest[3:])
+        n = struct.unpack('<H', rest[1:3])[0]
+        assert n >= 253
+        return (n, rest[3:])
     elif b == 254:
         assert len(rest) >= 5
-        return (struct.unpack('<I', rest[1:5])[0], rest[5:])
+        n = struct.unpack('<I', rest[1:5])[0]
+        assert n >= 0x10000
+        return (n, rest[5:])
     else:
         assert len(rest) >= 9
-        return (struct.unpack('<Q', rest[1:9])[0], rest[9:])
+        n = struct.unpack('<Q', rest[1:9])[0]
+        assert n >= 0x100000000
+        return (n, rest[9:])
 
+
+def assert_parse_fails(encoding):
+    try:
+        parse_compact_size(encoding)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("parse_compact_size(%r) failed to raise AssertionError" % (encoding,))
 
 def test_round_trip(n, encoding):
     assert write_compact_size(n) == encoding
     assert parse_compact_size(encoding) == (n, b'')
     assert parse_compact_size(encoding + b'*') == (n, b'*')
-    try:
-        parse_compact_size(encoding[:-1])
-    except AssertionError:
-        pass
-    else:
-        raise AssertionError("parse_compact_size(%r) failed to raise AssertionError" % (encoding,))
+    assert_parse_fails(encoding[:-1])
 
 test_round_trip(0, b'\x00')
 test_round_trip(1, b'\x01')
@@ -51,4 +60,7 @@ test_round_trip(0x010001, b'\xFE\x01\x00\x01\x00')
 test_round_trip(0xFFFFFFFE, b'\xFE\xFE\xFF\xFF\xFF')
 test_round_trip(0xFFFFFFFF, b'\xFE\xFF\xFF\xFF\xFF')
 test_round_trip(0x0100000000, b'\xFF\x00\x00\x00\x00\x01\x00\x00\x00')
-test_round_trip(0xFFFFFFFFFFFFFFFF, b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF')
+
+assert_parse_fails(b'\xFD\xFC\x00')
+assert_parse_fails(b'\xFE\xFF\xFF\x00\x00')
+assert_parse_fails(b'\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00')
