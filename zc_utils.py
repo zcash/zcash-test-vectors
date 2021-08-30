@@ -10,18 +10,45 @@ def write_compact_size(n):
     else:
         return struct.pack('B', 255) + struct.pack('<Q', n)
 
-assert write_compact_size(0) == b'\x00'
-assert write_compact_size(1) == b'\x01'
-assert write_compact_size(252) == b'\xFC'
-assert write_compact_size(253) == b'\xFD\xFD\x00'
-assert write_compact_size(254) == b'\xFD\xFE\x00'
-assert write_compact_size(255) == b'\xFD\xFF\x00'
-assert write_compact_size(256) == b'\xFD\x00\x01'
-assert write_compact_size(0xFFFE) == b'\xFD\xFE\xFF'
-assert write_compact_size(0xFFFF) == b'\xFD\xFF\xFF'
-assert write_compact_size(0x010000) == b'\xFE\x00\x00\x01\x00'
-assert write_compact_size(0x010001) == b'\xFE\x01\x00\x01\x00'
-assert write_compact_size(0xFFFFFFFE) == b'\xFE\xFE\xFF\xFF\xFF'
-assert write_compact_size(0xFFFFFFFF) == b'\xFE\xFF\xFF\xFF\xFF'
-assert write_compact_size(0x0100000000) == b'\xFF\x00\x00\x00\x00\x01\x00\x00\x00'
-assert write_compact_size(0xFFFFFFFFFFFFFFFF) == b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF'
+def parse_compact_size(rest):
+    assert len(rest) >= 1
+    b = rest[0]
+    if b < 253:
+        return (b, 1)
+    elif b == 253:
+        assert len(rest) >= 3
+        return (struct.unpack('<H', rest[1:3])[0], 3)
+    elif b == 254:
+        assert len(rest) >= 5
+        return (struct.unpack('<I', rest[1:5])[0], 5)
+    else:
+        assert len(rest) >= 9
+        return (struct.unpack('<Q', rest[1:9])[0], 9)
+
+
+def test_round_trip(n, encoding):
+    assert write_compact_size(n) == encoding
+    assert parse_compact_size(encoding) == (n, len(encoding))
+    assert parse_compact_size(encoding + b'\x2a') == (n, len(encoding))
+    try:
+        parse_compact_size(encoding[:-1])
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("parse_compact_size(%r) failed to raise AssertionError" % (encoding,))
+
+test_round_trip(0, b'\x00')
+test_round_trip(1, b'\x01')
+test_round_trip(252, b'\xFC')
+test_round_trip(253, b'\xFD\xFD\x00')
+test_round_trip(254, b'\xFD\xFE\x00')
+test_round_trip(255, b'\xFD\xFF\x00')
+test_round_trip(256, b'\xFD\x00\x01')
+test_round_trip(0xFFFE, b'\xFD\xFE\xFF')
+test_round_trip(0xFFFF, b'\xFD\xFF\xFF')
+test_round_trip(0x010000, b'\xFE\x00\x00\x01\x00')
+test_round_trip(0x010001, b'\xFE\x01\x00\x01\x00')
+test_round_trip(0xFFFFFFFE, b'\xFE\xFE\xFF\xFF\xFF')
+test_round_trip(0xFFFFFFFF, b'\xFE\xFF\xFF\xFF\xFF')
+test_round_trip(0x0100000000, b'\xFF\x00\x00\x00\x00\x01\x00\x00\x00')
+test_round_trip(0xFFFFFFFFFFFFFFFF, b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF')
