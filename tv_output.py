@@ -153,6 +153,23 @@ def tv_part_rust(name, value, config, indent=3):
                     '    ' * (indent + 1),
                     chunk(hexlify(item)),
                 ))
+            elif type(item) == list:
+                print('''%s[''' % (
+                    '    ' * (indent + 1)
+                ))
+                for subitem in item:
+                    if type(subitem) == bytes:
+                        print('''%s[%s],''' % (
+                            '    ' * (indent + 2),
+                            chunk(hexlify(subitem)),
+                        ))
+                    else:
+                        raise ValueError('Invalid sublist type(%s): %s' % (name, type(subitem)))
+                print('''%s],''' % (
+                    '    ' * (indent + 1)
+                ))
+            else:
+                raise ValueError('Invalid list type(%s): %s' % (name, type(item)))
         print('''%s],''' % (
                 pad,
             ))
