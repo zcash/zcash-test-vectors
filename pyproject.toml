@@ -3,12 +3,23 @@ name = "zcash-test-vectors"
 version = "0.1.0"
 description = "Zcash test vectors"
 authors = [
+    "Jack Grigg <jack@z.cash>",
+    "Daira Hopwood <daira@jacaranda.org>",
+    "ying tong <yingtong@z.cash>",
+    "Taylor Hornby <taylor@defuse.ca>",
+    "Kris Nuttycombe <kris@electriccoin.co>",
+    "Simon <simon@bitcartel.com>",
+    "Ariel Gabizon <ariel.gabizon@gmail.com>",
+    "Deirdre Connolly <durumcrustulum@gmail.com>",
 ]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/zcash-hackworks/zcash-test-vectors/"
 repository = "https://github.com/zcash-hackworks/zcash-test-vectors/"
 documentation = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+classifiers = [
+    "Private :: Do Not Upload",
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
