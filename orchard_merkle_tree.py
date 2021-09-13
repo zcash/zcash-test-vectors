@@ -60,7 +60,7 @@ def main():
     # Derive path for each leaf in a tree of depth 4.
     def get_paths_and_root(leaves):
         assert(len(leaves) == (1 << SMALL_DEPTH))
-        paths = [[]] * (1 << SMALL_DEPTH)
+        paths = [[] for _ in range(1 << SMALL_DEPTH)]
 
         # At layer 0, we want:
         # - leaf 0: sibling 1
