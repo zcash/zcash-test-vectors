@@ -92,7 +92,6 @@ def main():
     rand = Rand(randbytes)
 
     plain_test_vectors = []
-    hashed_test_vectors = []
 
     # Generate test vectors with various lengths:
     for l_M in [
@@ -115,20 +114,6 @@ def main():
             'jumbled': jumbled,
         })
 
-    for l_M in [
-        (rand.u32() % (MAX_l_M - MIN_l_M)) + MIN_l_M,
-        MAX_l_M,
-    ]:
-        M = bytes([i & 0xFF for i in range(l_M)])
-        jumbled = f4jumble(M)
-        assert len(jumbled) == len(M)
-        assert f4jumble_inv(jumbled) == M
-
-        hashed_test_vectors.append({
-            'length': l_M,
-            'jumbled_hash': blake2b(jumbled).digest()
-        })
-
     render_tv(
         args,
         'f4jumble',
@@ -137,16 +122,6 @@ def main():
             ('jumbled', 'Vec<u8>'),
         ),
         plain_test_vectors,
-    )
-    print()
-    render_tv(
-        args,
-        'f4jumble',
-        (
-            ('length', 'usize'),
-            ('jumbled_hash', 'Vec<u8>'),
-        ),
-        hashed_test_vectors,
     )
 
 
