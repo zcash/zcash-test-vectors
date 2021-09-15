@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import struct
 
 def write_compact_size(n):
@@ -60,6 +61,7 @@ test_round_trip(0x010001, b'\xFE\x01\x00\x01\x00')
 test_round_trip(0xFFFFFFFE, b'\xFE\xFE\xFF\xFF\xFF')
 test_round_trip(0xFFFFFFFF, b'\xFE\xFF\xFF\xFF\xFF')
 test_round_trip(0x0100000000, b'\xFF\x00\x00\x00\x00\x01\x00\x00\x00')
+test_round_trip(0xFFFFFFFFFFFFFFFF, b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF')
 
 assert_parse_fails(b'\xFD\xFC\x00')
 assert_parse_fails(b'\xFE\xFF\xFF\x00\x00')
