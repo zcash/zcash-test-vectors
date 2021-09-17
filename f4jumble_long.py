@@ -31,7 +31,7 @@ def main():
         'f4jumble_long',
         (
             ('length', 'usize'),
-            ('jumbled_hash', 'Vec<u8>'),
+            ('jumbled_hash', '[u8; 64]'),
         ),
         hashed_test_vectors,
     )
