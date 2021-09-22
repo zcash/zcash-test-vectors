@@ -4,17 +4,18 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 import math
 import struct
 
-from pyblake2 import blake2b
 from bech32m import bech32_encode, bech32_decode, convertbits, Encoding
 
 from tv_output import render_args, render_tv, Some
 from tv_rand import Rand
+from zc_utils import write_compact_size, parse_compact_size
 from f4jumble import f4jumble, f4jumble_inv
 import sapling_key_components
 import orchard_key_components
 
+
 def tlv(typecode, value):
-    return b"".join([bytes([typecode, len(value)]), value])
+    return b"".join([write_compact_size(typecode), write_compact_size(len(value)), value])
 
 def padding(hrp):
     assert(len(hrp) <= 16)
@@ -51,46 +52,35 @@ def decode_unified(addr_str):
     suffix = decoded[-16:]
     # check trailing padding bytes
     assert suffix == padding(hrp)
-    decoded = decoded[:-16]
+    rest = decoded[:-16]
 
-    s = 0
-    acc = []
     result = {}
-    for b in decoded:
-        if s == 0:
-            receiver_type = b
-            s = 1
-        elif s == 1:
-            receiver_len = b
-            expected_len = {0: 20, 1: 20, 2: 43, 3: 43}.get(receiver_type)
-            if expected_len is not None:
-                assert receiver_len == expected_len, "incorrect receiver length"
-            s = 2
-        elif s == 2:
-            if len(acc) < receiver_len:
-                acc.append(b)
-            
-            if len(acc) == receiver_len:
-                if receiver_type == 0 or receiver_type == 1:
-                    assert not ('transparent' in result), "duplicate transparent receiver detected"
-                    assert len(acc) == 20
-                    result['transparent'] = bytes(acc)
-                    acc = []
-                    s = 0
+    while len(rest) > 0:
+        (receiver_type, rest) = parse_compact_size(rest)
+        (receiver_len, rest) = parse_compact_size(rest)
 
-                elif receiver_type == 2:
-                    assert not ('sapling' in result), "duplicate sapling receiver detected"
-                    assert len(acc) == 43
-                    result['sapling'] = bytes(acc)
-                    acc = []
-                    s = 0
+        expected_len = {0: 20, 1: 20, 2: 43, 3: 43}.get(receiver_type)
+        if expected_len is not None:
+            assert receiver_len == expected_len, "incorrect receiver length"
 
-                elif receiver_type == 3:
-                    assert not ('orchard' in result), "duplicate orchard receiver detected"
-                    assert len(acc) == 43
-                    result['orchard'] = bytes(acc)
-                    acc = []
-                    s = 0
+        assert len(rest) >= receiver_len
+        (receiver, rest) = (rest[:receiver_len], rest[receiver_len:])
+
+        if receiver_type == 0 or receiver_type == 1:
+            assert not ('transparent' in result), "duplicate transparent receiver detected"
+            assert len(receiver) == 20
+            result['transparent'] = receiver
+
+        elif receiver_type == 2:
+            assert not ('sapling' in result), "duplicate sapling receiver detected"
+            assert len(receiver) == 43
+            result['sapling'] = receiver
+
+        elif receiver_type == 3:
+            assert not ('orchard' in result), "duplicate orchard receiver detected"
+            assert len(receiver) == 43
+            result['orchard'] = receiver
+
     return result
 
 
@@ -130,13 +120,13 @@ def main():
             orchard_default_d = orchard_fvk.default_d()
             orchard_default_pk_d = orchard_fvk.default_pkd()
             orchard_raw_addr = b"".join([orchard_default_d[:11], bytes(orchard_default_pk_d)[:32]])
-        else: 
+        else:
             orchard_raw_addr = None
 
         is_p2pkh = rand.bool()
         receivers = [
-            orchard_raw_addr, 
-            sapling_raw_addr, 
+            orchard_raw_addr,
+            sapling_raw_addr,
             (is_p2pkh, t_addr)
         ]
         ua = encode_unified(receivers)

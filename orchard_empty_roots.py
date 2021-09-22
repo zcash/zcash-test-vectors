@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+
 from orchard_merkle_tree import empty_roots
 from orchard_pallas import Fp
 from tv_output import render_args, render_tv

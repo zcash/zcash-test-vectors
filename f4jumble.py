@@ -8,17 +8,22 @@ from pyblake2 import blake2b
 
 from tv_output import render_args, render_tv
 from tv_rand import Rand
+from utils import i2leosp
 
 
 # Maximum output length of BLAKE2b
 l_H = 64
 assert 8*l_H == 512
 
+MIN_l_M = 48
+MAX_l_M = 4194368
+assert MAX_l_M == 65537*l_H
+
 def instantiate(l_L, l_R):
     def H(i, u):
         digest = blake2b(
             digest_size=l_L,
-            person=b'UA_F4Jumble_H_' + bytes([i, 0]),
+            person=b'UA_F4Jumble_H' + bytes([i, 0, 0]),
         )
         digest.update(u)
         return digest.digest()
@@ -27,11 +32,11 @@ def instantiate(l_L, l_R):
         def inner(j):
             digest = blake2b(
                 digest_size=l_H,
-                person=b'UA_F4Jumble_G_' + bytes([i, j]),
+                person=b'UA_F4Jumble_G' + bytes([i]) + i2leosp(16, j),
             )
             digest.update(u)
             return digest.digest()
-        
+
         return b''.join([inner(j) for j in range(0, math.ceil(l_R/l_H))])[:l_R]
 
     return (H, G)
@@ -41,7 +46,7 @@ def xor(x, y):
 
 def f4jumble(M):
     l_M = len(M)
-    assert 48 <= l_M and l_M <= 16448
+    assert MIN_l_M <= l_M and l_M <= MAX_l_M
 
     l_L = min([l_H, l_M//2])
     l_R = l_M - l_L
@@ -58,7 +63,7 @@ def f4jumble(M):
 
 def f4jumble_inv(M):
     l_M = len(M)
-    assert 48 <= l_M and l_M <= 16448
+    assert MIN_l_M <= l_M and l_M <= MAX_l_M
 
     l_L = min([l_H, l_M//2])
     l_R = l_M - l_L
@@ -86,28 +91,28 @@ def main():
         return bytes(ret)
     rand = Rand(randbytes)
 
-    test_vectors = []
+    plain_test_vectors = []
+
     # Generate test vectors with various lengths:
     for l_M in [
-        48,
+        MIN_l_M,
         l_H,
         2*l_H,
         2*l_H + 1,
         3*l_H,
         3*l_H + 1,
-        (rand.u32() % 16400) + 48,
-        16448,
+        257*l_H,
+        257*l_H + 1,
     ]:
         M = rand.b(l_M)
         jumbled = f4jumble(M)
         assert len(jumbled) == len(M)
         assert f4jumble_inv(jumbled) == M
-        test_vectors.append(M)
 
-    test_vectors = [{
-        'normal': M,
-        'jumbled': f4jumble(M),
-    } for M in test_vectors]
+        plain_test_vectors.append({
+            'normal': M,
+            'jumbled': jumbled,
+        })
 
     render_tv(
         args,
@@ -116,7 +121,7 @@ def main():
             ('normal', 'Vec<u8>'),
             ('jumbled', 'Vec<u8>'),
         ),
-        test_vectors,
+        plain_test_vectors,
     )
 
 

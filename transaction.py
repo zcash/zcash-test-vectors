@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import struct
 
 from orchard_pallas import (

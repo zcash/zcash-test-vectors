@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from orchard_group_hash import map_to_curve_simple_swu
 from orchard_iso_pallas import Point as IsoPoint
