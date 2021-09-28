@@ -24,7 +24,7 @@ def rcv_trapdoor(rand):
 # https://zips.z.cash/protocol/nu5.pdf#concretesinsemillacommit
 def sinsemilla_commit(r: Scalar, D, M):
     assert isinstance(r, Scalar)
-    return sinsemilla_hash_to_point(D + b"-M", M).checked_incomplete_add(
+    return sinsemilla_hash_to_point(D + b"-M", M) + (
         group_hash(D + b"-r", b"") * r
     )
 
