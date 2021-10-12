@@ -9,4 +9,4 @@ Requirements:
 
 ## License
 
-This repository is [MIT/Apache 2.0 dual-licensed](COPYING).
+This repository is [MIT/Apache 2.0 dual-licensed](COPYING.md).
