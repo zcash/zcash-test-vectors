@@ -5,15 +5,15 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 from sapling_jubjub import FieldElement
 from utils import leos2ip
 
-p = 0x40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001
-q = 0x40000000000000000000000000000000224698fc094cf91b992d30ed00000001
+q = 0x40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001
+p = 0x40000000000000000000000000000000224698fc094cf91b992d30ed00000001
 
-pm1d2 = 0x2000000000000000000000000000000011234c7e04ca546ec623759080000000
-assert (p - 1) // 2 == pm1d2
+qm1d2 = 0x2000000000000000000000000000000011234c7e04ca546ec623759080000000
+assert (q - 1) // 2 == qm1d2
 
 S = 32
 T = 0x40000000000000000000000000000000224698fc0994a8dd8c46eb21
-assert (p - 1) == (1 << S) * T
+assert (q - 1) == (1 << S) * T
 
 tm1d2 = 0x2000000000000000000000000000000011234c7e04ca546ec6237590
 assert (T - 1) // 2 == tm1d2
@@ -39,7 +39,7 @@ class Fq(FieldElement):
                 pass
 
     def __init__(self, s, strict=False):
-        FieldElement.__init__(self, Fq, s, p, strict=strict)
+        FieldElement.__init__(self, Fq, s, q, strict=strict)
 
     def __str__(self):
         return 'Fq(%s)' % self.s
@@ -51,7 +51,7 @@ class Fq(FieldElement):
     def sqrt(self):
         # Tonelli-Shank's algorithm for p mod 16 = 1
         # https://eprint.iacr.org/2012/685.pdf (page 12, algorithm 5)
-        a = self.exp(pm1d2)
+        a = self.exp(qm1d2)
         if a == self.ONE:
             # z <- c^t
             c = Fq(ROOT_OF_UNITY)
@@ -92,7 +92,7 @@ class Fq(FieldElement):
 
 class Scalar(FieldElement):
     def __init__(self, s, strict=False):
-        FieldElement.__init__(self, Scalar, s, q, strict=strict)
+        FieldElement.__init__(self, Scalar, s, p, strict=strict)
 
     def __str__(self):
         return 'Scalar(%s)' % self.s
