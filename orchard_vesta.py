@@ -18,8 +18,8 @@ assert (q - 1) == (1 << S) * T
 tm1d2 = 0x2000000000000000000000000000000011234c7e04ca546ec6237590
 assert (T - 1) // 2 == tm1d2
 
-# 5^T (mod p)
-ROOT_OF_UNITY = 0x2235e1a7415bf936f4c8f353124086c14ad38b9084b8a80c57eecda0a84b6836
+# 5^T (mod q)
+ROOT_OF_UNITY = 0x2de6a9b8746d3f589e5c4dfd492ae26e9bb97ea3c106f049a70e2c1102b6d05f
 
 
 #
