@@ -3,10 +3,10 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 import struct
 
-MAX_SIZE = 0x2000000
+MAX_COMPACT_SIZE = 0x2000000
 
 def write_compact_size(n, allow_u64=False):
-    assert allow_u64 or n <= MAX_SIZE
+    assert allow_u64 or n <= MAX_COMPACT_SIZE
     if n < 253:
         return struct.pack('B', n)
     elif n <= 0xFFFF:
@@ -18,7 +18,7 @@ def write_compact_size(n, allow_u64=False):
 
 def parse_compact_size(rest, allow_u64=False):
     (n, rest) = parse_compact_u64(rest)
-    assert allow_u64 or n <= MAX_SIZE
+    assert allow_u64 or n <= MAX_COMPACT_SIZE
     return (n, rest)
 
 def parse_compact_u64(rest):

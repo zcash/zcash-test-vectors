@@ -1,6 +1,14 @@
 import os
 import struct
 
+def randbytes_inner(rng, l):
+    ret = []
+    while len(ret) < l:
+        ret.append(rng.randrange(0, 256))
+    return bytes(ret)
+
+def randbytes(rng):
+    return lambda l: randbytes_inner(rng, l)
 
 class Rand(object):
     def __init__(self, random=os.urandom):

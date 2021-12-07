@@ -133,6 +133,12 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
     def nk(self):
         return self._nk
 
+    def ovk(self):
+        return self._ovk
+
+    def dk(self):
+        return self._dk
+
     def is_xsk(self):
         return False
 
@@ -164,11 +170,12 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         c_i   = I_R
         return self.__class__(ak_i, nk_i, ovk_i, dk_i, c_i, self.depth()+1, self.tag(), i)
 
+def hardened(i): 
+    assert(i < (1<<31))
+    return i + (1<<31)
 
 def main():
     args = render_args()
-
-    def hardened(i): return i + (1<<31)
 
     seed = bytes(range(32))
     m = ExtendedSpendingKey.master(seed)
