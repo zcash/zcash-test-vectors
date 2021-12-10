@@ -33,6 +33,8 @@ def main():
             privkey = ec.derive_private_key(int.from_bytes(rand.b(32), 'little'), ec.SECP256K1())
             pubkey = privkey.public_key()
             pubkey_bytes = pubkey.public_bytes(Encoding.X962, PublicFormat.CompressedPoint)
+            assert len(pubkey_bytes) == 33
+            assert pubkey_bytes[0] in (0x02, 0x03)
             t_key_bytes = c + pubkey_bytes
         else:
             t_key_bytes = None
