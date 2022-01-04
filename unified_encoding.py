@@ -23,7 +23,7 @@ def encode_unified(rng, items, hrp):
 
     has_p2pkh = False
     has_p2sh = False
-    for item in items:
+    for item in sorted(items):
         if item[1]:
             if item[0] == P2PKH_ITEM:
                 has_p2pkh = True
@@ -32,10 +32,9 @@ def encode_unified(rng, items, hrp):
             assert (not (has_p2pkh and has_p2sh))
             encoded_items.append(tlv(item[0], item[1]))
 
-    items_bytes = rng.sample(encoded_items, k=len(encoded_items))
-    items_bytes.append(padding(hrp))
+    encoded_items.append(padding(hrp))
 
-    r_bytes = b"".join(items_bytes)
+    r_bytes = b"".join(encoded_items)
     converted = convertbits(f4jumble(r_bytes), 8, 5)
     return bech32_encode(hrp, converted, Encoding.BECH32M)
 
@@ -51,6 +50,7 @@ def decode_unified(encoded, expected_hrp, expected_lengths):
     rest = decoded[:-16]
 
     result = {}
+    prev_type = -1
     while len(rest) > 0:
         (item_type, rest) = parse_compact_size(rest)
         (item_len, rest) = parse_compact_size(rest)
@@ -77,6 +77,9 @@ def decode_unified(encoded, expected_hrp, expected_lengths):
         else:
             assert not ('unknown' in result), "duplicate unknown item detected"
             result['unknown'] = (item_type, item)
+
+        assert item_type > prev_type, "items out of order: typecodes %r and %r" % (prev_type, item_type)
+        prev_type = item_type
 
     return result
 

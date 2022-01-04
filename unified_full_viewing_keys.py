@@ -87,8 +87,8 @@ def main():
         ufvk = encode_unified(rng, receivers, "uview")
 
         expected_lengths = {
-            P2PKH_ITEM: 65, 
-            SAPLING_ITEM: 128, 
+            P2PKH_ITEM: 65,
+            SAPLING_ITEM: 128,
             ORCHARD_ITEM: 96,
             unknown_tc: unknown_len
         }
