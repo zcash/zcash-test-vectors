@@ -261,13 +261,8 @@ def prevouts_sig_digest(tx, nHashType):
         return blake2b(digest_size=32, person=b'ZTxIdPrevoutHash').digest()
 
 def sequence_sig_digest(tx, nHashType):
-    # if the SIGHASH_ANYONECANPAY flag is not set, and the sighash type is neither
-    # SIGHASH_SINGLE nor SIGHASH_NONE:
-    if (
-        (not (nHashType & SIGHASH_ANYONECANPAY)) and \
-        (nHashType & 0x1f) != SIGHASH_SINGLE and \
-        (nHashType & 0x1f) != SIGHASH_NONE
-    ):
+    # if the SIGHASH_ANYONECANPAY flag is not set:
+    if not (nHashType & SIGHASH_ANYONECANPAY):
         return getHashSequence(tx, b'ZTxIdSequencHash')
     else:
         return blake2b(digest_size=32, person=b'ZTxIdSequencHash').digest()
