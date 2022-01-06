@@ -243,6 +243,7 @@ def transparent_sig_digest(tx, t_inputs, nHashType, txin):
     digest = blake2b(digest_size=32, person=b'ZTxIdTranspaHash')
 
     if len(tx.vin) + len(tx.vout) > 0:
+        digest.update(hash_type(tx, nHashType, txin))
         digest.update(prevouts_sig_digest(tx, nHashType))
         digest.update(amounts_sig_digest(t_inputs, nHashType))
         digest.update(script_codes_sig_digest(t_inputs, nHashType))
@@ -251,6 +252,23 @@ def transparent_sig_digest(tx, t_inputs, nHashType, txin):
         digest.update(txin_sig_digest(tx, txin))
 
     return digest.digest()
+
+def hash_type(tx, nHashType, txin):
+    if txin is None:
+        # Sapling Spend or Orchard Action
+        assert nHashType == SIGHASH_ALL
+    else:
+        # Transparent input
+        assert nHashType in [
+            SIGHASH_ALL,
+            SIGHASH_NONE,
+            SIGHASH_SINGLE,
+            SIGHASH_ALL | SIGHASH_ANYONECANPAY,
+            SIGHASH_NONE | SIGHASH_ANYONECANPAY,
+            SIGHASH_SINGLE | SIGHASH_ANYONECANPAY,
+        ]
+        assert (nHashType & 0x1f) != SIGHASH_SINGLE or 0 <= txin.nIn and txin.nIn < len(tx.vout)
+    return struct.pack('B', nHashType)
 
 def prevouts_sig_digest(tx, nHashType):
     # If the SIGHASH_ANYONECANPAY flag is not set:
@@ -344,14 +362,19 @@ def main():
         sighash_shielded = signature_digest(tx, t_inputs, SIGHASH_ALL, None)
         other_sighashes = {
             nHashType: None if txin is None else signature_digest(tx, t_inputs, nHashType, txin)
-            for nHashType in [
+            for nHashType in ([
                 SIGHASH_ALL,
                 SIGHASH_NONE,
                 SIGHASH_SINGLE,
                 SIGHASH_ALL | SIGHASH_ANYONECANPAY,
                 SIGHASH_NONE | SIGHASH_ANYONECANPAY,
                 SIGHASH_SINGLE | SIGHASH_ANYONECANPAY,
-            ]
+            ] if txin is None or txin.nIn < len(tx.vout) else [
+                SIGHASH_ALL,
+                SIGHASH_NONE,
+                SIGHASH_ALL | SIGHASH_ANYONECANPAY,
+                SIGHASH_NONE | SIGHASH_ANYONECANPAY,
+            ])
         }
 
         test_vectors.append({
