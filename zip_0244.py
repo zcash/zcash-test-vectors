@@ -324,8 +324,8 @@ def txin_sig_digest(tx, txin):
     digest = blake2b(digest_size=32, person=b'Zcash___TxInHash')
     if txin is not None:
         digest.update(bytes(tx.vin[txin.nIn].prevout))
-        digest.update(bytes(txin.scriptCode))
         digest.update(struct.pack('<Q', txin.amount))
+        digest.update(bytes(txin.scriptCode))
         digest.update(struct.pack('<I', tx.vin[txin.nIn].nSequence))
     return digest.digest()
 
