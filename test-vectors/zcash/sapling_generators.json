@@ -1,0 +1,5 @@
+[
+    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_generators.py"],
+    ["skb, pkb, npb, wprb, vcvb, vcrb, pb0, pb1, pb2, pb3"],
+    ["d7a1019e6de9b67553bb37d0c21cfd056d65674dcedbddbc305632adaaf2b530", "d4b6d10718df2a7adec901840f4948cc50df51eaf5a149d2467af9f7e05de8e7", "e1369d5440bf84a5fc9e8a15a096ba8fe155b8e8ffff2e42a3f7fa36c72b0065", "114b7501ad104c57949d77476e262c9596b78beafa9cc44cd4fc6365796c77ac", "c66a7e3a82f67ab1d32294fd89774ad6bc3332d0fa1ccd18a77a81f50667c8d7", "ed81d3a9cb45dedbe6fb2a6e1e22ab50ad46f1b0473b803b3caefab9380b6a8b", "a89e87a2d3521b5779c9166b837edc5ef9472e8bc04e463277bfabd432243cca", "015d8c7f5b43fe33f7891142c001d9251f3abeeb98fad3e87b0dc53c4ebf1891", "b62e1500d24eee9ee000a46c8e8ce8538bb22a7f1784b49880ed502c9793d457", "2f7ee40c4b56cad891070acbd8d947b75103afa1a11f6a8584714beca33570e9"]
+]
