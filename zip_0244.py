@@ -221,37 +221,54 @@ def auth_digest(tx):
 # Signatures
 
 class TransparentInput(object):
-    def __init__(self, tx, rand):
+    def __init__(self, nIn, rand):
+        self.nIn = nIn
         self.scriptCode = Script(rand)
-        self.nIn = rand.u8() % len(tx.vin)
         self.amount = rand.u64() % (MAX_MONEY + 1)
 
-def signature_digest(tx, nHashType, txin):
+def signature_digest(tx, t_inputs, nHashType, txin):
     digest = blake2b(
         digest_size=32,
         person=b'ZcashTxHash_' + struct.pack('<I', tx.nConsensusBranchId),
     )
 
     digest.update(header_digest(tx))
-    digest.update(transparent_sig_digest(tx, nHashType, txin))
+    digest.update(transparent_sig_digest(tx, t_inputs, nHashType, txin))
     digest.update(sapling_digest(tx))
     digest.update(orchard_digest(tx))
 
     return digest.digest()
 
-def transparent_sig_digest(tx, nHashType, txin):
-    # Sapling Spend or Orchard Action
-    if txin is None:
-        return transparent_digest(tx)
-
+def transparent_sig_digest(tx, t_inputs, nHashType, txin):
     digest = blake2b(digest_size=32, person=b'ZTxIdTranspaHash')
 
-    digest.update(prevouts_sig_digest(tx, nHashType))
-    digest.update(sequence_sig_digest(tx, nHashType))
-    digest.update(outputs_sig_digest(tx, nHashType, txin))
-    digest.update(txin_sig_digest(tx, txin))
+    if len(tx.vin) + len(tx.vout) > 0:
+        digest.update(hash_type(tx, nHashType, txin))
+        digest.update(prevouts_sig_digest(tx, nHashType))
+        digest.update(amounts_sig_digest(t_inputs, nHashType))
+        digest.update(script_codes_sig_digest(t_inputs, nHashType))
+        digest.update(sequence_sig_digest(tx, nHashType))
+        digest.update(outputs_sig_digest(tx, nHashType, txin))
+        digest.update(txin_sig_digest(tx, txin))
 
     return digest.digest()
+
+def hash_type(tx, nHashType, txin):
+    if txin is None:
+        # Sapling Spend or Orchard Action
+        assert nHashType == SIGHASH_ALL
+    else:
+        # Transparent input
+        assert nHashType in [
+            SIGHASH_ALL,
+            SIGHASH_NONE,
+            SIGHASH_SINGLE,
+            SIGHASH_ALL | SIGHASH_ANYONECANPAY,
+            SIGHASH_NONE | SIGHASH_ANYONECANPAY,
+            SIGHASH_SINGLE | SIGHASH_ANYONECANPAY,
+        ]
+        assert (nHashType & 0x1f) != SIGHASH_SINGLE or 0 <= txin.nIn and txin.nIn < len(tx.vout)
+    return struct.pack('B', nHashType)
 
 def prevouts_sig_digest(tx, nHashType):
     # If the SIGHASH_ANYONECANPAY flag is not set:
@@ -260,14 +277,29 @@ def prevouts_sig_digest(tx, nHashType):
     else:
         return blake2b(digest_size=32, person=b'ZTxIdPrevoutHash').digest()
 
+def amounts_sig_digest(t_inputs, nHashType):
+    # If the SIGHASH_ANYONECANPAY flag is not set:
+    if not (nHashType & SIGHASH_ANYONECANPAY):
+        digest = blake2b(digest_size=32, person=b'ZTxTrAmountsHash')
+        for x in t_inputs:
+            digest.update(struct.pack('<Q', x.amount))
+        return digest.digest()
+    else:
+        return blake2b(digest_size=32, person=b'ZTxTrAmountsHash').digest()
+
+def script_codes_sig_digest(t_inputs, nHashType):
+    # If the SIGHASH_ANYONECANPAY flag is not set:
+    if not (nHashType & SIGHASH_ANYONECANPAY):
+        digest = blake2b(digest_size=32, person=b'ZTxTrScriptsHash')
+        for x in t_inputs:
+            digest.update(bytes(x.scriptCode))
+        return digest.digest()
+    else:
+        return blake2b(digest_size=32, person=b'ZTxTrScriptsHash').digest()
+
 def sequence_sig_digest(tx, nHashType):
-    # if the SIGHASH_ANYONECANPAY flag is not set, and the sighash type is neither
-    # SIGHASH_SINGLE nor SIGHASH_NONE:
-    if (
-        (not (nHashType & SIGHASH_ANYONECANPAY)) and \
-        (nHashType & 0x1f) != SIGHASH_SINGLE and \
-        (nHashType & 0x1f) != SIGHASH_NONE
-    ):
+    # if the SIGHASH_ANYONECANPAY flag is not set:
+    if not (nHashType & SIGHASH_ANYONECANPAY):
         return getHashSequence(tx, b'ZTxIdSequencHash')
     else:
         return blake2b(digest_size=32, person=b'ZTxIdSequencHash').digest()
@@ -290,10 +322,11 @@ def outputs_sig_digest(tx, nHashType, txin):
 
 def txin_sig_digest(tx, txin):
     digest = blake2b(digest_size=32, person=b'Zcash___TxInHash')
-    digest.update(bytes(tx.vin[txin.nIn].prevout))
-    digest.update(bytes(txin.scriptCode))
-    digest.update(struct.pack('<Q', txin.amount))
-    digest.update(struct.pack('<I', tx.vin[txin.nIn].nSequence))
+    if txin is not None:
+        digest.update(bytes(tx.vin[txin.nIn].prevout))
+        digest.update(struct.pack('<Q', txin.amount))
+        digest.update(bytes(txin.scriptCode))
+        digest.update(struct.pack('<I', tx.vin[txin.nIn].nSequence))
     return digest.digest()
 
 
@@ -317,37 +350,47 @@ def main():
         txid = txid_digest(tx)
         auth = auth_digest(tx)
 
+        # Generate amounts and scriptCodes for each transparent input.
+        t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
+
         # If there are any transparent inputs, derive a corresponding transparent sighash.
-        if len(tx.vin) > 0:
-            txin = TransparentInput(tx, rand)
+        if len(t_inputs) > 0:
+            txin = rand.a(t_inputs)
         else:
             txin = None
 
-        sighash_all = signature_digest(tx, SIGHASH_ALL, txin)
-        other_sighashes = None if txin is None else [
-            signature_digest(tx, nHashType, txin)
-            for nHashType in [
+        sighash_shielded = signature_digest(tx, t_inputs, SIGHASH_ALL, None)
+        other_sighashes = {
+            nHashType: None if txin is None else signature_digest(tx, t_inputs, nHashType, txin)
+            for nHashType in ([
+                SIGHASH_ALL,
                 SIGHASH_NONE,
                 SIGHASH_SINGLE,
                 SIGHASH_ALL | SIGHASH_ANYONECANPAY,
                 SIGHASH_NONE | SIGHASH_ANYONECANPAY,
                 SIGHASH_SINGLE | SIGHASH_ANYONECANPAY,
-            ]
-        ]
+            ] if txin is None or txin.nIn < len(tx.vout) else [
+                SIGHASH_ALL,
+                SIGHASH_NONE,
+                SIGHASH_ALL | SIGHASH_ANYONECANPAY,
+                SIGHASH_NONE | SIGHASH_ANYONECANPAY,
+            ])
+        }
 
         test_vectors.append({
             'tx': bytes(tx),
             'txid': txid,
             'auth_digest': auth,
+            'amounts': [x.amount for x in t_inputs],
+            'script_codes': [x.scriptCode.raw() for x in t_inputs],
             'transparent_input': None if txin is None else txin.nIn,
-            'script_code': None if txin is None else txin.scriptCode.raw(),
-            'amount': None if txin is None else txin.amount,
-            'sighash_all': sighash_all,
-            'sighash_none': None if txin is None else other_sighashes[0],
-            'sighash_single': None if txin is None else other_sighashes[1],
-            'sighash_all_anyone': None if txin is None else other_sighashes[2],
-            'sighash_none_anyone': None if txin is None else other_sighashes[3],
-            'sighash_single_anyone': None if txin is None else other_sighashes[4],
+            'sighash_shielded': sighash_shielded,
+            'sighash_all': other_sighashes.get(SIGHASH_ALL),
+            'sighash_none': other_sighashes.get(SIGHASH_NONE),
+            'sighash_single': other_sighashes.get(SIGHASH_SINGLE),
+            'sighash_all_anyone': other_sighashes.get(SIGHASH_ALL | SIGHASH_ANYONECANPAY),
+            'sighash_none_anyone': other_sighashes.get(SIGHASH_NONE | SIGHASH_ANYONECANPAY),
+            'sighash_single_anyone': other_sighashes.get(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY),
         })
 
     render_tv(
@@ -357,19 +400,20 @@ def main():
             ('tx', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('txid', '[u8; 32]'),
             ('auth_digest', '[u8; 32]'),
+            ('amounts', '[i64; %d]' % len(t_inputs)),
+            ('script_codes', {
+                'rust_type': '[Vec<u8>; %d]' % len(t_inputs),
+                'bitcoin_flavoured': False,
+                }),
             ('transparent_input', {
                 'rust_type': 'Option<u32>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
                 }),
-            ('script_code', {
-                'rust_type': 'Option<Vec<u8>>',
+            ('sighash_shielded', '[u8; 32]'),
+            ('sighash_all', {
+                'rust_type': 'Option<[u8; 32]>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
                 }),
-            ('amount', {
-                'rust_type': 'Option<i64>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
-            ('sighash_all', '[u8; 32]'),
             ('sighash_none', {
                 'rust_type': 'Option<[u8; 32]>',
                 'rust_fmt': lambda x: None if x is None else Some(x),

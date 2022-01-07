@@ -27,11 +27,17 @@ def tv_value_json(value, bitcoin_flavoured):
     if isinstance(value, Some):
         value = value.thing
 
-    if type(value) == bytes:
-        if bitcoin_flavoured and len(value) == 32:
-            value = value[::-1]
-        value = hexlify(value).decode()
-    return value
+    def bitcoinify(value):
+        if type(value) == bytes:
+            if bitcoin_flavoured and len(value) == 32:
+                value = value[::-1]
+            value = hexlify(value).decode()
+        return value
+
+    if type(value) == list:
+        return [bitcoinify(v) for v in value]
+    else:
+        return bitcoinify(value)
 
 def tv_json(filename, parts, vectors, bitcoin_flavoured):
     if type(vectors) == type({}):
@@ -148,11 +154,22 @@ def tv_part_rust(name, value, config, indent=3):
                 name,
             ))
         for item in value:
-            if type(item) == bytes:
+            if 'Vec<u8>' in config['rust_type']:
+                print('''%svec![
+    %s%s
+%s],''' % (
+                    '    ' * (indent + 1),
+                    '    ' * (indent + 1),
+                    chunk(hexlify(item)),
+                    '    ' * (indent + 1),
+                ))
+            elif type(item) == bytes:
                 print('''%s[%s],''' % (
                     '    ' * (indent + 1),
                     chunk(hexlify(item)),
                 ))
+            elif type(item) == int:
+                print('%s%d,' % ('    ' * (indent + 1), item))
             elif type(item) == list:
                 print('''%s[''' % (
                     '    ' * (indent + 1)
