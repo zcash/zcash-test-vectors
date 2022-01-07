@@ -1,0 +1,36 @@
+name: Check test vectors
+
+on: pull_request
+
+jobs:
+  verify:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        kind: ['rust', 'json', 'zcash']
+        include:
+          - kind: 'rust'
+            extension: 'rs'
+            name: 'Rust'
+          - kind: 'json'
+            extension: 'json'
+            name: 'JSON'
+          - kind: 'zcash'
+            extension: 'rs'
+            name: 'Bitcoin-flavoured JSON'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install poetry
+        run: pip install --user poetry
+
+      - name: Install dependencies
+        run: poetry install --no-root
+
+      - name: Regenerate test vectors
+        run: ./regenerate.sh ${{ matrix.kind }} ${{ matrix.extension }}
+
+      - name: Verify there are no changes
+        run: git diff -s --exit-code
