@@ -1,19 +1,11 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from orchard_pallas import Fp
-from orchard_poseidon import perm
-from utils import leos2ip
-from tv_output import render_args, render_tv
-from tv_rand import Rand
-
-# Initial capacity element
-CAPACITY_ELEMENT = Fp(1 << 65)
-
-def poseidon_hash(x, y):
-    assert isinstance(x, Fp)
-    assert isinstance(y, Fp)
-    return perm([x, y, CAPACITY_ELEMENT])[0]
+from zcash_test_vectors.orchard.pallas import Fp
+from zcash_test_vectors.orchard import poseidon
+from zcash_test_vectors.utils import leos2ip
+from zcash_test_vectors.output import render_args, render_tv
+from zcash_test_vectors.rand import Rand
 
 def main():
     test_vectors = [[Fp.ZERO, Fp(1)]]
@@ -43,7 +35,7 @@ def main():
         ),
         [{
             'input': list(map(bytes, input)),
-            'output': bytes(poseidon_hash(input[0], input[1])),
+            'output': bytes(poseidon.hash(input[0], input[1])),
         } for input in test_vectors],
     )
 

@@ -3,9 +3,9 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from pyblake2 import blake2s
 
-from tv_output import render_args, render_tv
-from orchard_group_hash import group_hash
-from orchard_sinsemilla import sinsemilla_hash_to_point
+from ..output import render_args, render_tv
+from .group_hash import group_hash
+from .sinsemilla import sinsemilla_hash_to_point
 
 # https://zips.z.cash/protocol/nu5.pdf#concretespendauthsig
 SPENDING_KEY_BASE = group_hash(b'z.cash:Orchard', b'G')

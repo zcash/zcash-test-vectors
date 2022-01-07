@@ -6,9 +6,9 @@ import struct
 
 from pyblake2 import blake2b
 
-from tv_output import render_args, render_tv
-from tv_rand import Rand
-from utils import i2leosp
+from .output import render_args, render_tv
+from .rand import Rand
+from .utils import i2leosp
 
 
 # Maximum output length of BLAKE2b

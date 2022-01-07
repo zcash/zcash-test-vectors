@@ -3,11 +3,11 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from pyblake2 import blake2s
 
-from sapling_pedersen import (
+from .pedersen import (
     mixing_pedersen_hash,
     windowed_pedersen_commitment,
 )
-from utils import i2lebsp
+from ..utils import i2lebsp
 
 def note_commit(rcm, g_d, pk_d, v):
     return windowed_pedersen_commitment(rcm, [1] * 6 + i2lebsp(64, v) + g_d + pk_d)

@@ -2,8 +2,8 @@
 # -*- coding: utf8 -*-
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from sapling_jubjub import FieldElement
-from utils import leos2ip
+from ..sapling.jubjub import FieldElement
+from ..utils import leos2ip
 
 p = 0x40000000000000000000000000000000224698fc094cf91b992d30ed00000001
 q = 0x40000000000000000000000000000000224698fc0994a8dd8c46eb2100000001

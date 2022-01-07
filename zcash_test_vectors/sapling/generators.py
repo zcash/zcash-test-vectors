@@ -3,9 +3,9 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from pyblake2 import blake2s
 
-from sapling_jubjub import Point, JUBJUB_COFACTOR
-from tv_output import render_args, render_tv
-from utils import i2leosp
+from .jubjub import Point, JUBJUB_COFACTOR
+from ..output import render_args, render_tv
+from ..utils import i2leosp
 
 # First 64 bytes of the BLAKE2s input during group hash.
 # This is chosen to be some random string that we couldn't have

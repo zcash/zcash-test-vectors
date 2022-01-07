@@ -6,17 +6,17 @@ import struct
 from chacha20poly1305 import ChaCha20Poly1305
 import os
 from pyblake2 import blake2b
-from transaction import MAX_MONEY
-from tv_output import render_args, render_tv
-from tv_rand import Rand
+from ..transaction import MAX_MONEY
+from ..output import render_args, render_tv
+from ..rand import Rand
 
-from orchard_generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
-from orchard_pallas import Point, Scalar
-from orchard_commitments import rcv_trapdoor, value_commit
-from orchard_key_components import diversify_hash, prf_expand, FullViewingKey, SpendingKey
-from orchard_note import OrchardNote, OrchardNotePlaintext
-from orchard_utils import to_scalar
-from utils import leos2bsp
+from .generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
+from .pallas import Point, Scalar
+from .commitments import rcv_trapdoor, value_commit
+from .key_components import diversify_hash, prf_expand, FullViewingKey, SpendingKey
+from .note import OrchardNote, OrchardNotePlaintext
+from .utils import to_scalar
+from ..utils import leos2bsp
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardkdf
 def kdf_orchard(shared_secret, ephemeral_key):

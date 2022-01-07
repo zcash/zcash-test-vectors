@@ -4,11 +4,11 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 import os
 from pyblake2 import blake2b
 
-from sapling_generators import SPENDING_KEY_BASE
-from sapling_jubjub import Fr, Point, r_j
-from sapling_key_components import to_scalar
-from utils import cldiv, leos2ip
-from tv_output import render_args, render_tv
+from .generators import SPENDING_KEY_BASE
+from .jubjub import Fr, Point, r_j
+from .key_components import to_scalar
+from ..utils import cldiv, leos2ip
+from ..output import render_args, render_tv
 
 
 def H(x):

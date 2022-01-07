@@ -1,11 +1,11 @@
 import struct
 
-from orchard_commitments import note_commit
-from orchard_key_components import diversify_hash, prf_expand, derive_nullifier, FullViewingKey, SpendingKey
-from orchard_pallas import Point, Scalar
-from orchard_utils import to_base, to_scalar
+from .commitments import note_commit
+from .key_components import diversify_hash, prf_expand, derive_nullifier, FullViewingKey, SpendingKey
+from .pallas import Point, Scalar
+from .utils import to_base, to_scalar
 
-from utils import leos2bsp
+from ..utils import leos2bsp
 
 class OrchardNote(object):
     def __init__(self, d, pk_d, v, rho, rseed):

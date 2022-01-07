@@ -2,10 +2,21 @@
 
 Code to generate test vectors for various parts of Zcash.
 
-Requirements:
-- `pyblake2`
-- `chacha20poly1305` (for `sapling_note_encryption.py`).
-- `numpy` (for `orchard_poseidon.py` and dependents).
+The generated test vectors are checked into the repository:
+- `test-vectors/json/`: JSON format.
+- `test-vectors/rust/`: Rust format, suitable for copying into a Rust library or
+  application to use from `#[cfg(test)]` code.
+- `test-vectors/zcash/`: Bitcoin-flavoured JSON format (where 256-bit values are
+  encoded as byte-reversed hex strings), for use in `zcashd` unit tests.
+
+To generate the test vectors yourself (for example, to generate a larger set
+after adjusting:
+
+- Install [`poetry`](https://python-poetry.org/).
+- `poetry install`
+- `poetry run SCRIPT_NAME [-t json|rust|zcash]`
+  - `SCRIPT_NAME` is either one of the scripts listed in `pyproject.toml`, or
+    one of the Python files in the root directory.
 
 ## License
 

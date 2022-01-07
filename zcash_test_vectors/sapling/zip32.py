@@ -3,11 +3,11 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from pyblake2 import blake2b
 
-from sapling_key_components import to_scalar, prf_expand, diversify_hash, DerivedAkNk, DerivedIvk
-from sapling_generators import SPENDING_KEY_BASE, PROVING_KEY_BASE
-from utils import i2leosp, i2lebsp, lebs2osp
-from ff1 import ff1_aes256_encrypt
-from tv_output import render_args, render_tv, option, Some
+from .key_components import to_scalar, prf_expand, diversify_hash, DerivedAkNk, DerivedIvk
+from .generators import SPENDING_KEY_BASE, PROVING_KEY_BASE
+from ..utils import i2leosp, i2lebsp, lebs2osp
+from ..ff1 import ff1_aes256_encrypt
+from ..output import render_args, render_tv, option, Some
 
 
 def encode_xsk_parts(ask, nsk, ovk, dk):
