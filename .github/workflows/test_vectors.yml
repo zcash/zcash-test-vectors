@@ -19,6 +19,7 @@ jobs:
           - kind: 'zcash'
             extension: 'rs'
             name: 'Bitcoin-flavoured JSON'
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v2
