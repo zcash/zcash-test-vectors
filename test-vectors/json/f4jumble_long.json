@@ -1,0 +1,6 @@
+[
+    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/f4jumble_long.py"],
+    ["length, jumbled_hash"],
+    [3246395, "3fc2ecdfb68696571d89e8beddb647e6990b63a0171c36442273d687bd99257ec5002ec8197801b621732d6b05b8d70f688620a4c08873c12e4439a0127dc945"],
+    [4194368, "a5f18f163e598d4adb6ea7248057e24c1b61f29b33b7abcdabd420a0f2ee6c3ed31394652f28b59c44d3ea9ecf85f4d501e6aac14df288efd62cf80d1829d025"]
+]
