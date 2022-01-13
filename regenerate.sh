@@ -17,7 +17,12 @@ tv_scripts=(
     sapling_key_components
     sapling_note_encryption
     sapling_signatures
-    sapling_zip32)
+    sapling_zip32
+    unified_address
+    unified_full_viewing_keys
+    zip_0143
+    zip_0243
+    zip_0244)
 
 for generator in "${tv_scripts[@]}"
 do
