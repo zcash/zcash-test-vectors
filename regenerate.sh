@@ -25,7 +25,8 @@ tv_external_scripts=(
     orchard_map_to_curve
     orchard_poseidon_hash
     unified_address
-    unified_full_viewing_keys)
+    unified_full_viewing_keys
+    unified_incoming_viewing_keys)
 
 for generator in "${tv_scripts[@]}"
 do
