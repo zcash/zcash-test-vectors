@@ -2,9 +2,9 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from random import Random
 
-from zc_utils import write_compact_size, parse_compact_size
-from bech32m import bech32_encode, bech32_decode, convertbits, Encoding
-from f4jumble import f4jumble, f4jumble_inv
+from .zc_utils import write_compact_size, parse_compact_size
+from .bech32m import bech32_encode, bech32_decode, convertbits, Encoding
+from .f4jumble import f4jumble, f4jumble_inv
 
 P2PKH_ITEM = 0x00
 P2SH_ITEM = 0x01

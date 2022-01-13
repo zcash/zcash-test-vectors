@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from sapling_generators import (
+from .generators import (
     find_group_hash,
     NOTE_POSITION_BASE,
     WINDOWED_PEDERSEN_RANDOMNESS_BASE,
 )
-from sapling_jubjub import Fr, Point
-from utils import cldiv, i2leosp
+from .jubjub import Fr, Point
+from ..utils import cldiv, i2leosp
 
 
 #

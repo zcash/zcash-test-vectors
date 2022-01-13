@@ -2,8 +2,8 @@
 # -*- coding: utf8 -*-
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-import orchard_pallas
-from orchard_pallas import Fp, p, q, Scalar
+from . import pallas
+from .pallas import Fp, p, q, Scalar
 
 #
 # Point arithmetic
@@ -60,7 +60,7 @@ class Point(object):
         ]
 
         if self == Point.identity():
-            return orchard_pallas.identity()
+            return pallas.identity()
         else:
             numerator_a = c[1] * self.x * self.x * self.x + c[2] * self.x * self.x + c[3] * self.x + c[4]
             denominator_a = self.x * self.x + c[5] * self.x + c[6]
@@ -68,7 +68,7 @@ class Point(object):
             numerator_b = (c[7] * self.x * self.x * self.x + c[8] * self.x * self.x + c[9] * self.x + c[10]) * self.y
             denominator_b = self.x * self.x * self.x + c[11] * self.x * self.x + c[12] * self.x + c[13]
 
-            return orchard_pallas.Point(numerator_a / denominator_a, numerator_b / denominator_b)
+            return pallas.Point(numerator_a / denominator_a, numerator_b / denominator_b)
 
     def __init__(self, x, y, is_identity=False):
         self.x = x

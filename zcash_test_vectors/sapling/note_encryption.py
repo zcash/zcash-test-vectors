@@ -6,12 +6,12 @@ import os
 from pyblake2 import blake2b
 import struct
 
-from sapling_generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
-from sapling_jubjub import Fr, JUBJUB_COFACTOR
-from sapling_key_components import SpendingKey, diversify_hash
-from sapling_notes import note_commit
-from utils import leos2bsp, leos2ip
-from tv_output import render_args, render_tv
+from .generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
+from .jubjub import Fr, JUBJUB_COFACTOR
+from .key_components import SpendingKey, diversify_hash
+from .notes import note_commit
+from ..utils import leos2bsp, leos2ip
+from ..output import render_args, render_tv
 
 
 def kdf_sapling(shared_secret, epk):

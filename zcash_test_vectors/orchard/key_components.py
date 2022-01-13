@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from ff1 import ff1_aes256_encrypt
-from sapling_key_components import prf_expand
+from ..ff1 import ff1_aes256_encrypt
+from ..sapling.key_components import prf_expand
 
-from orchard_generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
-from orchard_pallas import Fp, Scalar, Point
-from orchard_poseidon_hash import poseidon_hash
-from orchard_commitments import commit_ivk
-from utils import i2leosp, i2lebsp, lebs2osp
-from orchard_utils import to_base, to_scalar
-from tv_output import render_args, render_tv
+from .generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
+from .pallas import Fp, Scalar, Point
+from . import poseidon
+from .commitments import commit_ivk
+from ..utils import i2leosp, i2lebsp, lebs2osp
+from .utils import to_base, to_scalar
+from ..output import render_args, render_tv
 
 #
 # PRFs and hashes
@@ -23,7 +23,7 @@ def diversify_hash(d):
     return P
 
 def prf_nf_orchard(nk, rho):
-    return poseidon_hash(nk, rho)
+    return poseidon.hash(nk, rho)
 
 def derive_nullifier(nk, rho: Fp, psi: Fp, cm):
     scalar = prf_nf_orchard(nk, rho) + psi  # addition mod p
@@ -77,9 +77,9 @@ class FullViewingKey(object):
 def main():
     args = render_args()
 
-    from orchard_note import OrchardNote
+    from .note import OrchardNote
     from random import Random
-    from tv_rand import Rand
+    from zcash_test_vectors.rand import Rand
 
     rng = Random(0xabad533d)
     def randbytes(l):

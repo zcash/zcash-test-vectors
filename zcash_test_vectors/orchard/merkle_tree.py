@@ -3,11 +3,11 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from binascii import unhexlify
 
-from orchard_pallas import Fp
-from orchard_sinsemilla import sinsemilla_hash
+from .pallas import Fp
+from .sinsemilla import sinsemilla_hash
 
-from tv_output import render_args, render_tv
-from utils import i2lebsp, leos2bsp
+from ..output import render_args, render_tv
+from ..utils import i2lebsp, leos2bsp
 
 # https://zips.z.cash/protocol/nu5.pdf#constants
 MERKLE_DEPTH = 32
@@ -45,7 +45,7 @@ def main():
     args = render_args()
 
     from random import Random
-    from tv_rand import Rand
+    from ..rand import Rand
 
     rng = Random(0xabad533d)
     def randbytes(l):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from utils import i2lebsp, leos2ip, i2leosp
+from ..utils import i2lebsp, leos2ip, i2leosp
 
 q_j = 52435875175126190479447740508185965837690552500527637822603658699938581184513
 r_j = 6554484396890773809930967563523245729705921265872317281365359162392183254199

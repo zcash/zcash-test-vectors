@@ -4,15 +4,15 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 from pyblake2 import blake2b
 import struct
 
-from transaction import (
+from .transaction import (
     MAX_MONEY,
     NU5_TX_VERSION,
     Script,
     TransactionV5,
 )
-from tv_output import render_args, render_tv, Some
-from tv_rand import Rand
-from zip_0143 import (
+from .output import render_args, render_tv, Some
+from .rand import Rand
+from .zip_0143 import (
     getHashOutputs,
     getHashPrevouts,
     getHashSequence,

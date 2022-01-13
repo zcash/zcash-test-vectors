@@ -3,14 +3,14 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 import math
 
-import orchard_iso_pallas
+from . import iso_pallas
 
 from pyblake2 import blake2b
-from orchard_pallas import Fp, p, q, PALLAS_B, Point
-from orchard_iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
-from utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
-from tv_output import render_args, render_tv
-from tv_rand import Rand
+from .pallas import Fp, p, q, PALLAS_B, Point
+from .iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
+from ..utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip
+from ..output import render_args, render_tv
+from ..rand import Rand
 
 # https://stackoverflow.com/questions/2612720/how-to-do-bitwise-exclusive-or-of-two-strings-in-python
 def sxor(s1,s2):
@@ -122,7 +122,7 @@ def map_to_curve_simple_swu(u):
 
     y = y if e3 else -y  #y = CMOV(-y, y, e3)
 
-    return orchard_iso_pallas.Point(x, y)
+    return iso_pallas.Point(x, y)
 
 def group_hash(d, m):
     dst = d + b"-" + b"pallas" + b"_XMD:BLAKE2b_SSWU_RO_"

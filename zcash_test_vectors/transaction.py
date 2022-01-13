@@ -1,18 +1,18 @@
 import struct
 
-from orchard_pallas import (
+from .orchard.pallas import (
     Fp as PallasBase,
     Scalar as PallasScalar,
 )
-from orchard_sinsemilla import group_hash as pallas_group_hash
-from sapling_generators import find_group_hash, SPENDING_KEY_BASE
-from sapling_jubjub import (
+from .orchard.sinsemilla import group_hash as pallas_group_hash
+from .sapling.generators import find_group_hash, SPENDING_KEY_BASE
+from .sapling.jubjub import (
     Fq,
     Point,
     Fr as JubjubScalar,
 )
-from utils import leos2ip
-from zc_utils import write_compact_size
+from .utils import leos2ip
+from .zc_utils import write_compact_size
 
 MAX_MONEY = 21000000 * 100000000
 TX_EXPIRY_HEIGHT_THRESHOLD = 500000000

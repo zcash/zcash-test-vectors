@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from orchard_pallas import Fp
+from ..orchard.pallas import Fp
 import numpy as np
 from itertools import chain
-from utils import leos2ip
-from tv_output import render_args, render_tv
-from tv_rand import Rand
+from ..utils import leos2ip
+from ..output import render_args, render_tv
+from ..rand import Rand
 
 # Number of full rounds
 R_F = 8
@@ -147,6 +147,14 @@ MDS_MATRIX = [
         Fp(0x3bf763086a18936451e0cbead65516b975872c39b59a31f615639415f6e85ef1),
     ]
 ]
+
+# Initial capacity element
+CAPACITY_ELEMENT = Fp(1 << 65)
+
+def hash(x, y):
+    assert isinstance(x, Fp)
+    assert isinstance(y, Fp)
+    return perm([x, y, CAPACITY_ELEMENT])[0]
 
 def main():
 
