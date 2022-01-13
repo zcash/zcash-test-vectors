@@ -7,6 +7,7 @@ import struct
 
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import PublicFormat, Encoding
+from cryptography.hazmat.backends import default_backend
 
 from zcash_test_vectors.output import render_args, render_tv, Some
 from zcash_test_vectors.rand import Rand, randbytes
@@ -29,7 +30,7 @@ def main():
         has_t_key = rand.bool()
         if has_t_key:
             c = rand.b(32)
-            privkey = ec.derive_private_key(int.from_bytes(rand.b(32), 'little'), ec.SECP256K1())
+            privkey = ec.derive_private_key(int.from_bytes(rand.b(32), 'little'), ec.SECP256K1(), default_backend())
             pubkey = privkey.public_key()
             pubkey_bytes = pubkey.public_bytes(Encoding.X962, PublicFormat.CompressedPoint)
             assert len(pubkey_bytes) == 33
