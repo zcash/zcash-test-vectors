@@ -3,7 +3,7 @@
             txid: [u8; 32],
             auth_digest: [u8; 32],
             amounts: [i64; 2],
-            script_codes: [Vec<u8>; 2],
+            script_pubkeys: [Vec<u8>; 2],
             transparent_input: Option<u32>,
             sighash_shielded: [u8; 32],
             sighash_all: Option<[u8; 32]>,
@@ -29,7 +29,7 @@
                 amounts: [
                     1800841178198868,
                 ],
-                script_codes: [
+                script_pubkeys: [
                     vec![
                         0x65, 0x00, 0x51
                     ],
@@ -65,7 +65,7 @@
                 ],
                 amounts: [
                 ],
-                script_codes: [
+                script_pubkeys: [
                 ],
                 transparent_input: None,
                 sighash_shielded: [
@@ -90,7 +90,7 @@
                 ],
                 amounts: [
                 ],
-                script_codes: [
+                script_pubkeys: [
                 ],
                 transparent_input: None,
                 sighash_shielded: [
@@ -115,7 +115,7 @@
                 ],
                 amounts: [
                 ],
-                script_codes: [
+                script_pubkeys: [
                 ],
                 transparent_input: None,
                 sighash_shielded: [
@@ -143,7 +143,7 @@
                     447389782351145,
                     620151782842275,
                 ],
-                script_codes: [
+                script_pubkeys: [
                     vec![
                         0xac, 0x00, 0x00
                     ],
@@ -191,7 +191,7 @@
                     1561051182746413,
                     1535468271734483,
                 ],
-                script_codes: [
+                script_pubkeys: [
                     vec![
                         0x65, 0x6a, 0x51, 0x6a, 0xac, 0x51, 0x6a, 0x65, 0x52
                     ],
@@ -234,7 +234,7 @@
                 ],
                 amounts: [
                 ],
-                script_codes: [
+                script_pubkeys: [
                 ],
                 transparent_input: None,
                 sighash_shielded: [
@@ -262,7 +262,7 @@
                     1685382316228727,
                     1715663111103469,
                 ],
-                script_codes: [
+                script_pubkeys: [
                     vec![
                         0x65, 0x6a
                     ],
@@ -307,7 +307,7 @@
                     316847576141144,
                     1780844721475339,
                 ],
-                script_codes: [
+                script_pubkeys: [
                     vec![
                         0x00, 0x65, 0x51, 0xac, 0x65, 0x63, 0x00, 0x53
                     ],
@@ -351,7 +351,7 @@
                     1399781968202734,
                     1999413718097392,
                 ],
-                script_codes: [
+                script_pubkeys: [
                     vec![
                         0x00, 0x53, 0x00
                     ],

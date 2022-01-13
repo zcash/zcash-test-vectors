@@ -223,7 +223,7 @@ def auth_digest(tx):
 class TransparentInput(object):
     def __init__(self, nIn, rand):
         self.nIn = nIn
-        self.scriptCode = Script(rand)
+        self.scriptPubKey = Script(rand)
         self.amount = rand.u64() % (MAX_MONEY + 1)
 
 def signature_digest(tx, t_inputs, nHashType, txin):
@@ -246,7 +246,7 @@ def transparent_sig_digest(tx, t_inputs, nHashType, txin):
         digest.update(hash_type(tx, nHashType, txin))
         digest.update(prevouts_sig_digest(tx, nHashType))
         digest.update(amounts_sig_digest(t_inputs, nHashType))
-        digest.update(script_codes_sig_digest(t_inputs, nHashType))
+        digest.update(scriptpubkeys_sig_digest(t_inputs, nHashType))
         digest.update(sequence_sig_digest(tx, nHashType))
         digest.update(outputs_sig_digest(tx, nHashType, txin))
         digest.update(txin_sig_digest(tx, txin))
@@ -287,12 +287,12 @@ def amounts_sig_digest(t_inputs, nHashType):
     else:
         return blake2b(digest_size=32, person=b'ZTxTrAmountsHash').digest()
 
-def script_codes_sig_digest(t_inputs, nHashType):
+def scriptpubkeys_sig_digest(t_inputs, nHashType):
     # If the SIGHASH_ANYONECANPAY flag is not set:
     if not (nHashType & SIGHASH_ANYONECANPAY):
         digest = blake2b(digest_size=32, person=b'ZTxTrScriptsHash')
         for x in t_inputs:
-            digest.update(bytes(x.scriptCode))
+            digest.update(bytes(x.scriptPubKey))
         return digest.digest()
     else:
         return blake2b(digest_size=32, person=b'ZTxTrScriptsHash').digest()
@@ -325,7 +325,7 @@ def txin_sig_digest(tx, txin):
     if txin is not None:
         digest.update(bytes(tx.vin[txin.nIn].prevout))
         digest.update(struct.pack('<Q', txin.amount))
-        digest.update(bytes(txin.scriptCode))
+        digest.update(bytes(txin.scriptPubKey))
         digest.update(struct.pack('<I', tx.vin[txin.nIn].nSequence))
     return digest.digest()
 
@@ -382,7 +382,7 @@ def main():
             'txid': txid,
             'auth_digest': auth,
             'amounts': [x.amount for x in t_inputs],
-            'script_codes': [x.scriptCode.raw() for x in t_inputs],
+            'script_pubkeys': [x.scriptPubKey.raw() for x in t_inputs],
             'transparent_input': None if txin is None else txin.nIn,
             'sighash_shielded': sighash_shielded,
             'sighash_all': other_sighashes.get(SIGHASH_ALL),
@@ -401,7 +401,7 @@ def main():
             ('txid', '[u8; 32]'),
             ('auth_digest', '[u8; 32]'),
             ('amounts', '[i64; %d]' % len(t_inputs)),
-            ('script_codes', {
+            ('script_pubkeys', {
                 'rust_type': '[Vec<u8>; %d]' % len(t_inputs),
                 'bitcoin_flavoured': False,
                 }),
