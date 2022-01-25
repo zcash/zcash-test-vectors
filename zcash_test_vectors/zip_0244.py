@@ -400,9 +400,9 @@ def main():
             ('tx', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('txid', '[u8; 32]'),
             ('auth_digest', '[u8; 32]'),
-            ('amounts', '[i64; %d]' % len(t_inputs)),
+            ('amounts', {'rust_type': 'Vec<i64>'}),
             ('script_pubkeys', {
-                'rust_type': '[Vec<u8>; %d]' % len(t_inputs),
+                'rust_type': 'Vec<Vec<u8>>',
                 'bitcoin_flavoured': False,
                 }),
             ('transparent_input', {
