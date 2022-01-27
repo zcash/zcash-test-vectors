@@ -240,9 +240,15 @@ def signature_digest(tx, t_inputs, nHashType, txin):
     return digest.digest()
 
 def transparent_sig_digest(tx, t_inputs, nHashType, txin):
-    digest = blake2b(digest_size=32, person=b'ZTxIdTranspaHash')
+    # If we are producing a hash for either a coinbase transaction, or a
+    # non-coinbase transaction that has no transparent inputs, the value of
+    # ``transparent_sig_digest`` is identical to the value specified in section
+    # T.2 <https://zips.z.cash/zip-0244#t-2-transparent-digest>.
 
-    if len(tx.vin) + len(tx.vout) > 0:
+    if tx.is_coinbase() or len(tx.vin) == 0:
+        return transparent_digest(tx)
+    else:
+        digest = blake2b(digest_size=32, person=b'ZTxIdTranspaHash')
         digest.update(hash_type(tx, nHashType, txin))
         digest.update(prevouts_sig_digest(tx, nHashType))
         digest.update(amounts_sig_digest(t_inputs, nHashType))
@@ -251,7 +257,7 @@ def transparent_sig_digest(tx, t_inputs, nHashType, txin):
         digest.update(outputs_sig_digest(tx, nHashType, txin))
         digest.update(txin_sig_digest(tx, txin))
 
-    return digest.digest()
+        return digest.digest()
 
 def hash_type(tx, nHashType, txin):
     if txin is None:
