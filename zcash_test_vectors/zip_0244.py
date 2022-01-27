@@ -356,10 +356,13 @@ def main():
         txid = txid_digest(tx)
         auth = auth_digest(tx)
 
-        # Generate amounts and scriptCodes for each transparent input.
-        t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
+        # Generate amounts and scriptCodes for each non-dummy transparent input.
+        if tx.is_coinbase():
+            t_inputs = []
+        else:
+            t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
 
-        # If there are any transparent inputs, derive a corresponding transparent sighash.
+        # If there are any non-dummy transparent inputs, derive a corresponding transparent sighash.
         if len(t_inputs) > 0:
             txin = rand.a(t_inputs)
         else:
