@@ -11,7 +11,7 @@ from .sapling.jubjub import (
     Point,
     Fr as JubjubScalar,
 )
-from .utils import leos2ip
+from .utils import leos2ip, i2leosp
 from .zc_utils import write_compact_size
 
 MAX_MONEY = 21000000 * 100000000
@@ -160,6 +160,8 @@ class OutputDescription(object):
 
 class OrchardActionDescription(object):
     def __init__(self, rand):
+        # We don't need to take account of whether this is a coinbase transaction,
+        # because we're only generating random fields.
         self.cv = pallas_group_hash(b'TVRandPt', rand.b(32))
         self.nullifier = PallasBase(leos2ip(rand.b(32)))
         self.rk = pallas_group_hash(b'TVRandPt', rand.b(32))
@@ -220,10 +222,39 @@ RAND_OPCODES = [
 ]
 
 class Script(object):
-    def __init__(self, rand):
-        self._script = bytes([
-            rand.a(RAND_OPCODES) for i in range(rand.i8() % 10)
-        ])
+    def __init__(self, rand=None):
+        if rand is not None:
+            self._script = bytes([
+                rand.a(RAND_OPCODES) for i in range(rand.i8() % 10)
+            ])
+
+    @staticmethod
+    def from_bytes(b):
+        script = Script()
+        script._script = b
+        return script
+
+    @staticmethod
+    def coinbase_from_height(height):
+        assert height >= 0
+        if height == 0:
+            enc_height = b'\x00'
+        elif height <= 16:
+            enc_height = bytes([0x50 + height])
+        elif height <= 0x7F:
+            enc_height = b'\x01' + i2leosp( 8, height)
+        elif height <= 0x7FFF:
+            enc_height = b'\x02' + i2leosp(16, height)
+        elif height <= 0x7FFFFF:
+            enc_height = b'\x03' + i2leosp(24, height)
+        elif height <= 0x7FFFFFFF:
+            enc_height = b'\x04' + i2leosp(32, height)
+        else:
+            assert height <= 0x7FFFFFFFFF
+            enc_height = b'\x05' + i2leosp(40, height)
+
+        # zcashd adds an OP_0
+        return Script.from_bytes(enc_height + b'\x00')
 
     def raw(self):
         return self._script
@@ -233,19 +264,36 @@ class Script(object):
 
 
 class OutPoint(object):
-    def __init__(self, rand):
-        self.txid = rand.b(32)
-        self.n = rand.u32()
+    def __init__(self, rand=None):
+        if rand is not None:
+            self.txid = rand.b(32)
+            self.n = rand.u32()
+
+    @staticmethod
+    def from_components(txid, n):
+        outpoint = OutPoint()
+        outpoint.txid = txid
+        outpoint.n = n
+        return outpoint
 
     def __bytes__(self):
         return self.txid + struct.pack('<I', self.n)
 
 
 class TxIn(object):
-    def __init__(self, rand):
-        self.prevout = OutPoint(rand)
-        self.scriptSig = Script(rand)
-        self.nSequence = rand.u32()
+    def __init__(self, rand=None):
+        if rand is not None:
+            self.prevout = OutPoint(rand)
+            self.scriptSig = Script(rand)
+            self.nSequence = rand.u32()
+
+    @staticmethod
+    def from_components(prevout, scriptSig, nSequence):
+        txin = TxIn()
+        txin.prevout = prevout
+        txin.scriptSig = scriptSig
+        txin.nSequence = nSequence
+        return txin
 
     def __bytes__(self):
         return (
@@ -372,6 +420,7 @@ class TransactionV5(object):
         have_transparent_out = (flip_coins >> 1) % 2
         have_sapling = (flip_coins >> 2) % 2
         have_orchard = (flip_coins >> 3) % 2
+        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
         # Common Transaction Fields
         self.nVersionGroupId = NU5_VERSION_GROUP_ID
@@ -385,6 +434,11 @@ class TransactionV5(object):
         if have_transparent_in:
             for _ in range((rand.u8() % 3) + 1):
                 self.vin.append(TxIn(rand))
+        if is_coinbase:
+            self.vin.append(TxIn.from_components(
+                OutPoint.from_components(b'\x00' * 32, 0xFFFFFFFF),
+                Script.coinbase_from_height(self.nExpiryHeight),
+                0xFFFFFFFF))
         if have_transparent_out:
             for _ in range((rand.u8() % 3) + 1):
                 self.vout.append(TxOut(rand))
@@ -394,8 +448,11 @@ class TransactionV5(object):
         self.vOutputsSapling = []
         if have_sapling:
             self.anchorSapling = Fq(leos2ip(rand.b(32)))
+            # We use the randomness unconditionally here to avoid unnecessary test vector changes.
             for _ in range(rand.u8() % 3):
-                self.vSpendsSapling.append(SpendDescription(rand, self.anchorSapling))
+                spend = SpendDescription(rand, self.anchorSapling)
+                if not is_coinbase:
+                    self.vSpendsSapling.append(spend)
             for _ in range(rand.u8() % 3):
                 self.vOutputsSapling.append(OutputDescription(rand))
             self.valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
@@ -411,6 +468,9 @@ class TransactionV5(object):
             for _ in range(rand.u8() % 5):
                 self.vActionsOrchard.append(OrchardActionDescription(rand))
             self.flagsOrchard = rand.u8() & 3 # Only two flag bits are currently defined.
+            if is_coinbase:
+                # set enableSpendsOrchard = 0
+                self.flagsOrchard &= 2
             self.valueBalanceOrchard = rand.u64() % (MAX_MONEY + 1)
             self.anchorOrchard = PallasBase(leos2ip(rand.b(32)))
             self.proofsOrchard = rand.b(rand.u8() + 32) # Proof will always contain at least one element
@@ -420,8 +480,14 @@ class TransactionV5(object):
             # v^balanceOrchard is defined to be 0.
             self.valueBalanceOrchard = 0
 
+        assert is_coinbase == self.is_coinbase()
+
     def version_bytes(self):
         return NU5_TX_VERSION | (1 << 31)
+
+    def is_coinbase(self):
+        # <https://github.com/zcash/zcash/blob/d8c818bfa507adb845e527f5beb38345c490b330/src/primitives/transaction.h#L969-L972>
+        return len(self.vin) == 1 and bytes(self.vin[0].prevout.txid) == b'\x00'*32 and self.vin[0].prevout.n == 0xFFFFFFFF
 
     # TODO: Update ZIP 225 to document endianness
     def __bytes__(self):

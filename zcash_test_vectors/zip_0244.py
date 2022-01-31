@@ -240,9 +240,15 @@ def signature_digest(tx, t_inputs, nHashType, txin):
     return digest.digest()
 
 def transparent_sig_digest(tx, t_inputs, nHashType, txin):
-    digest = blake2b(digest_size=32, person=b'ZTxIdTranspaHash')
+    # If we are producing a hash for either a coinbase transaction, or a
+    # non-coinbase transaction that has no transparent inputs, the value of
+    # ``transparent_sig_digest`` is identical to the value specified in section
+    # T.2 <https://zips.z.cash/zip-0244#t-2-transparent-digest>.
 
-    if len(tx.vin) + len(tx.vout) > 0:
+    if tx.is_coinbase() or len(tx.vin) == 0:
+        return transparent_digest(tx)
+    else:
+        digest = blake2b(digest_size=32, person=b'ZTxIdTranspaHash')
         digest.update(hash_type(tx, nHashType, txin))
         digest.update(prevouts_sig_digest(tx, nHashType))
         digest.update(amounts_sig_digest(t_inputs, nHashType))
@@ -251,7 +257,7 @@ def transparent_sig_digest(tx, t_inputs, nHashType, txin):
         digest.update(outputs_sig_digest(tx, nHashType, txin))
         digest.update(txin_sig_digest(tx, txin))
 
-    return digest.digest()
+        return digest.digest()
 
 def hash_type(tx, nHashType, txin):
     if txin is None:
@@ -350,10 +356,13 @@ def main():
         txid = txid_digest(tx)
         auth = auth_digest(tx)
 
-        # Generate amounts and scriptCodes for each transparent input.
-        t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
+        # Generate amounts and scriptCodes for each non-dummy transparent input.
+        if tx.is_coinbase():
+            t_inputs = []
+        else:
+            t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
 
-        # If there are any transparent inputs, derive a corresponding transparent sighash.
+        # If there are any non-dummy transparent inputs, derive a corresponding transparent sighash.
         if len(t_inputs) > 0:
             txin = rand.a(t_inputs)
         else:
@@ -400,9 +409,9 @@ def main():
             ('tx', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('txid', '[u8; 32]'),
             ('auth_digest', '[u8; 32]'),
-            ('amounts', '[i64; %d]' % len(t_inputs)),
+            ('amounts', {'rust_type': 'Vec<i64>'}),
             ('script_pubkeys', {
-                'rust_type': '[Vec<u8>; %d]' % len(t_inputs),
+                'rust_type': 'Vec<Vec<u8>>',
                 'bitcoin_flavoured': False,
                 }),
             ('transparent_input', {

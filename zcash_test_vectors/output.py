@@ -149,9 +149,10 @@ def tv_part_rust(name, value, config, indent=3):
     elif type(value) == int:
         tv_int_rust(name, value, pad)
     elif type(value) == list:
-        print('''%s%s: [''' % (
+        print('''%s%s: %s[''' % (
                 pad,
                 name,
+                'vec!' if config['rust_type'].startswith('Vec<') else '',
             ))
         for item in value:
             if 'Vec<u8>' in config['rust_type']:
