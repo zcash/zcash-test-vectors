@@ -11,7 +11,7 @@ from .sapling.jubjub import (
     Point,
     Fr as JubjubScalar,
 )
-from .utils import leos2ip
+from .utils import leos2ip, i2leosp
 from .zc_utils import write_compact_size
 
 MAX_MONEY = 21000000 * 100000000
@@ -234,6 +234,28 @@ class Script(object):
         script._script = b
         return script
 
+    @staticmethod
+    def coinbase_from_height(height):
+        assert height >= 0
+        if height == 0:
+            enc_height = b'\x00'
+        elif height <= 16:
+            enc_height = bytes([0x50 + height])
+        elif height <= 0x7F:
+            enc_height = b'\x01' + i2leosp( 8, height)
+        elif height <= 0x7FFF:
+            enc_height = b'\x02' + i2leosp(16, height)
+        elif height <= 0x7FFFFF:
+            enc_height = b'\x03' + i2leosp(24, height)
+        elif height <= 0x7FFFFFFF:
+            enc_height = b'\x04' + i2leosp(32, height)
+        else:
+            assert height <= 0x7FFFFFFFFF
+            enc_height = b'\x05' + i2leosp(40, height)
+
+        # zcashd adds an OP_0
+        return Script.from_bytes(enc_height + b'\x00')
+
     def raw(self):
         return self._script
 
@@ -415,8 +437,8 @@ class TransactionV5(object):
         if is_coinbase:
             self.vin.append(TxIn.from_components(
                 OutPoint.from_components(b'\x00' * 32, 0xFFFFFFFF),
-                Script.from_bytes(b"\x51"),
-                0))
+                Script.coinbase_from_height(self.nExpiryHeight),
+                0xFFFFFFFF))
         if have_transparent_out:
             for _ in range((rand.u8() % 3) + 1):
                 self.vout.append(TxOut(rand))
