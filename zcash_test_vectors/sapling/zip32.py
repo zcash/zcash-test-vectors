@@ -60,6 +60,16 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
         self._parent_tag = parent_tag
         self._i     = i
 
+    def __eq__(self, other):
+        return (self._ask == other._ask and
+                self._nsk == other._nsk and
+                self._ovk == other._ovk and
+                self._dk  == other._dk  and
+                self._c   == other._c   and
+                self._depth == other._depth and
+                self._parent_tag == other._parent_tag and
+                self._i   == other._i)
+
     @classmethod
     def master(cls, S):
         I     = blake2b(person=b'ZcashIP32Sapling', data=S).digest()
@@ -111,6 +121,19 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
         c_i   = I_R
         return self.__class__(ask_i, nsk_i, ovk_i, dk_i, c_i, self.depth()+1, self.tag(), i)
 
+    def internal(self):
+        FVK   = encode_xfvk_parts(self.ak(), self.nk(), self.ovk(), self.dk())
+        I     = blake2b(person=b'Zcash_SaplingInt', digest_size=32, data=FVK).digest()
+        I_nsk = to_scalar(prf_expand(I, b'\x17'))
+        R     = prf_expand(I, b'\x18')
+        nsk_internal = I_nsk + self.nsk()
+        dk_internal  = R[:32]
+        ovk_internal = R[32:]
+        internal = self.__class__(self.ask(), nsk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.tag(), self._i)
+        # check commutative diagram
+        assert internal.to_extended_fvk() == self.to_extended_fvk().internal()
+        return internal
+
 
 class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
     def __init__(self, ak, nk, ovk, dk, c, depth=0, parent_tag=i2leosp(32, 0), i=0):
@@ -122,6 +145,16 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         self._depth = depth
         self._parent_tag = parent_tag
         self._i     = i
+
+    def __eq__(self, other):
+        return (self._ak  == other._ak  and
+                self._nk  == other._nk  and
+                self._ovk == other._ovk and
+                self._dk  == other._dk  and
+                self._c   == other._c   and
+                self._depth == other._depth and
+                self._parent_tag == other._parent_tag and
+                self._i   == other._i)
 
     @classmethod
     def master(cls, S):
@@ -170,6 +203,17 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         c_i   = I_R
         return self.__class__(ak_i, nk_i, ovk_i, dk_i, c_i, self.depth()+1, self.tag(), i)
 
+    def internal(self):
+        FVK   = encode_xfvk_parts(self.ak(), self.nk(), self.ovk(), self.dk())
+        I     = blake2b(person=b'Zcash_SaplingInt', digest_size=32, data=FVK).digest()
+        I_nsk = to_scalar(prf_expand(I, b'\x17'))
+        R     = prf_expand(I, b'\x18')
+        nk_internal  = PROVING_KEY_BASE * I_nsk + self.nk()
+        dk_internal  = R[:32]
+        ovk_internal = R[32:]
+        return self.__class__(self.ak(), nk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.tag(), self._i)
+
+
 def hardened(i): 
     assert(i < (1<<31))
     return i + (1<<31)
@@ -184,6 +228,7 @@ def main():
     m_1_2hv = m_1_2h.to_extended_fvk()
     m_1_2hv_3 = m_1_2hv.child(3)
 
+    keys_and_internals = [(k, k.internal()) for k in (m, m_1, m_1_2h, m_1_2hv, m_1_2hv_3)]
     test_vectors = [
         {'ask' : Some(bytes(k.ask())) if k.is_xsk() else None,
          'nsk' : Some(bytes(k.nsk())) if k.is_xsk() else None,
@@ -200,8 +245,14 @@ def main():
          'd1'  : option(k.diversifier(1)),
          'd2'  : option(k.diversifier(2)),
          'dmax': option(k.diversifier((1<<88)-1)),
+         'internal_nsk' : Some(bytes(internal.nsk())) if internal.is_xsk() else None,
+         'internal_ovk' : bytes(internal.ovk()),
+         'internal_dk'  : bytes(internal.dk()),
+         'internal_nk'  : bytes(internal.nk()),
+         'internal_xsk' : Some(bytes(internal)) if internal.is_xsk() else None,
+         'internal_xfvk': bytes(internal.to_extended_fvk()),
         }
-        for k in (m, m_1, m_1_2h, m_1_2hv, m_1_2hv_3)
+        for (k, internal) in keys_and_internals
     ]
 
     render_tv(
@@ -223,6 +274,12 @@ def main():
             ('d1',  'Option<[u8; 11]>'),
             ('d2',  'Option<[u8; 11]>'),
             ('dmax','Option<[u8; 11]>'),
+            ('internal_nsk', 'Option<[u8; 32]>'),
+            ('internal_ovk', '[u8; 32]'),
+            ('internal_dk',  '[u8; 32]'),
+            ('internal_nk',  '[u8; 32]'),
+            ('internal_xsk', 'Option<[u8; 169]>'),
+            ('internal_xfvk','[u8; 169]'),
         ),
         test_vectors,
     )
