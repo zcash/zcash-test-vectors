@@ -54,7 +54,11 @@ class SpendingKey:
 
 class FullViewingKey(object):
     def __init__(self, sk):
-        (self.rivk, self.ak, self.nk) = (sk.rivk, sk.ak, sk.nk)
+        if isinstance(sk, SpendingKey):
+            (self.rivk, self.ak, self.nk) = (sk.rivk, sk.ak, sk.nk)
+        else:
+            (self.rivk, self.ak, self.nk) = sk
+
         K = i2leosp(256, self.rivk.s)
         R = prf_expand(K, b'\x82' + i2leosp(256, self.ak.s) + i2leosp(256, self.nk.s))
         self.dk = R[:32]
@@ -72,6 +76,11 @@ class FullViewingKey(object):
 
     def default_pkd(self):
         return self.default_gd() * Scalar(self.ivk().s)
+
+    def internal(self):
+        K = i2leosp(256, self.rivk.s)
+        rivk_internal = to_scalar(prf_expand(K, b'\x83' + i2leosp(256, self.ak.s) + i2leosp(256, self.nk.s)))
+        return self.__class__((rivk_internal, self.ak, self.nk))
 
 
 def main():
@@ -109,6 +118,7 @@ def main():
         note_cm = note.note_commitment()
         note_nf = derive_nullifier(fvk.nk, note_rho, note.psi, note_cm)
 
+        internal = fvk.internal()
         test_vectors.append({
             'sk': sk.data,
             'ask': bytes(sk.ask),
@@ -120,6 +130,10 @@ def main():
             'dk': fvk.dk,
             'default_d': default_d,
             'default_pk_d': bytes(default_pk_d),
+            'internal_rivk': bytes(internal.rivk),
+            'internal_ivk': bytes(internal.ivk()),
+            'internal_ovk': internal.ovk,
+            'internal_dk': internal.dk,
             'note_v': note_v,
             'note_rho': bytes(note_rho),
             'note_rseed': bytes(note_rseed),
@@ -141,6 +155,10 @@ def main():
             ('dk', '[u8; 32]'),
             ('default_d', '[u8; 11]'),
             ('default_pk_d', '[u8; 32]'),
+            ('internal_rivk', '[u8; 32]'),
+            ('internal_ivk', '[u8; 32]'),
+            ('internal_ovk', '[u8; 32]'),
+            ('internal_dk', '[u8; 32]'),
             ('note_v', 'u64'),
             ('note_rho', '[u8; 32]'),
             ('note_rseed', '[u8; 32]'),
