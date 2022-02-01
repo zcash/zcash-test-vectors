@@ -129,7 +129,7 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
         nsk_internal = I_nsk + self.nsk()
         dk_internal  = R[:32]
         ovk_internal = R[32:]
-        internal = self.__class__(self.ask(), nsk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.tag(), self._i)
+        internal = self.__class__(self.ask(), nsk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.parent_tag(), self._i)
         # check commutative diagram
         assert internal.to_extended_fvk() == self.to_extended_fvk().internal()
         return internal
@@ -211,7 +211,7 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         nk_internal  = PROVING_KEY_BASE * I_nsk + self.nk()
         dk_internal  = R[:32]
         ovk_internal = R[32:]
-        return self.__class__(self.ak(), nk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.tag(), self._i)
+        return self.__class__(self.ak(), nk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.parent_tag(), self._i)
 
 
 def hardened(i): 
