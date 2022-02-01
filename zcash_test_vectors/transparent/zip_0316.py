@@ -4,6 +4,7 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 from ..output import render_args, render_tv
 from ..rand import Rand
 from ..sapling.key_components import prf_expand
+from secp256k1 import PrivateKey
 
 
 def derive_ovks(chaincode, pk):
@@ -29,7 +30,7 @@ def main():
     test_vectors = []
     for i in range(10):
         chaincode = rand.b(32)
-        pk = bytes([0x02 + rand.bool()]) + rand.b(32)
+        pk = PrivateKey(rand.b(32), True).pubkey.serialize(compressed=True)
         (external_ovk, internal_ovk) = derive_ovks(chaincode, pk)
         test_vectors.append({
             'c' : chaincode,
