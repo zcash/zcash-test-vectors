@@ -16,7 +16,8 @@ tv_scripts=(
     sapling_zip32
     zip_0143
     zip_0243
-    zip_0244)
+    zip_0244
+    zip_0316)
 
 tv_external_scripts=(
     f4jumble_long
