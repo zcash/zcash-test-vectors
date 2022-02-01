@@ -53,16 +53,16 @@ class SpendingKey:
 
 
 class FullViewingKey(object):
-    def __init__(self, sk):
-        if isinstance(sk, SpendingKey):
-            (self.rivk, self.ak, self.nk) = (sk.rivk, sk.ak, sk.nk)
-        else:
-            (self.rivk, self.ak, self.nk) = sk
-
+    def __init__(self, rivk, ak, nk):
+        (self.rivk, self.ak, self.nk) = (rivk, ak, nk)
         K = i2leosp(256, self.rivk.s)
         R = prf_expand(K, b'\x82' + i2leosp(256, self.ak.s) + i2leosp(256, self.nk.s))
         self.dk = R[:32]
         self.ovk = R[32:]
+
+    @classmethod
+    def from_spending_key(cls, sk):
+        return cls(sk.rivk, sk.ak, sk.nk)
 
     def ivk(self):
         return commit_ivk(self.rivk, self.ak, self.nk)
@@ -80,7 +80,7 @@ class FullViewingKey(object):
     def internal(self):
         K = i2leosp(256, self.rivk.s)
         rivk_internal = to_scalar(prf_expand(K, b'\x83' + i2leosp(256, self.ak.s) + i2leosp(256, self.nk.s)))
-        return self.__class__((rivk_internal, self.ak, self.nk))
+        return self.__class__(rivk_internal, self.ak, self.nk)
 
 
 def main():
@@ -101,7 +101,7 @@ def main():
     test_vectors = []
     for _ in range(0, 10):
         sk = SpendingKey(rand.b(32))
-        fvk = FullViewingKey(sk)
+        fvk = FullViewingKey.from_spending_key(sk)
         default_d = fvk.default_d()
         default_pk_d = fvk.default_pkd()
 

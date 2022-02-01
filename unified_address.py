@@ -42,7 +42,7 @@ def main():
         has_o_addr = (not has_s_addr) or rand.bool()
         if has_o_addr:
             orchard_sk = orchard_key_components.SpendingKey(rand.b(32))
-            orchard_fvk = orchard_key_components.FullViewingKey(orchard_sk)
+            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(orchard_sk)
             orchard_default_d = orchard_fvk.default_d()
             orchard_default_pk_d = orchard_fvk.default_pkd()
             orchard_raw_addr = b"".join([orchard_default_d[:11], bytes(orchard_default_pk_d)[:32]])

@@ -58,7 +58,7 @@ def main():
         has_o_key = (not has_s_key) or rand.bool()
         if has_o_key:
             orchard_sk = orchard_key_components.SpendingKey(rand.b(32))
-            orchard_fvk = orchard_key_components.FullViewingKey(orchard_sk)
+            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(orchard_sk)
             orchard_fvk_bytes = b"".join([
                 bytes(orchard_fvk.ak), 
                 bytes(orchard_fvk.nk),

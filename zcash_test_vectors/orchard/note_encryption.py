@@ -214,7 +214,7 @@ def main():
         sender_ovk = rand.b(32)
 
         receiver_sk = SpendingKey(rand.b(32))
-        receiver_fvk = FullViewingKey(receiver_sk)
+        receiver_fvk = FullViewingKey.from_spending_key(receiver_sk)
         ivk = receiver_fvk.ivk()
         d = receiver_fvk.default_d()
         pk_d = receiver_fvk.default_pkd()
