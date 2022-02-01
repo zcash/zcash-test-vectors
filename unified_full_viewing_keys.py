@@ -47,9 +47,9 @@ def main():
             sapling_fvk = account_key.to_extended_fvk()
 
             sapling_fvk_bytes = b"".join([
-                bytes(sapling_fvk.ak()), 
-                bytes(sapling_fvk.nk()), 
-                sapling_fvk.ovk(), 
+                bytes(sapling_fvk.ak()),
+                bytes(sapling_fvk.nk()),
+                sapling_fvk.ovk(),
                 sapling_fvk.dk()
                 ])
         else:
@@ -60,17 +60,17 @@ def main():
             orchard_sk = orchard_key_components.SpendingKey(rand.b(32))
             orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(orchard_sk)
             orchard_fvk_bytes = b"".join([
-                bytes(orchard_fvk.ak), 
+                bytes(orchard_fvk.ak),
                 bytes(orchard_fvk.nk),
                 bytes(orchard_fvk.rivk)
                 ])
         else:
             orchard_fvk_bytes = None
 
-        # include an unknown item 1/4 of the time 
+        # include an unknown item 1/4 of the time
         has_unknown_item = rand.bool() and rand.bool()
         # use the range reserved for experimental typecodes for unknowns
-        unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1) 
+        unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1)
         unknown_len = rng.randrange(32, 256)
         if has_unknown_item:
             unknown_bytes = b"".join([rand.b(unknown_len)])

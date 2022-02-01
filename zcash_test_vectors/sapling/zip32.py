@@ -214,9 +214,10 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         return self.__class__(self.ak(), nk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.parent_tag(), self._i)
 
 
-def hardened(i): 
+def hardened(i):
     assert(i < (1<<31))
     return i + (1<<31)
+
 
 def main():
     args = render_args()
