@@ -249,8 +249,10 @@ def main():
          'internal_ovk' : bytes(internal.ovk()),
          'internal_dk'  : bytes(internal.dk()),
          'internal_nk'  : bytes(internal.nk()),
+         'internal_ivk' : bytes(internal.ivk()),
          'internal_xsk' : Some(bytes(internal)) if internal.is_xsk() else None,
          'internal_xfvk': bytes(internal.to_extended_fvk()),
+         'internal_fp'  : internal.fingerprint(),
         }
         for (k, internal) in keys_and_internals
     ]
@@ -278,8 +280,10 @@ def main():
             ('internal_ovk', '[u8; 32]'),
             ('internal_dk',  '[u8; 32]'),
             ('internal_nk',  '[u8; 32]'),
+            ('internal_ivk', '[u8; 32]'),
             ('internal_xsk', 'Option<[u8; 169]>'),
             ('internal_xfvk','[u8; 169]'),
+            ('internal_fp',  '[u8; 32]'),
         ),
         test_vectors,
     )
