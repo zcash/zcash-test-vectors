@@ -63,7 +63,7 @@ class OrchardNotePlaintext(object):
 
     def dummy_nullifier(self, rand):
         sk = SpendingKey(rand.b(32))
-        fvk = FullViewingKey(sk)
+        fvk = FullViewingKey.from_spending_key(sk)
         pk_d = fvk.default_pkd()
         d = fvk.default_d()
 
