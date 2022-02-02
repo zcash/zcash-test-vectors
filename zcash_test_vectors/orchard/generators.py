@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from pyblake2 import blake2s
+from hashlib import blake2s
 
 from ..output import render_args, render_tv
 from .group_hash import group_hash

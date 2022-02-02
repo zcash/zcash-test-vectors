@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
+from chacha20poly1305 import ChaCha20Poly1305
+from hashlib import blake2b
+import os
 import struct
 
-from chacha20poly1305 import ChaCha20Poly1305
-import os
-from pyblake2 import blake2b
 from ..transaction import MAX_MONEY
 from ..output import render_args, render_tv
 from ..rand import Rand

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
+from hashlib import blake2b
 import os
-from pyblake2 import blake2b
 
 from .generators import SPENDING_KEY_BASE
 from .jubjub import Fr, Point, r_j

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from pyblake2 import blake2b
+from hashlib import blake2b
 
 from zcash_test_vectors.output import render_args, render_tv
 from zcash_test_vectors.f4jumble import f4jumble, f4jumble_inv, MAX_l_M
