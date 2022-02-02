@@ -49,14 +49,6 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
-name = "pyblake2"
-version = "1.1.2"
-description = "BLAKE2 hash function extension module"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
@@ -78,7 +70,7 @@ cffi = ">=1.3.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "e010c1cdcddf9d8e5d49d7b1578d95e966b4271158567cebf4cca1c2ac0e5b89"
+content-hash = "948efde6d090bec2749dc1b557f3147dc0e33a98d8b12ddc41c8a7ffb07ea8ba"
 
 [metadata.files]
 cffi = [
@@ -188,17 +180,6 @@ numpy = [
     {file = "numpy-1.21.0-cp39-cp39-win_amd64.whl", hash = "sha256:2ba579dde0563f47021dcd652253103d6fd66165b18011dce1a0609215b2791e"},
     {file = "numpy-1.21.0-pp37-pypy37_pp73-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:3c40e6b860220ed862e8097b8f81c9af6d7405b723f4a7af24a267b46f90e461"},
     {file = "numpy-1.21.0.zip", hash = "sha256:e80fe25cba41c124d04c662f33f6364909b985f2eb5998aaa5ae4b9587242cce"},
-]
-pyblake2 = [
-    {file = "pyblake2-1.1.2-cp27-cp27m-win32.whl", hash = "sha256:3757f7ad709b0e1b2a6b3919fa79fe3261f166fc375cd521f2be480f8319dde9"},
-    {file = "pyblake2-1.1.2-cp27-cp27m-win_amd64.whl", hash = "sha256:8043267fbc0b2f3748c6920591cd0b8b5609dcce60c504c32858aa36206386f2"},
-    {file = "pyblake2-1.1.2-cp34-cp34m-win32.whl", hash = "sha256:4d47b4a2c1d292b1e460bde1dda4d13aa792ed2ed70fcc263b6bc24632c8e902"},
-    {file = "pyblake2-1.1.2-cp34-cp34m-win_amd64.whl", hash = "sha256:982295a87907d50f4723db6bc724660da76b6547826d52160171d54f95b919ac"},
-    {file = "pyblake2-1.1.2-cp35-cp35m-win32.whl", hash = "sha256:baa2190bfe549e36163aa44664d4ee3a9080b236fc5d42f50dc6fd36bbdc749e"},
-    {file = "pyblake2-1.1.2-cp35-cp35m-win_amd64.whl", hash = "sha256:407e02c7f8f36fcec1b7aa114ddca0c1060c598142ea6f6759d03710b946a7e3"},
-    {file = "pyblake2-1.1.2-cp36-cp36m-win32.whl", hash = "sha256:fbc9fcde75713930bc2a91b149e97be2401f7c9c56d735b46a109210f58d7358"},
-    {file = "pyblake2-1.1.2-cp36-cp36m-win_amd64.whl", hash = "sha256:c53417ee0bbe77db852d5fd1036749f03696ebc2265de359fe17418d800196c4"},
-    {file = "pyblake2-1.1.2.tar.gz", hash = "sha256:5ccc7eb02edb82fafb8adbb90746af71460fbc29aa0f822526fc976dff83e93f"},
 ]
 pycparser = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},

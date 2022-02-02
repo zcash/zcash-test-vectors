@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
+from hashlib import blake2b
 import math
 
 from . import iso_pallas
 
-from pyblake2 import blake2b
 from .pallas import Fp, p, q, PALLAS_B, Point
 from .iso_pallas import PALLAS_ISO_B, PALLAS_ISO_A
 from ..utils import i2beosp, cldiv, beos2ip, i2leosp, lebs2ip

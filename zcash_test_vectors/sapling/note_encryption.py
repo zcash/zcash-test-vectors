@@ -2,8 +2,8 @@
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from chacha20poly1305 import ChaCha20Poly1305
+from hashlib import blake2b
 import os
-from pyblake2 import blake2b
 import struct
 
 from .generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE

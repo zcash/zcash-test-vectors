@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from pyblake2 import blake2b
+from hashlib import blake2b
 
 from .key_components import to_scalar, prf_expand, diversify_hash, DerivedAkNk, DerivedIvk
 from .generators import SPENDING_KEY_BASE, PROVING_KEY_BASE
@@ -42,8 +42,9 @@ class ExtendedBase(object):
         return d if diversify_hash(d) else None
 
     def fingerprint(self):
-        FVK = bytes(self.ak()) + bytes(self.nk()) + self.ovk()
-        return blake2b(person=b'ZcashSaplingFVFP', digest_size=32, data=FVK).digest()
+        digest = blake2b(person=b'ZcashSaplingFVFP', digest_size=32)
+        digest.update(bytes(self.ak()) + bytes(self.nk()) + self.ovk())
+        return digest.digest()
 
     def tag(self):
         return self.fingerprint()[:4]
@@ -72,7 +73,9 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
 
     @classmethod
     def master(cls, S):
-        I     = blake2b(person=b'ZcashIP32Sapling', data=S).digest()
+        digest = blake2b(person=b'ZcashIP32Sapling')
+        digest.update(S)
+        I     = digest.digest()
         I_L   = I[:32]
         I_R   = I[32:]
         sk_m  = I_L
@@ -122,8 +125,9 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
         return self.__class__(ask_i, nsk_i, ovk_i, dk_i, c_i, self.depth()+1, self.tag(), i)
 
     def internal(self):
-        FVK   = encode_xfvk_parts(self.ak(), self.nk(), self.ovk(), self.dk())
-        I     = blake2b(person=b'Zcash_SaplingInt', digest_size=32, data=FVK).digest()
+        digest = blake2b(person=b'Zcash_SaplingInt', digest_size=32)
+        digest.update(encode_xfvk_parts(self.ak(), self.nk(), self.ovk(), self.dk()))
+        I     = digest.digest()
         I_nsk = to_scalar(prf_expand(I, b'\x17'))
         R     = prf_expand(I, b'\x18')
         nsk_internal = I_nsk + self.nsk()
@@ -204,8 +208,9 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         return self.__class__(ak_i, nk_i, ovk_i, dk_i, c_i, self.depth()+1, self.tag(), i)
 
     def internal(self):
-        FVK   = encode_xfvk_parts(self.ak(), self.nk(), self.ovk(), self.dk())
-        I     = blake2b(person=b'Zcash_SaplingInt', digest_size=32, data=FVK).digest()
+        digest = blake2b(person=b'Zcash_SaplingInt', digest_size=32)
+        digest.update(encode_xfvk_parts(self.ak(), self.nk(), self.ovk(), self.dk()))
+        I     = digest.digest()
         I_nsk = to_scalar(prf_expand(I, b'\x17'))
         R     = prf_expand(I, b'\x18')
         nk_internal  = PROVING_KEY_BASE * I_nsk + self.nk()
