@@ -17,7 +17,7 @@ jobs:
             extension: 'json'
             name: 'JSON'
           - kind: 'zcash'
-            extension: 'rs'
+            extension: 'json'
             name: 'Bitcoin-flavoured JSON'
       fail-fast: false
 
