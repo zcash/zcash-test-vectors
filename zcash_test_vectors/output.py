@@ -28,16 +28,16 @@ def tv_value_json(value, bitcoin_flavoured):
         value = value.thing
 
     def bitcoinify(value):
+        if type(value) == list:
+            return [bitcoinify(v) for v in value]
+
         if type(value) == bytes:
             if bitcoin_flavoured and len(value) == 32:
                 value = value[::-1]
             value = hexlify(value).decode()
         return value
 
-    if type(value) == list:
-        return [bitcoinify(v) for v in value]
-    else:
-        return bitcoinify(value)
+    return bitcoinify(value)
 
 def tv_json(filename, parts, vectors, bitcoin_flavoured):
     if type(vectors) == type({}):
