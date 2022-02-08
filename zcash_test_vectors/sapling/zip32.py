@@ -5,6 +5,8 @@ from hashlib import blake2b
 
 from .key_components import to_scalar, prf_expand, diversify_hash, DerivedAkNk, DerivedIvk
 from .generators import SPENDING_KEY_BASE, PROVING_KEY_BASE
+
+from ..hd_common import hardened
 from ..utils import i2leosp, i2lebsp, lebs2osp
 from ..ff1 import ff1_aes256_encrypt
 from ..output import render_args, render_tv, option, Some
@@ -217,11 +219,6 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         dk_internal  = R[:32]
         ovk_internal = R[32:]
         return self.__class__(self.ak(), nk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.parent_tag(), self._i)
-
-
-def hardened(i):
-    assert(i < (1<<31))
-    return i + (1<<31)
 
 
 def main():

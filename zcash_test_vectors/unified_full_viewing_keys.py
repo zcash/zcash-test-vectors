@@ -10,8 +10,10 @@ from .output import render_args, render_tv, Some
 from .rand import Rand, randbytes
 from .orchard import key_components as orchard_key_components
 from .sapling import zip32 as sapling_zip32
+from .hd_common import ZCASH_MAIN_COINTYPE, hardened
 from .unified_encoding import encode_unified, decode_unified
 from .unified_encoding import P2PKH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
+
 
 def main():
     args = render_args()
@@ -37,9 +39,9 @@ def main():
         has_s_key = rand.bool()
         if has_s_key:
             root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
-            purpose_key = root_key.child(sapling_zip32.hardened(32))
-            coin_key = purpose_key.child(sapling_zip32.hardened(133))
-            account_key = coin_key.child(sapling_zip32.hardened(i))
+            purpose_key = root_key.child(hardened(32))
+            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+            account_key = coin_key.child(hardened(i))
             sapling_fvk = account_key.to_extended_fvk()
 
             sapling_fvk_bytes = b"".join([
