@@ -6,12 +6,12 @@ from random import Random
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import PublicFormat, Encoding
 
-from zcash_test_vectors.output import render_args, render_tv, Some
-from zcash_test_vectors.rand import Rand, randbytes
-from zcash_test_vectors.orchard import key_components as orchard_key_components
-from zcash_test_vectors.sapling import zip32 as sapling_zip32
-from zcash_test_vectors.unified_encoding import encode_unified, decode_unified
-from zcash_test_vectors.unified_encoding import P2PKH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
+from .output import render_args, render_tv, Some
+from .rand import Rand, randbytes
+from .orchard import key_components as orchard_key_components
+from .sapling import zip32 as sapling_zip32
+from .unified_encoding import encode_unified, decode_unified
+from .unified_encoding import P2PKH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
 
 def main():
     args = render_args()

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from zcash_test_vectors.orchard.group_hash import map_to_curve_simple_swu
-from zcash_test_vectors.orchard.iso_pallas import Point as IsoPoint
-from zcash_test_vectors.orchard.pallas import Fp
-from zcash_test_vectors.utils import leos2ip
-from zcash_test_vectors.output import render_args, render_tv
-from zcash_test_vectors.rand import Rand
+from .group_hash import map_to_curve_simple_swu
+from .iso_pallas import Point as IsoPoint
+from .pallas import Fp
+
+from ..utils import leos2ip
+from ..output import render_args, render_tv
+from ..rand import Rand
 
 
 def main():
