@@ -11,8 +11,9 @@ from .output import render_args, render_tv, Some
 from .rand import Rand, randbytes
 from .zc_utils import write_compact_size, parse_compact_size
 from .f4jumble import f4jumble, f4jumble_inv
-from .sapling import key_components as sapling_key_components
+from .sapling import key_components as sapling_key_components, zip32 as sapling_zip32
 from .orchard import key_components as orchard_key_components
+from .hd_common import ZCASH_MAIN_COINTYPE, hardened
 from .unified_encoding import encode_unified, decode_unified
 from .unified_encoding import P2PKH_ITEM, P2SH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
 
@@ -21,21 +22,29 @@ def main():
 
     rng = Random(0xabad533d)
     rand = Rand(randbytes(rng))
+    seed = bytes(range(32))
 
     test_vectors = []
-    for _ in range(0, 10):
+    for account in range(0, 10):
         has_t_addr = rand.bool()
         if has_t_addr:
             t_addr = b"".join([rand.b(20)])
         else:
             t_addr = None
 
+        j = 0
         has_s_addr = rand.bool()
         if has_s_addr:
-            sapling_sk = sapling_key_components.SpendingKey(rand.b(32))
-            sapling_default_d = sapling_sk.default_d()
-            sapling_default_pk_d = sapling_sk.default_pkd()
-            sapling_raw_addr = b"".join([sapling_default_d[:11], bytes(sapling_default_pk_d)[:32]])
+            rand.b(32) # discard
+            root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
+            purpose_key = root_key.child(hardened(32))
+            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+            account_key = coin_key.child(hardened(account))
+
+            j = account_key.find_j(0)
+            sapling_d = account_key.diversifier(j)
+            sapling_pk_d = account_key.pk_d(j)
+            sapling_raw_addr = sapling_d + bytes(sapling_pk_d)
         else:
             sapling_raw_addr = None
 
@@ -69,7 +78,9 @@ def main():
             'p2sh_bytes': None if is_p2pkh else t_addr,
             'sapling_raw_addr': sapling_raw_addr,
             'orchard_raw_addr': orchard_raw_addr,
-            'unified_addr': ua.encode()
+            'unified_addr': ua.encode(),
+            'account': account,
+            'diversifier_index': j,
         })
 
     render_tv(
@@ -92,7 +103,9 @@ def main():
                 'rust_type': 'Option<[u8; 43]>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
             }),
-            ('unified_addr', 'Vec<u8>')
+            ('unified_addr', 'Vec<u8>'),
+            ('account', 'u32'),
+            ('diversifier_index', 'u32'),
         ),
         test_vectors,
     )

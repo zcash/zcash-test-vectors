@@ -20,10 +20,11 @@ def main():
 
     rng = Random(0xabad533d)
     rand = Rand(randbytes(rng))
-    seed = rand.b(32)
+    seed = bytes(range(32))
+    rand.b(32) # discard
 
     test_vectors = []
-    for i in range(0, 10):
+    for account in range(0, 10):
         has_t_key = rand.bool()
         if has_t_key:
             c = rand.b(32)
@@ -41,7 +42,7 @@ def main():
             root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
             purpose_key = root_key.child(hardened(32))
             coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
-            account_key = coin_key.child(hardened(i))
+            account_key = coin_key.child(hardened(account))
             sapling_dk = account_key.to_extended_fvk().dk()
             sapling_ivk = account_key.ivk()
             sapling_ivk_bytes = bytes(sapling_dk) + bytes(sapling_ivk)
@@ -95,6 +96,7 @@ def main():
             'unknown_ivk_typecode': unknown_tc,
             'unknown_ivk_bytes': unknown_bytes,
             'unified_ivk': uivk.encode(),
+            'account': account,
         })
 
     render_tv(
@@ -118,7 +120,8 @@ def main():
                 'rust_type': 'Option<Vec<u8>>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
             }),
-            ('unified_ivk', 'Vec<u8>')
+            ('unified_ivk', 'Vec<u8>'),
+            ('account', 'u32'),
         ),
         test_vectors,
     )

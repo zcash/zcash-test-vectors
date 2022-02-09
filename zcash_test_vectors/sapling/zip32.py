@@ -39,9 +39,21 @@ class ExtendedBase(object):
     def i(self):
         return self._i
 
+    def _derive_d(self, j):
+        return lebs2osp(ff1_aes256_encrypt(self.dk(), b'', i2lebsp(88, j)))
+
     def diversifier(self, j):
-        d = lebs2osp(ff1_aes256_encrypt(self.dk(), b'', i2lebsp(88, j)))
+        d = self._derive_d(j)
         return d if diversify_hash(d) else None
+
+    def find_j(self, start):
+        for j in range(start, 1<<31):
+            d = self._derive_d(j)
+            if diversify_hash(d): return j
+        return None
+
+    def g_d(self, j):
+        return diversify_hash(self._derive_d(j))
 
     def fingerprint(self):
         digest = blake2b(person=b'ZcashSaplingFVFP', digest_size=32)
@@ -93,6 +105,10 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
 
     def nsk(self):
         return self._nsk
+
+    def pk_d(self, j):
+        g_d = self.g_d(j)
+        return g_d * self.ivk() if g_d else None
 
     def is_xsk(self):
         return True
