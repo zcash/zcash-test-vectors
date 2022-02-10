@@ -55,8 +55,12 @@ def main():
 
         has_o_key = (not has_s_key) or rand.bool()
         if has_o_key:
-            orchard_sk = orchard_key_components.SpendingKey(rand.b(32))
-            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(orchard_sk)
+            rand.b(32) # discard
+            root_key = orchard_key_components.ExtendedSpendingKey.master(seed)
+            purpose_key = root_key.child(hardened(32))
+            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+            account_key = coin_key.child(hardened(account))
+            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(account_key)
             orchard_fvk_bytes = b"".join([
                 bytes(orchard_fvk.ak),
                 bytes(orchard_fvk.nk),
