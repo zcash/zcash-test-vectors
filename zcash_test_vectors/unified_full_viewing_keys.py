@@ -20,6 +20,18 @@ def main():
     rand = Rand(randbytes(rng))
     seed = bytes(range(32))
 
+    t_root_key = bip_0032.ExtendedSecretKey.master(seed)
+    t_purpose_key = t_root_key.child(hardened(44))
+    t_coin_key = t_purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+
+    s_root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
+    s_purpose_key = s_root_key.child(hardened(32))
+    s_coin_key = s_purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+
+    o_root_key = orchard_key_components.ExtendedSpendingKey.master(seed)
+    o_purpose_key = o_root_key.child(hardened(32))
+    o_coin_key = o_purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+
     test_vectors = []
     for account in range(0, 20):
         has_t_key = rand.bool()
@@ -30,21 +42,15 @@ def main():
             # "However, the [Transparent P2PKH] FVK uses the key at the Account level, i.e.
             # at path m/44'/coin_type'/account', while the IVK uses the external (non-change)
             # child key at the Change level, i.e. at path m/44'/coin_type'/account'/0."
-            root_key = bip_0032.ExtendedSecretKey.master(seed)
-            purpose_key = root_key.child(hardened(44))
-            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
-            account_key = coin_key.child(hardened(account))
-            t_key_bytes = bytes(account_key.public_key())
+            t_account_key = t_coin_key.child(hardened(account))
+            t_key_bytes = bytes(t_account_key.public_key())
         else:
             t_key_bytes = None
 
         has_s_key = rand.bool()
         if has_s_key:
-            root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
-            purpose_key = root_key.child(hardened(32))
-            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
-            account_key = coin_key.child(hardened(account))
-            sapling_fvk = account_key.to_extended_fvk()
+            s_account_key = s_coin_key.child(hardened(account))
+            sapling_fvk = s_account_key.to_extended_fvk()
             sapling_fvk_bytes = b"".join([
                 bytes(sapling_fvk.ak()),
                 bytes(sapling_fvk.nk()),
@@ -56,11 +62,8 @@ def main():
 
         has_o_key = (not has_s_key) or rand.bool()
         if has_o_key:
-            root_key = orchard_key_components.ExtendedSpendingKey.master(seed)
-            purpose_key = root_key.child(hardened(32))
-            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
-            account_key = coin_key.child(hardened(account))
-            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(account_key)
+            o_account_key = o_coin_key.child(hardened(account))
+            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(o_account_key)
             orchard_fvk_bytes = b"".join([
                 bytes(orchard_fvk.ak),
                 bytes(orchard_fvk.nk),

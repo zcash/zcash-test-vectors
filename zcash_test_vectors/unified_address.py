@@ -25,6 +25,18 @@ def main():
     rand = Rand(randbytes(rng))
     seed = bytes(range(32))
 
+    t_root_key = bip_0032.ExtendedSecretKey.master(seed)
+    t_purpose_key = t_root_key.child(hardened(44))
+    t_coin_key = t_purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+
+    s_root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
+    s_purpose_key = s_root_key.child(hardened(32))
+    s_coin_key = s_purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+
+    o_root_key = orchard_key_components.ExtendedSpendingKey.master(seed)
+    o_purpose_key = o_root_key.child(hardened(32))
+    o_coin_key = o_purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+
     test_vectors = []
     for account in range(0, 20):
         has_t_addr = rand.bool()
@@ -39,25 +51,18 @@ def main():
         j = 0
         has_s_addr = rand.bool()
         if has_s_addr:
-            root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
-            purpose_key = root_key.child(hardened(32))
-            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
-            account_key = coin_key.child(hardened(account))
-
-            j = account_key.find_j(0)
-            sapling_d = account_key.diversifier(j)
-            sapling_pk_d = account_key.pk_d(j)
+            s_account_key = s_coin_key.child(hardened(account))
+            j = s_account_key.find_j(0)
+            sapling_d = s_account_key.diversifier(j)
+            sapling_pk_d = s_account_key.pk_d(j)
             sapling_raw_addr = sapling_d + bytes(sapling_pk_d)
         else:
             sapling_raw_addr = None
 
         has_o_addr = (not has_s_addr) or rand.bool()
         if has_o_addr:
-            root_key = orchard_key_components.ExtendedSpendingKey.master(seed)
-            purpose_key = root_key.child(hardened(32))
-            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
-            account_key = coin_key.child(hardened(account))
-            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(account_key)
+            o_account_key = o_coin_key.child(hardened(account))
+            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(o_account_key)
             orchard_d = orchard_fvk.diversifier(j)
             orchard_pk_d = orchard_fvk.pk_d(j)
             orchard_raw_addr = orchard_d + bytes(orchard_pk_d)
@@ -66,14 +71,11 @@ def main():
 
         is_p2pkh = rand.bool()
         if has_t_addr and is_p2pkh:
-            root_key = bip_0032.ExtendedSecretKey.master(seed)
-            purpose_key = root_key.child(hardened(44))
-            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
-            account_key = coin_key.child(hardened(account))
-            external_key = account_key.child(0)
-            index_key = account_key.child(j)
-            index_pubkey = index_key.public_key()
-            t_addr = index_pubkey.address()
+            t_account_key = t_coin_key.child(hardened(account))
+            t_external_key = t_account_key.child(0)
+            t_index_key = t_account_key.child(j)
+            t_index_pubkey = t_index_key.public_key()
+            t_addr = t_index_pubkey.address()
 
         # include an unknown item 1/4 of the time
         has_unknown_item = rand.bool() and rand.bool()
