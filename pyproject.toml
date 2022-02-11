@@ -38,6 +38,9 @@ unified_incoming_viewing_keys = "zcash_test_vectors.unified_incoming_viewing_key
 zip_0143 = "zcash_test_vectors.zip_0143:main"
 zip_0243 = "zcash_test_vectors.zip_0243:main"
 zip_0244 = "zcash_test_vectors.zip_0244:main"
+
+# Transparent test vectors
+bip_0032 = "zcash_test_vectors.transparent.bip_0032:main"
 zip_0316 = "zcash_test_vectors.transparent.zip_0316:main"
 
 # Sapling test vectors

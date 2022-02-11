@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 tv_scripts=(
+    bip_0032
     f4jumble
     f4jumble_long
     orchard_empty_roots

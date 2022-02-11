@@ -3,13 +3,11 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from random import Random
 
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.serialization import PublicFormat, Encoding
-
 from .output import render_args, render_tv, Some
 from .rand import Rand, randbytes
 from .orchard import key_components as orchard_key_components
 from .sapling import zip32 as sapling_zip32
+from .transparent import bip_0032
 from .hd_common import ZCASH_MAIN_COINTYPE, hardened
 from .unified_encoding import encode_unified, decode_unified
 from .unified_encoding import P2PKH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
@@ -27,13 +25,18 @@ def main():
     for account in range(0, 10):
         has_t_key = rand.bool()
         if has_t_key:
-            c = rand.b(32)
-            privkey = ec.derive_private_key(int.from_bytes(rand.b(32), 'little'), ec.SECP256K1())
-            pubkey = privkey.public_key()
-            pubkey_bytes = pubkey.public_bytes(Encoding.X962, PublicFormat.CompressedPoint)
-            assert len(pubkey_bytes) == 33
-            assert pubkey_bytes[0] in (0x02, 0x03)
-            t_key_bytes = c + pubkey_bytes
+            rand.b(32) # discard
+            rand.b(32) # discard
+
+            # <https://zips.z.cash/zip-0316#encoding-of-unified-full-incoming-viewing-keys>
+            # "However, the [Transparent P2PKH] FVK uses the key at the Account level, i.e.
+            # at path m/44'/coin_type'/account', while the IVK uses the external (non-change)
+            # child key at the Change level, i.e. at path m/44'/coin_type'/account'/0."
+            root_key = bip_0032.ExtendedSecretKey.master(seed)
+            purpose_key = root_key.child(hardened(44))
+            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+            account_key = coin_key.child(hardened(account))
+            t_key_bytes = bytes(account_key.public_key())
         else:
             t_key_bytes = None
 

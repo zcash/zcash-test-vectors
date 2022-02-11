@@ -13,6 +13,7 @@ from .zc_utils import write_compact_size, parse_compact_size
 from .f4jumble import f4jumble, f4jumble_inv
 from .sapling import key_components as sapling_key_components, zip32 as sapling_zip32
 from .orchard import key_components as orchard_key_components
+from .transparent import bip_0032
 from .hd_common import ZCASH_MAIN_COINTYPE, hardened
 from .unified_encoding import encode_unified, decode_unified
 from .unified_encoding import P2PKH_ITEM, P2SH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
@@ -28,7 +29,10 @@ def main():
     for account in range(0, 10):
         has_t_addr = rand.bool()
         if has_t_addr:
-            t_addr = b"".join([rand.b(20)])
+            # This randomness is only used if this UA will have a P2SH key.
+            # If it will have a P2PKH key, it gets overwritten below (after
+            # we've decided on the diversifier index).
+            t_addr = rand.b(20)
         else:
             t_addr = None
 
@@ -63,6 +67,16 @@ def main():
             orchard_raw_addr = None
 
         is_p2pkh = rand.bool()
+        if has_t_addr and is_p2pkh:
+            root_key = bip_0032.ExtendedSecretKey.master(seed)
+            purpose_key = root_key.child(hardened(44))
+            coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
+            account_key = coin_key.child(hardened(account))
+            external_key = account_key.child(0)
+            index_key = account_key.child(j)
+            index_pubkey = index_key.public_key()
+            t_addr = index_pubkey.address()
+
         receivers = [
             (ORCHARD_ITEM, orchard_raw_addr),
             (SAPLING_ITEM, sapling_raw_addr),
