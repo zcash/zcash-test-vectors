@@ -19,14 +19,12 @@ def main():
     rng = Random(0xabad533d)
     rand = Rand(randbytes(rng))
     seed = bytes(range(32))
-    rand.b(32) # discard
 
     test_vectors = []
-    for account in range(0, 10):
+    for account in range(0, 20):
         has_t_key = rand.bool()
         if has_t_key:
-            rand.b(32) # discard
-            rand.b(32) # discard
+            rand.b(20) # discard, to match UA generation
 
             # <https://zips.z.cash/zip-0316#encoding-of-unified-full-incoming-viewing-keys>
             # "However, the [Transparent P2PKH] FVK uses the key at the Account level, i.e.
@@ -55,7 +53,6 @@ def main():
 
         has_o_key = (not has_s_key) or rand.bool()
         if has_o_key:
-            rand.b(32) # discard
             root_key = orchard_key_components.ExtendedSpendingKey.master(seed)
             purpose_key = root_key.child(hardened(32))
             coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
@@ -66,6 +63,8 @@ def main():
             orchard_ivk_bytes = bytes(orchard_dk) + bytes(orchard_ivk)
         else:
             orchard_ivk_bytes = None
+
+        rand.bool() # discard, to match UA generation
 
         # include an unknown item 1/4 of the time
         has_unknown_item = rand.bool() and rand.bool()

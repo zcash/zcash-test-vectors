@@ -26,7 +26,7 @@ def main():
     seed = bytes(range(32))
 
     test_vectors = []
-    for account in range(0, 10):
+    for account in range(0, 20):
         has_t_addr = rand.bool()
         if has_t_addr:
             # This randomness is only used if this UA will have a P2SH key.
@@ -39,7 +39,6 @@ def main():
         j = 0
         has_s_addr = rand.bool()
         if has_s_addr:
-            rand.b(32) # discard
             root_key = sapling_zip32.ExtendedSpendingKey.master(seed)
             purpose_key = root_key.child(hardened(32))
             coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
@@ -54,7 +53,6 @@ def main():
 
         has_o_addr = (not has_s_addr) or rand.bool()
         if has_o_addr:
-            rand.b(32) # discard
             root_key = orchard_key_components.ExtendedSpendingKey.master(seed)
             purpose_key = root_key.child(hardened(32))
             coin_key = purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
@@ -77,6 +75,16 @@ def main():
             index_pubkey = index_key.public_key()
             t_addr = index_pubkey.address()
 
+        # include an unknown item 1/4 of the time
+        has_unknown_item = rand.bool() and rand.bool()
+        # use the range reserved for experimental typecodes for unknowns
+        unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1)
+        unknown_len = rng.randrange(32, 256)
+        if has_unknown_item:
+            unknown_bytes = b"".join([rand.b(unknown_len)])
+        else:
+            unknown_bytes = None
+
         receivers = [
             (ORCHARD_ITEM, orchard_raw_addr),
             (SAPLING_ITEM, sapling_raw_addr),
@@ -96,6 +104,8 @@ def main():
             'p2sh_bytes': None if is_p2pkh else t_addr,
             'sapling_raw_addr': sapling_raw_addr,
             'orchard_raw_addr': orchard_raw_addr,
+            'unknown_typecode': unknown_tc,
+            'unknown_bytes': unknown_bytes,
             'unified_addr': ua.encode(),
             'account': account,
             'diversifier_index': j,
@@ -119,6 +129,11 @@ def main():
             }),
             ('orchard_raw_addr', {
                 'rust_type': 'Option<[u8; 43]>',
+                'rust_fmt': lambda x: None if x is None else Some(x),
+            }),
+            ('unknown_typecode', 'u32'),
+            ('unknown_bytes', {
+                'rust_type': 'Option<Vec<u8>>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
             }),
             ('unified_addr', 'Vec<u8>'),
