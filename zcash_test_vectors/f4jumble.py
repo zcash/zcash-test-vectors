@@ -123,6 +123,35 @@ def main():
         plain_test_vectors,
     )
 
+def long_test_vectors():
+    args = render_args()
+
+    hashed_test_vectors = []
+
+    for l_M in [
+        3246395,
+        MAX_l_M,
+    ]:
+        M = bytes([i & 0xFF for i in range(l_M)])
+        jumbled = f4jumble(M)
+        assert len(jumbled) == len(M)
+        assert f4jumble_inv(jumbled) == M
+
+        hashed_test_vectors.append({
+            'length': l_M,
+            'jumbled_hash': blake2b(jumbled).digest()
+        })
+
+    render_tv(
+        args,
+        'f4jumble_long',
+        (
+            ('length', 'usize'),
+            ('jumbled_hash', '[u8; 64]'),
+        ),
+        hashed_test_vectors,
+    )
+
 
 if __name__ == "__main__":
     main()

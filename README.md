@@ -15,8 +15,7 @@ after adjusting:
 - Install [`poetry`](https://python-poetry.org/).
 - `poetry install`
 - `poetry run SCRIPT_NAME [-t json|rust|zcash]`
-  - `SCRIPT_NAME` is either one of the scripts listed in `pyproject.toml`, or
-    one of the Python files in the root directory.
+  - `SCRIPT_NAME` is one of the scripts listed in `pyproject.toml`.
 
 ## License
 

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from ..orchard.pallas import Fp
 import numpy as np
 from itertools import chain
+
+from .pallas import Fp
+
 from ..utils import leos2ip
 from ..output import render_args, render_tv
 from ..rand import Rand
+
 
 # Number of full rounds
 R_F = 8
@@ -156,8 +159,8 @@ def hash(x, y):
     assert isinstance(y, Fp)
     return perm([x, y, CAPACITY_ELEMENT])[0]
 
-def main():
 
+def main():
     # These are test vectors from https://github.com/daira/pasta-hadeshash/commit/f7ca15dcf8568f1a4b2c4b7188815e80e9ab8975.
     fixed_test_input = [
         Fp(0x0000000000000000000000000000000000000000000000000000000000000000),
@@ -203,6 +206,39 @@ def main():
             'final_state': list(map(bytes, perm(input))),
         } for input in test_vectors],
     )
+
+def hash_test_vectors():
+    test_vectors = [[Fp.ZERO, Fp(1)]]
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    # Generate random test vectors
+    for _ in range(10):
+        test_vectors.append([
+            Fp(leos2ip(rand.b(32))),
+            Fp(leos2ip(rand.b(32))),
+        ])
+
+    render_tv(
+        render_args(),
+        'orchard_poseidon_hash',
+        (
+            ('input', '[[u8; 32]; 2]'),
+            ('output', '[u8; 32]'),
+        ),
+        [{
+            'input': list(map(bytes, input)),
+            'output': bytes(hash(input[0], input[1])),
+        } for input in test_vectors],
+    )
+
 
 if __name__ == "__main__":
     main()

@@ -5,16 +5,16 @@ import math
 from random import Random
 import struct
 
-from zcash_test_vectors.bech32m import bech32_encode, bech32_decode, convertbits, Encoding
+from .bech32m import bech32_encode, bech32_decode, convertbits, Encoding
 
-from zcash_test_vectors.output import render_args, render_tv, Some
-from zcash_test_vectors.rand import Rand, randbytes
-from zcash_test_vectors.zc_utils import write_compact_size, parse_compact_size
-from zcash_test_vectors.f4jumble import f4jumble, f4jumble_inv
-from zcash_test_vectors.sapling import key_components as sapling_key_components
-from zcash_test_vectors.orchard import key_components as orchard_key_components
-from zcash_test_vectors.unified_encoding import encode_unified, decode_unified
-from zcash_test_vectors.unified_encoding import P2PKH_ITEM, P2SH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
+from .output import render_args, render_tv, Some
+from .rand import Rand, randbytes
+from .zc_utils import write_compact_size, parse_compact_size
+from .f4jumble import f4jumble, f4jumble_inv
+from .sapling import key_components as sapling_key_components
+from .orchard import key_components as orchard_key_components
+from .unified_encoding import encode_unified, decode_unified
+from .unified_encoding import P2PKH_ITEM, P2SH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
 
 def main():
     args = render_args()

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from zcash_test_vectors.orchard.merkle_tree import empty_roots
-from zcash_test_vectors.orchard.pallas import Fp
-from zcash_test_vectors.output import render_args, render_tv
-from zcash_test_vectors.utils import i2lebsp
+from .merkle_tree import empty_roots
+from .pallas import Fp
+
+from ..output import render_args, render_tv
+from ..utils import i2lebsp
 
 
 def main():
