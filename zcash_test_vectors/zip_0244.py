@@ -406,43 +406,19 @@ def main():
         args,
         'zip_0244',
         (
-            ('tx', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
-            ('txid', '[u8; 32]'),
-            ('auth_digest', '[u8; 32]'),
-            ('amounts', {'rust_type': 'Vec<i64>'}),
-            ('script_pubkeys', {
-                'rust_type': 'Vec<Vec<u8>>',
-                'bitcoin_flavoured': False,
-                }),
-            ('transparent_input', {
-                'rust_type': 'Option<u32>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
-            ('sighash_shielded', '[u8; 32]'),
-            ('sighash_all', {
-                'rust_type': 'Option<[u8; 32]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
-            ('sighash_none', {
-                'rust_type': 'Option<[u8; 32]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
-            ('sighash_single', {
-                'rust_type': 'Option<[u8; 32]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
-            ('sighash_all_anyone', {
-                'rust_type': 'Option<[u8; 32]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
-            ('sighash_none_anyone', {
-                'rust_type': 'Option<[u8; 32]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
-            ('sighash_single_anyone', {
-                'rust_type': 'Option<[u8; 32]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                }),
+            ('tx',                    {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('txid',                  '[u8; 32]'),
+            ('auth_digest',           '[u8; 32]'),
+            ('amounts',               'Vec<i64>'),
+            ('script_pubkeys',        {'rust_type': 'Vec<Vec<u8>>', 'bitcoin_flavoured': False}),
+            ('transparent_input',     'Option<u32>'),
+            ('sighash_shielded',      '[u8; 32]'),
+            ('sighash_all',           'Option<[u8; 32]>'),
+            ('sighash_none',          'Option<[u8; 32]>'),
+            ('sighash_single',        'Option<[u8; 32]>'),
+            ('sighash_all_anyone',    'Option<[u8; 32]>'),
+            ('sighash_none_anyone',   'Option<[u8; 32]>'),
+            ('sighash_single_anyone', 'Option<[u8; 32]>'),
         ),
         test_vectors,
     )

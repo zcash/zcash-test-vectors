@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
+from hashlib import blake2b
+
 from ..ff1 import ff1_aes256_encrypt
 from ..sapling.key_components import prf_expand
 
@@ -34,7 +36,7 @@ def derive_nullifier(nk, rho: Fp, psi: Fp, cm):
 # Key components
 #
 
-class SpendingKey:
+class SpendingKey(object):
     def __init__(self, data):
         self.data = data
 
@@ -52,6 +54,29 @@ class SpendingKey:
         assert commit_ivk(self.rivk, self.ak, self.nk) is not None
 
 
+class ExtendedSpendingKey(SpendingKey):
+    def __init__(self, chaincode, data):
+        SpendingKey.__init__(self, data)
+        self.chaincode = chaincode
+
+    @classmethod
+    def master(cls, S):
+        digest = blake2b(person=b'ZcashIP32Orchard')
+        digest.update(S)
+        I   = digest.digest()
+        I_L = I[:32]
+        I_R = I[32:]
+        return cls(I_R, I_L)
+
+    def child(self, i):
+        assert 0x80000000 <= i and i <= 0xFFFFFFFF
+
+        I   = prf_expand(self.chaincode, b'\x81' + self.data + i2leosp(32, i))
+        I_L = I[:32]
+        I_R = I[32:]
+        return self.__class__(I_R, I_L)
+
+
 class FullViewingKey(object):
     def __init__(self, rivk, ak, nk):
         (self.rivk, self.ak, self.nk) = (rivk, ak, nk)
@@ -67,15 +92,20 @@ class FullViewingKey(object):
     def ivk(self):
         return commit_ivk(self.rivk, self.ak, self.nk)
 
-    def default_d(self):
-        index = i2lebsp(88, 0)
-        return lebs2osp(ff1_aes256_encrypt(self.dk, b'', index))
+    def diversifier(self, j):
+        return lebs2osp(ff1_aes256_encrypt(self.dk, b'', i2lebsp(88, j)))
 
-    def default_gd(self):
-        return diversify_hash(self.default_d())
+    def default_d(self):
+        return self.diversifier(0)
+
+    def g_d(self, j):
+        return diversify_hash(self.diversifier(j))
+
+    def pk_d(self, j):
+        return self.g_d(j) * Scalar(self.ivk().s)
 
     def default_pkd(self):
-        return self.default_gd() * Scalar(self.ivk().s)
+        return self.pk_d(0)
 
     def internal(self):
         K = i2leosp(256, self.rivk.s)
@@ -88,7 +118,7 @@ def main():
 
     from .note import OrchardNote
     from random import Random
-    from zcash_test_vectors.rand import Rand
+    from ..rand import Rand
 
     rng = Random(0xabad533d)
     def randbytes(l):

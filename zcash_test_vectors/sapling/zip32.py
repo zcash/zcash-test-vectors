@@ -5,6 +5,8 @@ from hashlib import blake2b
 
 from .key_components import to_scalar, prf_expand, diversify_hash, DerivedAkNk, DerivedIvk
 from .generators import SPENDING_KEY_BASE, PROVING_KEY_BASE
+
+from ..hd_common import hardened
 from ..utils import i2leosp, i2lebsp, lebs2osp
 from ..ff1 import ff1_aes256_encrypt
 from ..output import render_args, render_tv, option, Some
@@ -37,9 +39,21 @@ class ExtendedBase(object):
     def i(self):
         return self._i
 
+    def _derive_d(self, j):
+        return lebs2osp(ff1_aes256_encrypt(self.dk(), b'', i2lebsp(88, j)))
+
     def diversifier(self, j):
-        d = lebs2osp(ff1_aes256_encrypt(self.dk(), b'', i2lebsp(88, j)))
+        d = self._derive_d(j)
         return d if diversify_hash(d) else None
+
+    def find_j(self, start):
+        for j in range(start, 1<<31):
+            d = self._derive_d(j)
+            if diversify_hash(d): return j
+        return None
+
+    def g_d(self, j):
+        return diversify_hash(self._derive_d(j))
 
     def fingerprint(self):
         digest = blake2b(person=b'ZcashSaplingFVFP', digest_size=32)
@@ -91,6 +105,10 @@ class ExtendedSpendingKey(DerivedAkNk, DerivedIvk, ExtendedBase):
 
     def nsk(self):
         return self._nsk
+
+    def pk_d(self, j):
+        g_d = self.g_d(j)
+        return g_d * self.ivk() if g_d else None
 
     def is_xsk(self):
         return True
@@ -217,11 +235,6 @@ class ExtendedFullViewingKey(DerivedIvk, ExtendedBase):
         dk_internal  = R[:32]
         ovk_internal = R[32:]
         return self.__class__(self.ak(), nk_internal, ovk_internal, dk_internal, self._c, self.depth(), self.parent_tag(), self._i)
-
-
-def hardened(i):
-    assert(i < (1<<31))
-    return i + (1<<31)
 
 
 def main():
