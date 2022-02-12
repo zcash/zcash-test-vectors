@@ -132,6 +132,8 @@ def tv_option_int_rust(name, value, pad):
 def tv_part_rust(name, value, config, indent=3):
     if 'rust_fmt' in config:
         value = config['rust_fmt'](value)
+    elif config['rust_type'].startswith('Option<') and not (value is None or isinstance(value, Some)):
+        value = Some(value)
 
     pad = '    ' * indent
     if config['rust_type'] == 'Option<Vec<u8>>':

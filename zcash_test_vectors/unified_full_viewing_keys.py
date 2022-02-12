@@ -119,27 +119,14 @@ def main():
         args,
         'unified_full_viewing_keys',
         (
-            ('t_key_bytes', {
-                'rust_type': 'Option<[u8; 65]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-            }),
-            ('sapling_fvk_bytes', {
-                'rust_type': 'Option<[u8; 128]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-            }),
-            ('orchard_fvk_bytes', {
-                'rust_type': 'Option<[u8; 96]>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-            }),
+            ('t_key_bytes',          'Option<[u8; 65]>'),
+            ('sapling_fvk_bytes',    'Option<[u8; 128]>'),
+            ('orchard_fvk_bytes',    'Option<[u8; 96]>'),
             ('unknown_fvk_typecode', 'u32'),
-            ('unknown_fvk_bytes', {
-                'rust_type': 'Option<Vec<u8>>',
-                'rust_fmt': lambda x: None if x is None else Some(x),
-                'bitcoin_flavoured': False,
-            }),
-            ('unified_fvk', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
-            ('root_seed', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
-            ('account', 'u32'),
+            ('unknown_fvk_bytes',    {'rust_type': 'Option<Vec<u8>>', 'bitcoin_flavoured': False}),
+            ('unified_fvk',          {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('root_seed',            {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('account',              'u32'),
         ),
         test_vectors,
     )
