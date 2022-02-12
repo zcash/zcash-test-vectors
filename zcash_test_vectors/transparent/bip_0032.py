@@ -16,11 +16,12 @@ from ..utils import i2beosp
 
 
 class ExtendedSecretKey:
-    def __init__(self, sk, chaincode):
-        assert isinstance(sk, PrivateKey)
+    def __init__(self, chaincode, sk):
         assert len(chaincode) == 32
-        self.sk = sk
+        assert isinstance(sk, PrivateKey)
+
         self.chaincode = chaincode
+        self.sk = sk
 
     @classmethod
     def master(cls, S):
@@ -28,7 +29,7 @@ class ExtendedSecretKey:
         I_L = I[:32]
         I_R = I[32:]
         sk = PrivateKey(I_L, True)
-        return cls(sk, I_R)
+        return cls(I_R, sk)
 
     def __bytes__(self):
         # The extra zero byte is specified in
@@ -36,7 +37,7 @@ class ExtendedSecretKey:
         return self.chaincode + b'\x00' + self.sk.private_key
 
     def public_key(self):
-        return ExtendedPublicKey(self.sk.pubkey, self.chaincode)
+        return ExtendedPublicKey(self.chaincode, self.sk.pubkey)
 
     def child(self, i):
         assert 0 <= i and i <= 0xFFFFFFFF
@@ -49,7 +50,7 @@ class ExtendedSecretKey:
         I_L = I[:32]
         I_R = I[32:]
         sk_i = PrivateKey(self.sk.tweak_add(I_L), True)
-        child_i = self.__class__(sk_i, I_R)
+        child_i = self.__class__(I_R, sk_i)
 
         if i < 0x80000000:
             assert bytes(self.public_key().child(i)) == bytes(child_i.public_key())
@@ -58,12 +59,12 @@ class ExtendedSecretKey:
 
 
 class ExtendedPublicKey:
-    def __init__(self, pk, chaincode):
-        assert isinstance(pk, PublicKey)
+    def __init__(self, chaincode, pk):
         assert len(chaincode) == 32
+        assert isinstance(pk, PublicKey)
 
-        self.pk = pk
         self.chaincode = chaincode
+        self.pk = pk
 
     def pubkey_bytes(self):
         pk_bytes = self.pk.serialize(compressed=True)
@@ -87,7 +88,7 @@ class ExtendedPublicKey:
         I_L = I[:32]
         I_R = I[32:]
         pk_i = self.pk.tweak_add(I_L)
-        return self.__class__(pk_i, I_R)
+        return self.__class__(I_R, pk_i)
 
     def derive_ovks(self):
         return derive_ovks(self.chaincode, self.pk.serialize(compressed=True))
