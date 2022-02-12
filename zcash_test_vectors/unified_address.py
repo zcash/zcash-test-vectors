@@ -109,6 +109,7 @@ def main():
             'unknown_typecode': unknown_tc,
             'unknown_bytes': unknown_bytes,
             'unified_addr': ua.encode(),
+            'root_seed': seed,
             'account': account,
             'diversifier_index': j,
         })
@@ -137,8 +138,10 @@ def main():
             ('unknown_bytes', {
                 'rust_type': 'Option<Vec<u8>>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
+                'bitcoin_flavoured': False,
             }),
-            ('unified_addr', 'Vec<u8>'),
+            ('unified_addr', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('root_seed', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('account', 'u32'),
             ('diversifier_index', 'u32'),
         ),

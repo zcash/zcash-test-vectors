@@ -107,6 +107,7 @@ def main():
             'unknown_ivk_typecode': unknown_tc,
             'unknown_ivk_bytes': unknown_bytes,
             'unified_ivk': uivk.encode(),
+            'root_seed': seed,
             'account': account,
         })
 
@@ -130,8 +131,10 @@ def main():
             ('unknown_ivk_bytes', {
                 'rust_type': 'Option<Vec<u8>>',
                 'rust_fmt': lambda x: None if x is None else Some(x),
+                'bitcoin_flavoured': False,
             }),
-            ('unified_ivk', 'Vec<u8>'),
+            ('unified_ivk', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('root_seed', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('account', 'u32'),
         ),
         test_vectors,

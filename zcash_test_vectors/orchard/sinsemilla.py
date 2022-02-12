@@ -81,7 +81,7 @@ def main():
         render_args(),
         'orchard_sinsemilla',
         (
-            ('domain', 'Vec<u8>'),
+            ('domain', {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('msg', {
                 'rust_type': 'Vec<bool>',
                 'rust_fmt': lambda x: str_to_bits(x),
