@@ -92,13 +92,22 @@ def main():
             (SAPLING_ITEM, sapling_raw_addr),
             (P2PKH_ITEM, t_addr if is_p2pkh else None),
             (P2SH_ITEM, None if is_p2pkh else t_addr),
+            (unknown_tc, unknown_bytes),
         ]
         ua = encode_unified(rng, receivers, "u")
 
-        expected_lengths = {P2PKH_ITEM: 20, P2SH_ITEM: 20, SAPLING_ITEM: 43, ORCHARD_ITEM: 43}
+        expected_lengths = {
+            ORCHARD_ITEM: 43,
+            SAPLING_ITEM: 43,
+            P2PKH_ITEM: 20,
+            P2SH_ITEM: 20,
+            unknown_tc: unknown_len
+        }
         decoded = decode_unified(ua, "u", expected_lengths)
         assert decoded.get('orchard') == orchard_raw_addr
         assert decoded.get('sapling') == sapling_raw_addr
+        assert decoded.get('transparent') == t_addr
+        assert decoded.get('unknown') == ((unknown_tc, unknown_bytes) if unknown_bytes else None)
         assert decoded.get('transparent') == t_addr
 
         test_vectors.append({
