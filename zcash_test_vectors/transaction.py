@@ -575,3 +575,79 @@ class Transaction(object):
 
     def __bytes__(self):
         return bytes(self.inner)
+
+
+def v5_test_vectors():
+    from .output import render_args, render_tv
+    from .rand import Rand
+    from .zip_0244 import txid_digest
+
+    args = render_args()
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    test_vectors = []
+    while len(test_vectors) < 10:
+        tx = TransactionV5(rand, rand.u32())
+        txid = txid_digest(tx)
+
+        has_sapling = len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0
+        has_orchard = len(tx.vActionsOrchard) > 0
+
+        test_vectors.append({
+            'tx': bytes(tx),
+            'txid': txid,
+            'version': NU5_TX_VERSION,
+            'nVersionGroupId': tx.nVersionGroupId,
+            'nConsensusBranchId': tx.nConsensusBranchId,
+            'lock_time': tx.nLockTime,
+            'nExpiryHeight': tx.nExpiryHeight,
+            'tx_in_count': len(tx.vin),
+            'tx_out_count': len(tx.vout),
+            'nSpendsSapling': len(tx.vSpendsSapling),
+            'nOutputsSapling': len(tx.vOutputsSapling),
+            'valueBalanceSapling': tx.valueBalanceSapling,
+            'anchorSapling': bytes(tx.anchorSapling) if has_sapling else None,
+            'bindingSigSapling': bytes(tx.bindingSigSapling) if has_sapling else None,
+            'nActionsOrchard': len(tx.vActionsOrchard),
+            'flagsOrchard': tx.flagsOrchard if has_orchard else None,
+            'valueBalanceOrchard': tx.valueBalanceOrchard,
+            'anchorOrchard': bytes(tx.anchorOrchard) if has_orchard else None,
+            'proofsOrchard': tx.proofsOrchard if has_orchard else None,
+            'bindingSigOrchard': bytes(tx.bindingSigOrchard) if has_orchard else None,
+        })
+
+    render_tv(
+        args,
+        'transaction_v5',
+        (
+            ('tx',                    {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('txid',                  '[u8; 32]'),
+            ('version',               'u32'),
+            ('nVersionGroupId',       'u32'),
+            ('nConsensusBranchId',    'u32'),
+            ('lock_time',             'u32'),
+            ('nExpiryHeight',         'u32'),
+            ('tx_in_count',           'usize'),
+            ('tx_out_count',          'usize'),
+            ('nSpendsSapling',        'usize'),
+            ('nOutputsSapling',       'usize'),
+            ('valueBalanceSapling',   'i64'),
+            ('anchorSapling',         'Option<[u8; 32]>'),
+            ('bindingSigSapling',     'Option<[u8; 64]>'),
+            ('nActionsOrchard',       'usize'),
+            ('flagsOrchard',          'Option<u8>'),
+            ('valueBalanceOrchard',   'i64'),
+            ('anchorOrchard',         'Option<[u8; 32]>'),
+            ('proofsOrchard',         {'rust_type': 'Option<Vec<u8>>', 'bitcoin_flavoured': False}),
+            ('bindingSigOrchard',     'Option<[u8; 64]>'),
+        ),
+        test_vectors,
+    )

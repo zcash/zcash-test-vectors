@@ -19,6 +19,7 @@ tv_scripts=(
     sapling_note_encryption
     sapling_signatures
     sapling_zip32
+    transaction_v5
     unified_address
     unified_full_viewing_keys
     unified_incoming_viewing_keys
