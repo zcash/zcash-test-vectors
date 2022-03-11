@@ -577,6 +577,78 @@ class Transaction(object):
         return bytes(self.inner)
 
 
+def legacy_test_vectors():
+    from hashlib import sha256
+
+    from .output import render_args, render_tv
+    from .rand import Rand
+    from .zip_0244 import txid_digest
+
+    args = render_args()
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    test_vectors = []
+    while len(test_vectors) < 30:
+        # Generate transactions with versions prior to ZIP 225.
+        tx = LegacyTransaction(rand, rand.u8() % NU5_TX_VERSION)
+        tx_bytes = bytes(tx)
+        txid = sha256(sha256(tx_bytes).digest()).digest()
+
+        has_sprout = tx.nVersion >= 2 and len(tx.vJoinSplit) > 0
+        has_sapling = tx.nVersion == SAPLING_TX_VERSION  and not (len(tx.vShieldedSpends) == 0 and len(tx.vShieldedOutputs) == 0)
+
+        test_vectors.append({
+            'tx': tx_bytes,
+            'txid': txid,
+            'fOverwintered': tx.fOverwintered,
+            'version': tx.nVersion,
+            'nVersionGroupId': tx.nVersionGroupId if tx.fOverwintered else None,
+            'tx_in_count': len(tx.vin),
+            'tx_out_count': len(tx.vout),
+            'lock_time': tx.nLockTime,
+            'nExpiryHeight': tx.nExpiryHeight if tx.fOverwintered else None,
+            'valueBalanceSapling': tx.valueBalance if tx.nVersion == SAPLING_TX_VERSION else None,
+            'nSpendsSapling': len(tx.vShieldedSpends) if tx.nVersion == SAPLING_TX_VERSION else None,
+            'nOutputsSapling': len(tx.vShieldedOutputs) if tx.nVersion == SAPLING_TX_VERSION else None,
+            'nJoinSplit': len(tx.vJoinSplit) if tx.nVersion > 2 else None,
+            'joinSplitPubKey': bytes(tx.joinSplitPubKey) if has_sprout else None,
+            'joinSplitSig': bytes(tx.joinSplitSig) if has_sprout else None,
+            'bindingSigSapling': bytes(tx.bindingSig) if has_sapling else None,
+        })
+
+    render_tv(
+        args,
+        'transaction_legacy',
+        (
+            ('tx',                    {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('txid',                  '[u8; 32]'),
+            ('fOverwintered',         'bool'),
+            ('version',               'u32'),
+            ('nVersionGroupId',       'Option<u32>'),
+            ('tx_in_count',           'usize'),
+            ('tx_out_count',          'usize'),
+            ('lock_time',             'u32'),
+            ('nExpiryHeight',         'Option<u32>'),
+            ('valueBalanceSapling',   'Option<i64>'),
+            ('nSpendsSapling',        'Option<usize>'),
+            ('nOutputsSapling',       'Option<usize>'),
+            ('nJoinSplit',            'usize'),
+            ('joinSplitPubKey',       'Option<[u8; 32]>'),
+            ('joinSplitSig',          'Option<[u8; 64]>'),
+            ('bindingSigSapling',     'Option<[u8; 64]>'),
+        ),
+        test_vectors,
+    )
+
+
 def v5_test_vectors():
     from .output import render_args, render_tv
     from .rand import Rand
