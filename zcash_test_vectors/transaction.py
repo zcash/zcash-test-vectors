@@ -337,7 +337,11 @@ class LegacyTransaction(object):
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
         if self.nVersion >= SAPLING_TX_VERSION:
-            self.valueBalance = rand.u64() % (MAX_MONEY + 1)
+            valueBalanceRand = rand.u64()
+            if valueBalanceRand & 0x8000000000000000:
+                self.valueBalance = (valueBalanceRand % (MAX_MONEY + 1)) - MAX_MONEY
+            else:
+                self.valueBalance = valueBalanceRand % (MAX_MONEY + 1)
 
         self.vShieldedSpends = []
         self.vShieldedOutputs = []
@@ -390,7 +394,7 @@ class LegacyTransaction(object):
             ret += struct.pack('<I', self.nExpiryHeight)
 
         if isSaplingV4:
-            ret += struct.pack('<Q', self.valueBalance)
+            ret += struct.pack('<q', self.valueBalance)
             ret += write_compact_size(len(self.vShieldedSpends))
             for desc in self.vShieldedSpends:
                 ret += bytes(desc)
@@ -455,7 +459,11 @@ class TransactionV5(object):
                     self.vSpendsSapling.append(spend)
             for _ in range(rand.u8() % 3):
                 self.vOutputsSapling.append(OutputDescription(rand))
-            self.valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
+            valueBalanceRand = rand.u64()
+            if valueBalanceRand & 0x8000000000000000:
+                self.valueBalanceSapling = (valueBalanceRand % (MAX_MONEY + 1)) - MAX_MONEY
+            else:
+                self.valueBalanceSapling = valueBalanceRand % (MAX_MONEY + 1)
             self.bindingSigSapling = RedJubjubSignature(rand)
         else:
             # If valueBalanceSapling is not present in the serialized transaction, then
@@ -471,7 +479,11 @@ class TransactionV5(object):
             if is_coinbase:
                 # set enableSpendsOrchard = 0
                 self.flagsOrchard &= 2
-            self.valueBalanceOrchard = rand.u64() % (MAX_MONEY + 1)
+            valueBalanceRand = rand.u64()
+            if valueBalanceRand & 0x8000000000000000:
+                self.valueBalanceOrchard = (valueBalanceRand % (MAX_MONEY + 1)) - MAX_MONEY
+            else:
+                self.valueBalanceOrchard = valueBalanceRand % (MAX_MONEY + 1)
             self.anchorOrchard = PallasBase(leos2ip(rand.b(32)))
             self.proofsOrchard = rand.b(rand.u8() + 32) # Proof will always contain at least one element
             self.bindingSigOrchard = RedPallasSignature(rand)
@@ -517,7 +529,7 @@ class TransactionV5(object):
         for desc in self.vOutputsSapling:
             ret += desc.bytes_v5()
         if hasSapling:
-            ret += struct.pack('<Q', self.valueBalanceSapling)
+            ret += struct.pack('<q', self.valueBalanceSapling)
         if len(self.vSpendsSapling) > 0:
             ret += bytes(self.anchorSapling)
             # Not explicitly gated in the protocol spec, but if the gate
@@ -539,7 +551,7 @@ class TransactionV5(object):
             for desc in self.vActionsOrchard:
                 ret += bytes(desc) # Excludes spendAuthSig
             ret += struct.pack('B', self.flagsOrchard)
-            ret += struct.pack('<Q', self.valueBalanceOrchard)
+            ret += struct.pack('<q', self.valueBalanceOrchard)
             ret += bytes(self.anchorOrchard)
             ret += write_compact_size(len(self.proofsOrchard))
             ret += self.proofsOrchard
@@ -563,3 +575,151 @@ class Transaction(object):
 
     def __bytes__(self):
         return bytes(self.inner)
+
+
+def legacy_test_vectors():
+    from hashlib import sha256
+
+    from .output import render_args, render_tv
+    from .rand import Rand
+    from .zip_0244 import txid_digest
+
+    args = render_args()
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    test_vectors = []
+    while len(test_vectors) < 30:
+        # Generate transactions with versions prior to ZIP 225.
+        tx = LegacyTransaction(rand, rand.u8() % NU5_TX_VERSION)
+        tx_bytes = bytes(tx)
+        txid = sha256(sha256(tx_bytes).digest()).digest()
+
+        has_sprout = tx.nVersion >= 2 and len(tx.vJoinSplit) > 0
+        has_sapling = tx.nVersion == SAPLING_TX_VERSION  and not (len(tx.vShieldedSpends) == 0 and len(tx.vShieldedOutputs) == 0)
+
+        test_vectors.append({
+            'tx': tx_bytes,
+            'txid': txid,
+            'fOverwintered': tx.fOverwintered,
+            'version': tx.nVersion,
+            'nVersionGroupId': tx.nVersionGroupId if tx.fOverwintered else None,
+            'tx_in_count': len(tx.vin),
+            'tx_out_count': len(tx.vout),
+            'lock_time': tx.nLockTime,
+            'nExpiryHeight': tx.nExpiryHeight if tx.fOverwintered else None,
+            'valueBalanceSapling': tx.valueBalance if tx.nVersion == SAPLING_TX_VERSION else None,
+            'nSpendsSapling': len(tx.vShieldedSpends) if tx.nVersion == SAPLING_TX_VERSION else None,
+            'nOutputsSapling': len(tx.vShieldedOutputs) if tx.nVersion == SAPLING_TX_VERSION else None,
+            'nJoinSplit': len(tx.vJoinSplit) if tx.nVersion > 2 else None,
+            'joinSplitPubKey': bytes(tx.joinSplitPubKey) if has_sprout else None,
+            'joinSplitSig': bytes(tx.joinSplitSig) if has_sprout else None,
+            'bindingSigSapling': bytes(tx.bindingSig) if has_sapling else None,
+        })
+
+    render_tv(
+        args,
+        'transaction_legacy',
+        (
+            ('tx',                    {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('txid',                  '[u8; 32]'),
+            ('fOverwintered',         'bool'),
+            ('version',               'u32'),
+            ('nVersionGroupId',       'Option<u32>'),
+            ('tx_in_count',           'usize'),
+            ('tx_out_count',          'usize'),
+            ('lock_time',             'u32'),
+            ('nExpiryHeight',         'Option<u32>'),
+            ('valueBalanceSapling',   'Option<i64>'),
+            ('nSpendsSapling',        'Option<usize>'),
+            ('nOutputsSapling',       'Option<usize>'),
+            ('nJoinSplit',            'usize'),
+            ('joinSplitPubKey',       'Option<[u8; 32]>'),
+            ('joinSplitSig',          'Option<[u8; 64]>'),
+            ('bindingSigSapling',     'Option<[u8; 64]>'),
+        ),
+        test_vectors,
+    )
+
+
+def v5_test_vectors():
+    from .output import render_args, render_tv
+    from .rand import Rand
+    from .zip_0244 import txid_digest
+
+    args = render_args()
+
+    from random import Random
+    rng = Random(0xabad533d)
+    def randbytes(l):
+        ret = []
+        while len(ret) < l:
+            ret.append(rng.randrange(0, 256))
+        return bytes(ret)
+    rand = Rand(randbytes)
+
+    test_vectors = []
+    while len(test_vectors) < 10:
+        tx = TransactionV5(rand, rand.u32())
+        txid = txid_digest(tx)
+
+        has_sapling = len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0
+        has_orchard = len(tx.vActionsOrchard) > 0
+
+        test_vectors.append({
+            'tx': bytes(tx),
+            'txid': txid,
+            'version': NU5_TX_VERSION,
+            'nVersionGroupId': tx.nVersionGroupId,
+            'nConsensusBranchId': tx.nConsensusBranchId,
+            'lock_time': tx.nLockTime,
+            'nExpiryHeight': tx.nExpiryHeight,
+            'tx_in_count': len(tx.vin),
+            'tx_out_count': len(tx.vout),
+            'nSpendsSapling': len(tx.vSpendsSapling),
+            'nOutputsSapling': len(tx.vOutputsSapling),
+            'valueBalanceSapling': tx.valueBalanceSapling,
+            'anchorSapling': bytes(tx.anchorSapling) if has_sapling else None,
+            'bindingSigSapling': bytes(tx.bindingSigSapling) if has_sapling else None,
+            'nActionsOrchard': len(tx.vActionsOrchard),
+            'flagsOrchard': tx.flagsOrchard if has_orchard else None,
+            'valueBalanceOrchard': tx.valueBalanceOrchard,
+            'anchorOrchard': bytes(tx.anchorOrchard) if has_orchard else None,
+            'proofsOrchard': tx.proofsOrchard if has_orchard else None,
+            'bindingSigOrchard': bytes(tx.bindingSigOrchard) if has_orchard else None,
+        })
+
+    render_tv(
+        args,
+        'transaction_v5',
+        (
+            ('tx',                    {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
+            ('txid',                  '[u8; 32]'),
+            ('version',               'u32'),
+            ('nVersionGroupId',       'u32'),
+            ('nConsensusBranchId',    'u32'),
+            ('lock_time',             'u32'),
+            ('nExpiryHeight',         'u32'),
+            ('tx_in_count',           'usize'),
+            ('tx_out_count',          'usize'),
+            ('nSpendsSapling',        'usize'),
+            ('nOutputsSapling',       'usize'),
+            ('valueBalanceSapling',   'i64'),
+            ('anchorSapling',         'Option<[u8; 32]>'),
+            ('bindingSigSapling',     'Option<[u8; 64]>'),
+            ('nActionsOrchard',       'usize'),
+            ('flagsOrchard',          'Option<u8>'),
+            ('valueBalanceOrchard',   'i64'),
+            ('anchorOrchard',         'Option<[u8; 32]>'),
+            ('proofsOrchard',         {'rust_type': 'Option<Vec<u8>>', 'bitcoin_flavoured': False}),
+            ('bindingSigOrchard',     'Option<[u8; 64]>'),
+        ),
+        test_vectors,
+    )

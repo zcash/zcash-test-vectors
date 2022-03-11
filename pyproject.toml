@@ -40,6 +40,10 @@ zip_0143 = "zcash_test_vectors.zip_0143:main"
 zip_0243 = "zcash_test_vectors.zip_0243:main"
 zip_0244 = "zcash_test_vectors.zip_0244:main"
 
+# Transaction format test vectors
+transaction_legacy = "zcash_test_vectors.transaction:legacy_test_vectors"
+transaction_v5 = "zcash_test_vectors.transaction:v5_test_vectors"
+
 # Transparent test vectors
 bip_0032 = "zcash_test_vectors.transparent.bip_0032:main"
 zip_0316 = "zcash_test_vectors.transparent.zip_0316:main"

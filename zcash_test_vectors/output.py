@@ -120,6 +120,9 @@ def tv_option_vec_bytes_rust(name, value, pad):
     else:
         print('%s%s: None,' % (pad, name))
 
+def tv_bool_rust(name, value, pad):
+    print('%s%s: %s,' % (pad, name, 'true' if value else 'false'))
+
 def tv_int_rust(name, value, pad):
     print('%s%s: %d,' % (pad, name, value))
 
@@ -148,6 +151,8 @@ def tv_part_rust(name, value, config, indent=3):
         tv_bytes_rust(name, value, pad)
     elif config['rust_type'].startswith('Option<'):
         tv_option_int_rust(name, value, pad)
+    elif type(value) == bool:
+        tv_bool_rust(name, value, pad)
     elif type(value) == int:
         tv_int_rust(name, value, pad)
     elif type(value) == list:
