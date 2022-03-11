@@ -92,7 +92,7 @@ def signature_hash(scriptCode, tx, nIn, nHashType, amount, consensusBranchId):
     digest.update(hashShieldedOutputs)
     digest.update(struct.pack('<I', tx.nLockTime))
     digest.update(struct.pack('<I', tx.nExpiryHeight))
-    digest.update(struct.pack('<Q', tx.valueBalance))
+    digest.update(struct.pack('<q', tx.valueBalance))
     digest.update(struct.pack('<I', nHashType))
 
     if nIn != NOT_AN_INPUT:

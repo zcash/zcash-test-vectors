@@ -337,7 +337,11 @@ class LegacyTransaction(object):
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
         if self.nVersion >= SAPLING_TX_VERSION:
-            self.valueBalance = rand.u64() % (MAX_MONEY + 1)
+            valueBalanceRand = rand.u64()
+            if valueBalanceRand & 0x8000000000000000:
+                self.valueBalance = (valueBalanceRand % (MAX_MONEY + 1)) - MAX_MONEY
+            else:
+                self.valueBalance = valueBalanceRand % (MAX_MONEY + 1)
 
         self.vShieldedSpends = []
         self.vShieldedOutputs = []
@@ -390,7 +394,7 @@ class LegacyTransaction(object):
             ret += struct.pack('<I', self.nExpiryHeight)
 
         if isSaplingV4:
-            ret += struct.pack('<Q', self.valueBalance)
+            ret += struct.pack('<q', self.valueBalance)
             ret += write_compact_size(len(self.vShieldedSpends))
             for desc in self.vShieldedSpends:
                 ret += bytes(desc)
@@ -455,7 +459,11 @@ class TransactionV5(object):
                     self.vSpendsSapling.append(spend)
             for _ in range(rand.u8() % 3):
                 self.vOutputsSapling.append(OutputDescription(rand))
-            self.valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
+            valueBalanceRand = rand.u64()
+            if valueBalanceRand & 0x8000000000000000:
+                self.valueBalanceSapling = (valueBalanceRand % (MAX_MONEY + 1)) - MAX_MONEY
+            else:
+                self.valueBalanceSapling = valueBalanceRand % (MAX_MONEY + 1)
             self.bindingSigSapling = RedJubjubSignature(rand)
         else:
             # If valueBalanceSapling is not present in the serialized transaction, then
@@ -471,7 +479,11 @@ class TransactionV5(object):
             if is_coinbase:
                 # set enableSpendsOrchard = 0
                 self.flagsOrchard &= 2
-            self.valueBalanceOrchard = rand.u64() % (MAX_MONEY + 1)
+            valueBalanceRand = rand.u64()
+            if valueBalanceRand & 0x8000000000000000:
+                self.valueBalanceOrchard = (valueBalanceRand % (MAX_MONEY + 1)) - MAX_MONEY
+            else:
+                self.valueBalanceOrchard = valueBalanceRand % (MAX_MONEY + 1)
             self.anchorOrchard = PallasBase(leos2ip(rand.b(32)))
             self.proofsOrchard = rand.b(rand.u8() + 32) # Proof will always contain at least one element
             self.bindingSigOrchard = RedPallasSignature(rand)
@@ -517,7 +529,7 @@ class TransactionV5(object):
         for desc in self.vOutputsSapling:
             ret += desc.bytes_v5()
         if hasSapling:
-            ret += struct.pack('<Q', self.valueBalanceSapling)
+            ret += struct.pack('<q', self.valueBalanceSapling)
         if len(self.vSpendsSapling) > 0:
             ret += bytes(self.anchorSapling)
             # Not explicitly gated in the protocol spec, but if the gate
@@ -539,7 +551,7 @@ class TransactionV5(object):
             for desc in self.vActionsOrchard:
                 ret += bytes(desc) # Excludes spendAuthSig
             ret += struct.pack('B', self.flagsOrchard)
-            ret += struct.pack('<Q', self.valueBalanceOrchard)
+            ret += struct.pack('<q', self.valueBalanceOrchard)
             ret += bytes(self.anchorOrchard)
             ret += write_compact_size(len(self.proofsOrchard))
             ret += self.proofsOrchard
