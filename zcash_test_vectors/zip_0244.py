@@ -348,7 +348,7 @@ def main():
         return bytes(ret)
     rand = Rand(randbytes)
 
-    consensusBranchId = 0x37519621 # NU5
+    consensusBranchId = 0xc2d6d0b4 # NU5
 
     test_vectors = []
     for _ in range(10):
