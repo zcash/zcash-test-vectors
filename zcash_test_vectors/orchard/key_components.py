@@ -43,14 +43,22 @@ class SpendingKey(object):
         self.ask  = to_scalar(prf_expand(self.data, b'\x06'))
         self.nk   = to_base(prf_expand(self.data, b'\x07'))
         self.rivk = to_scalar(prf_expand(self.data, b'\x08'))
+        self.isk  = to_scalar(prf_expand(self.data, b'\x10'))
         if self.ask == Scalar.ZERO:
             raise ValueError("invalid spending key")
+        if sef.isk == Scalar.ZERO:
+            raise ValueError("invalid issuer key")
 
         self.akP = SPENDING_KEY_BASE * self.ask
         if bytes(self.akP)[-1] & 0x80 != 0:
             self.ask = -self.ask
 
+        self.ikP = SPENDING_KEY_BASE * self.isk
+        if bytes(self.ikP)[-1] & 0x10 != 0:
+            self.isk = -self.isk
+
         self.ak = self.akP.extract()
+        self.ik = self.ikP.extract()
         assert commit_ivk(self.rivk, self.ak, self.nk) is not None
 
 
@@ -153,6 +161,8 @@ def main():
             'sk': sk.data,
             'ask': bytes(sk.ask),
             'ak': bytes(fvk.ak),
+            'isk': bytes(sk.isk),
+            'ik': bytes(sk.ik),
             'nk': bytes(fvk.nk),
             'rivk': bytes(fvk.rivk),
             'ivk': bytes(fvk.ivk()),
@@ -178,6 +188,8 @@ def main():
             ('sk', '[u8; 32]'),
             ('ask', '[u8; 32]'),
             ('ak', '[u8; 32]'),
+            ('isk', '[u8; 32]'),
+            ('ik', '[u8; 32]'),
             ('nk', '[u8; 32]'),
             ('rivk', '[u8; 32]'),
             ('ivk', '[u8; 32]'),
