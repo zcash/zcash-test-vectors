@@ -43,10 +43,10 @@ class SpendingKey(object):
         self.ask  = to_scalar(prf_expand(self.data, b'\x06'))
         self.nk   = to_base(prf_expand(self.data, b'\x07'))
         self.rivk = to_scalar(prf_expand(self.data, b'\x08'))
-        self.isk  = to_scalar(prf_expand(self.data, b'\x10'))
+        self.isk  = to_scalar(prf_expand(self.data, b'\x0a'))
         if self.ask == Scalar.ZERO:
             raise ValueError("invalid spending key")
-        if sef.isk == Scalar.ZERO:
+        if self.isk == Scalar.ZERO:
             raise ValueError("invalid issuer key")
 
         self.akP = SPENDING_KEY_BASE * self.ask
@@ -54,7 +54,7 @@ class SpendingKey(object):
             self.ask = -self.ask
 
         self.ikP = SPENDING_KEY_BASE * self.isk
-        if bytes(self.ikP)[-1] & 0x10 != 0:
+        if bytes(self.ikP)[-1] & 0x80 != 0:
             self.isk = -self.isk
 
         self.ak = self.akP.extract()
