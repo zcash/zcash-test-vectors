@@ -7,7 +7,7 @@ import os
 import struct
 
 from ..transaction import MAX_MONEY
-from ..output import render_args, render_tv
+from ..output import render_args, render_tv, option, Some
 from ..rand import Rand
 
 from .generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
@@ -124,14 +124,7 @@ class TransmittedNoteCipherText(object):
         if p_enc is None:
             return None
 
-        leadbyte = p_enc[0]
-        assert(leadbyte == 2)
-        np = OrchardNotePlaintext(
-            p_enc[1:12],   # d
-            struct.unpack('<Q', p_enc[12:20])[0],  # v
-            p_enc[20:52],  # rseed
-            p_enc[52:564], # memo
-        )
+        np = OrchardNotePlaintext.from_bytes(p_enc)
 
         g_d = diversify_hash(np.d)
 
@@ -140,7 +133,7 @@ class TransmittedNoteCipherText(object):
             return None
 
         pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
-        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v, np.note_type, rho, np.rseed)
 
         cm = note.note_commitment()
         if cm is None:
@@ -173,18 +166,11 @@ class TransmittedNoteCipherText(object):
         if p_enc is None:
             return None
 
-        leadbyte = p_enc[0]
-        assert(leadbyte == 2)
-        np = OrchardNotePlaintext(
-            p_enc[1:12],   # d
-            struct.unpack('<Q', p_enc[12:20])[0],  # v
-            p_enc[20:52],  # rseed
-            p_enc[52:564], # memo
-        )
+        np = OrchardNotePlaintext.from_bytes(p_enc)
         if OrchardKeyAgreement.esk(np.rseed, rho) != esk:
             return None
         g_d = diversify_hash(np.d)
-        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v, np.note_type, rho, np.rseed)
 
         cm = note.note_commitment()
         if cm is None:
@@ -196,6 +182,7 @@ class TransmittedNoteCipherText(object):
             return None
 
         return (note, np.memo)
+
 
 def main():
     args = render_args()
@@ -210,7 +197,7 @@ def main():
     rand = Rand(randbytes)
 
     test_vectors = []
-    for _ in range(0, 10):
+    for i in range(0, 20):
         sender_ovk = rand.b(32)
 
         receiver_sk = SpendingKey(rand.b(32))
@@ -220,11 +207,20 @@ def main():
         pk_d = receiver_fvk.default_pkd()
         g_d = diversify_hash(d)
 
+        is_native = i < 10
+        note_type = None if is_native else bytes(Point.rand(rand))
+
         rseed = rand.b(32)
+
         memo = b'\xff' + rand.b(511)
+        if note_type:
+            # Set the end of the memo to zeros
+            memo = memo[:512-32] + bytes(32)
+
         np = OrchardNotePlaintext(
             d,
             rand.u64(),
+            note_type,
             rseed,
             memo
         )
@@ -233,7 +229,7 @@ def main():
         cv = value_commit(rcv, Scalar(np.v))
 
         rho = np.dummy_nullifier(rand)
-        note = OrchardNote(d, pk_d, np.v, rho, rseed)
+        note = OrchardNote(d, pk_d, np.v, note_type, rho, rseed)
         cm = note.note_commitment()
 
         ne = OrchardNoteEncryption(rand)
@@ -272,6 +268,7 @@ def main():
             'ock': ne.ock,
             'op': ne.op,
             'c_out': transmitted_note_ciphertext.c_out,
+            'note_type': option(note_type),
         })
 
     render_tv(
@@ -297,6 +294,7 @@ def main():
             ('ock', '[u8; 32]'),
             ('op', '[u8; 64]'),
             ('c_out', '[u8; 80]'),
+            ('note_type', 'Option<[u8; 32]>'),
         ),
         test_vectors,
     )

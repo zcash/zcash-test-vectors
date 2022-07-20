@@ -144,12 +144,14 @@ def main():
         default_pk_d = fvk.default_pkd()
 
         note_v = rand.u64()
+        note_type = None
         note_rho = Fp.random(rand)
         note_rseed = rand.b(32)
         note = OrchardNote(
             default_d,
             default_pk_d,
             note_v,
+            note_type,
             note_rho,
             note_rseed,
         )

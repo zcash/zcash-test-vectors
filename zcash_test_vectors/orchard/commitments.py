@@ -31,12 +31,26 @@ def sinsemilla_commit(r: Scalar, D, M):
 def sinsemilla_short_commit(r: Scalar, D, M):
     return sinsemilla_commit(r, D, M).extract()
 
+# ZIP-226 (https://github.com/zcash/zips/pull/628)
+def note_commit(rcm, g_d, pk_d, v, note_type, rho, psi):
+    if note_type:
+        return note_commit_zsa(rcm, g_d, pk_d, v, note_type, rho, psi)
+    else:
+        return note_commit_orchard(rcm, g_d, pk_d, v, rho, psi)
+
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardnotecommit
-def note_commit(rcm, g_d, pk_d, v, rho, psi):
+def note_commit_orchard(rcm, g_d, pk_d, v, rho, psi):
     return sinsemilla_commit(
         rcm,
         b"z.cash:Orchard-NoteCommit",
         g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho.s) + i2lebsp(L_ORCHARD_BASE, psi.s)
+    )
+
+def note_commit_zsa(rcm, g_d, pk_d, v, note_type, rho, psi):
+    return sinsemilla_commit(
+        rcm,
+        b"z.cash:ZSA-NoteCommit",
+        g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho.s) + i2lebsp(L_ORCHARD_BASE, psi.s) + note_type
     )
 
 def rcm_trapdoor(rand):
