@@ -49,79 +49,82 @@ def main():
             t_addr = None
 
         j = 0
-        has_s_addr = rand.bool()
-        if has_s_addr:
-            s_account_key = s_coin_key.child(hardened(account))
-            j = s_account_key.find_j(0)
-            sapling_d = s_account_key.diversifier(j)
-            sapling_pk_d = s_account_key.pk_d(j)
-            sapling_raw_addr = sapling_d + bytes(sapling_pk_d)
-        else:
-            sapling_raw_addr = None
+        for _ in range(0, 3):
+            has_s_addr = rand.bool()
+            if has_s_addr:
+                s_account_key = s_coin_key.child(hardened(account))
+                j = s_account_key.find_j(j)
+                sapling_d = s_account_key.diversifier(j)
+                sapling_pk_d = s_account_key.pk_d(j)
+                sapling_raw_addr = sapling_d + bytes(sapling_pk_d)
+            else:
+                sapling_raw_addr = None
 
-        has_o_addr = (not has_s_addr) or rand.bool()
-        if has_o_addr:
-            o_account_key = o_coin_key.child(hardened(account))
-            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(o_account_key)
-            orchard_d = orchard_fvk.diversifier(j)
-            orchard_pk_d = orchard_fvk.pk_d(j)
-            orchard_raw_addr = orchard_d + bytes(orchard_pk_d)
-        else:
-            orchard_raw_addr = None
+            has_o_addr = (not has_s_addr) or rand.bool()
+            if has_o_addr:
+                o_account_key = o_coin_key.child(hardened(account))
+                orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(o_account_key)
+                orchard_d = orchard_fvk.diversifier(j)
+                orchard_pk_d = orchard_fvk.pk_d(j)
+                orchard_raw_addr = orchard_d + bytes(orchard_pk_d)
+            else:
+                orchard_raw_addr = None
 
-        is_p2pkh = rand.bool()
-        if has_t_addr and is_p2pkh:
-            t_account_key = t_coin_key.child(hardened(account))
-            t_external_key = t_account_key.child(0)
-            t_index_key = t_account_key.child(j)
-            t_index_pubkey = t_index_key.public_key()
-            t_addr = t_index_pubkey.address()
+            is_p2pkh = rand.bool()
+            if has_t_addr and is_p2pkh:
+                t_account_key = t_coin_key.child(hardened(account))
+                t_external_key = t_account_key.child(0)
+                t_index_key = t_account_key.child(j)
+                t_index_pubkey = t_index_key.public_key()
+                t_addr = t_index_pubkey.address()
 
-        # include an unknown item 1/4 of the time
-        has_unknown_item = rand.bool() and rand.bool()
-        # use the range reserved for experimental typecodes for unknowns
-        unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1)
-        unknown_len = rng.randrange(32, 256)
-        if has_unknown_item:
-            unknown_bytes = b"".join([rand.b(unknown_len)])
-        else:
-            unknown_bytes = None
+            # include an unknown item 1/4 of the time
+            has_unknown_item = rand.bool() and rand.bool()
+            # use the range reserved for experimental typecodes for unknowns
+            unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1)
+            unknown_len = rng.randrange(32, 256)
+            if has_unknown_item:
+                unknown_bytes = b"".join([rand.b(unknown_len)])
+            else:
+                unknown_bytes = None
 
-        receivers = [
-            (ORCHARD_ITEM, orchard_raw_addr),
-            (SAPLING_ITEM, sapling_raw_addr),
-            (P2PKH_ITEM, t_addr if is_p2pkh else None),
-            (P2SH_ITEM, None if is_p2pkh else t_addr),
-            (unknown_tc, unknown_bytes),
-        ]
-        ua = encode_unified(rng, receivers, "u")
+            receivers = [
+                (ORCHARD_ITEM, orchard_raw_addr),
+                (SAPLING_ITEM, sapling_raw_addr),
+                (P2PKH_ITEM, t_addr if is_p2pkh else None),
+                (P2SH_ITEM, None if is_p2pkh else t_addr),
+                (unknown_tc, unknown_bytes),
+            ]
+            ua = encode_unified(rng, receivers, "u")
 
-        expected_lengths = {
-            ORCHARD_ITEM: 43,
-            SAPLING_ITEM: 43,
-            P2PKH_ITEM: 20,
-            P2SH_ITEM: 20,
-            unknown_tc: unknown_len
-        }
-        decoded = decode_unified(ua, "u", expected_lengths)
-        assert decoded.get('orchard') == orchard_raw_addr
-        assert decoded.get('sapling') == sapling_raw_addr
-        assert decoded.get('transparent') == t_addr
-        assert decoded.get('unknown') == ((unknown_tc, unknown_bytes) if unknown_bytes else None)
-        assert decoded.get('transparent') == t_addr
+            expected_lengths = {
+                ORCHARD_ITEM: 43,
+                SAPLING_ITEM: 43,
+                P2PKH_ITEM: 20,
+                P2SH_ITEM: 20,
+                unknown_tc: unknown_len
+            }
+            decoded = decode_unified(ua, "u", expected_lengths)
+            assert decoded.get('orchard') == orchard_raw_addr
+            assert decoded.get('sapling') == sapling_raw_addr
+            assert decoded.get('transparent') == t_addr
+            assert decoded.get('unknown') == ((unknown_tc, unknown_bytes) if unknown_bytes else None)
+            assert decoded.get('transparent') == t_addr
 
-        test_vectors.append({
-            'p2pkh_bytes': t_addr if is_p2pkh else None,
-            'p2sh_bytes': None if is_p2pkh else t_addr,
-            'sapling_raw_addr': sapling_raw_addr,
-            'orchard_raw_addr': orchard_raw_addr,
-            'unknown_typecode': unknown_tc,
-            'unknown_bytes': unknown_bytes,
-            'unified_addr': ua.encode(),
-            'root_seed': seed,
-            'account': account,
-            'diversifier_index': j,
-        })
+            test_vectors.append({
+                'p2pkh_bytes': t_addr if is_p2pkh else None,
+                'p2sh_bytes': None if is_p2pkh else t_addr,
+                'sapling_raw_addr': sapling_raw_addr,
+                'orchard_raw_addr': orchard_raw_addr,
+                'unknown_typecode': unknown_tc,
+                'unknown_bytes': unknown_bytes,
+                'unified_addr': ua.encode(),
+                'root_seed': seed,
+                'account': account,
+                'diversifier_index': j,
+            })
+
+            j += 1
 
     render_tv(
         args,
