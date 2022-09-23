@@ -31,6 +31,9 @@ def tv_value_json(value, bitcoin_flavoured):
         if type(value) == list:
             return [bitcoinify(v) for v in value]
 
+        if type(value) == str:
+            return value
+
         if type(value) == bytes:
             if bitcoin_flavoured and len(value) == 32:
                 value = value[::-1]
@@ -92,6 +95,13 @@ def tv_vec_bool_rust(name, value, pad):
         pad,
     ))
 
+def tv_str_rust(name, value, pad):
+    print('''%s%s: "%s",''' % (
+        pad,
+        name,
+        value,
+    ))
+
 def tv_option_bytes_rust(name, value, pad):
     if value:
         print('''%s%s: Some([
@@ -142,6 +152,8 @@ def tv_part_rust(name, value, config, indent=3):
         tv_vec_bytes_rust(name, value, pad)
     elif config['rust_type'] == 'Vec<bool>':
         tv_vec_bool_rust(name, value, pad)
+    elif config['rust_type'] == '&\'static str':
+        tv_str_rust(name, value, pad)
     elif config['rust_type'].startswith('Option<['):
         tv_option_bytes_rust(name, value, pad)
     elif type(value) == bytes:
