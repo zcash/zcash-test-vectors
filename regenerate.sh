@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+poetry install -q
+
 tv_scripts=(
     bip_0032
     f4jumble
@@ -27,8 +29,16 @@ tv_scripts=(
     zip_0244
     zip_0316)
 
+formats="${*:-rust json zcash}"
+
 for generator in "${tv_scripts[@]}"
 do
-    echo "# $generator"
-    poetry run $generator -t $1 >test-vectors/$1/$generator.$2
+    for format in $formats
+    do
+        filetype="${format/rust/rs}"
+        filetype="${filetype/zcash/json}"
+        output_file="test-vectors/$format/$generator.$filetype"
+        echo $output_file
+        poetry run $generator -t $format >$output_file
+    done
 done
