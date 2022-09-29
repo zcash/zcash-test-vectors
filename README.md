@@ -17,6 +17,8 @@ after adjusting:
 - `poetry run SCRIPT_NAME [-t json|rust|zcash]`
   - `SCRIPT_NAME` is one of the scripts listed in `pyproject.toml`.
 
+To run unit tests, use ``poetry run test``.
+
 ## License
 
 Licensed under either of
