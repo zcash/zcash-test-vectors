@@ -43,7 +43,7 @@ def main():
         # of typecodes, to simplify use in tests.
         has_t_addr = rand.bool()
         # use p2pkh 3/4 of the time
-        is_p2pkh = rand.bool() or rand.bool()
+        is_p2pkh = any([rand.bool(), rand.bool()])
         if has_t_addr:
             # This randomness is only used if this UA will have a P2SH key.
             # If it will have a P2PKH key, it gets overwritten below (after
@@ -55,7 +55,7 @@ def main():
         has_s_addr = rand.bool()
         has_o_addr = (not has_s_addr) or rand.bool()
         # include an unknown item 1/4 of the time
-        has_unknown_item = rand.bool() and rand.bool()
+        has_unknown_item = all([rand.bool(), rand.bool()])
         # use the range reserved for experimental typecodes for unknowns
         unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1)
         unknown_len = rng.randrange(32, 256)
@@ -118,7 +118,7 @@ def main():
             assert decoded.get('sapling') == sapling_raw_addr
             assert decoded.get('transparent') == t_addr
             if has_unknown_item:
-                assert decoded.get('unknown') == ((unknown_tc, unknown_bytes))
+                assert decoded.get('unknown') == (unknown_tc, unknown_bytes)
             else:
                 assert decoded.get('unknown') == None
 
