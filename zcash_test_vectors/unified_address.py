@@ -38,12 +38,7 @@ def main():
     o_coin_key = o_purpose_key.child(hardened(ZCASH_MAIN_COINTYPE))
 
     test_vectors = []
-    for account in range(0, 20):
-        # Each set of sequential diversified addresses should have the same set
-        # of typecodes, to simplify use in tests.
-        has_t_addr = rand.bool()
-        # use p2pkh 3/4 of the time
-        is_p2pkh = any([rand.bool(), rand.bool()])
+    def gen_v(account, has_t_addr, is_p2pkh, has_s_addr, has_o_addr, has_unknown_item, unknown_tc, unknown_len):
         if has_t_addr:
             # This randomness is only used if this UA will have a P2SH key.
             # If it will have a P2PKH key, it gets overwritten below (after
@@ -51,14 +46,6 @@ def main():
             t_addr = rand.b(20)
         else:
             t_addr = None
-
-        has_s_addr = rand.bool()
-        has_o_addr = (not has_s_addr) or rand.bool()
-        # include an unknown item 1/4 of the time
-        has_unknown_item = all([rand.bool(), rand.bool()])
-        # use the range reserved for experimental typecodes for unknowns
-        unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1)
-        unknown_len = rng.randrange(32, 256)
 
         # we will increment the diversifier index after generating each sample
         # within the current account
@@ -136,6 +123,32 @@ def main():
             })
 
             j += 1
+
+
+    # Add a UA with just P2PKH & Sapling receivers
+    gen_v(0, True,  True, True, False, False, None, None)
+    # Add a UA with P2PKH, Sapling, and Orchard receivers
+    gen_v(1, True,  True, True, True,  False, None, None)
+    # Add a UA with just Sapling and Orchard receivers
+    gen_v(2, False, None, True, True,  False, None, None)
+
+    # Add random UAs for the remaining 17 accounts
+    for account in range(3, 20):
+        # Each set of sequential diversified addresses should have the same set
+        # of typecodes, to simplify use in tests.
+        has_t_addr = rand.bool()
+        # use p2pkh 3/4 of the time
+        is_p2pkh = any([rand.bool(), rand.bool()])
+
+        has_s_addr = rand.bool()
+        has_o_addr = (not has_s_addr) or rand.bool()
+        # include an unknown item 1/4 of the time
+        has_unknown_item = all([rand.bool(), rand.bool()])
+        # use the range reserved for experimental typecodes for unknowns
+        unknown_tc = rng.randrange(0xFFFA, 0xFFFF+1)
+        unknown_len = rng.randrange(32, 256)
+
+        gen_v(account, has_t_addr, is_p2pkh, has_s_addr, has_o_addr, has_unknown_item, unknown_tc, unknown_len)
 
     render_tv(
         args,
