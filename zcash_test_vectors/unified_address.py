@@ -74,7 +74,7 @@ def main():
             if has_t_addr and is_p2pkh:
                 t_account_key = t_coin_key.child(hardened(account))
                 t_external_key = t_account_key.child(0)
-                t_index_key = t_account_key.child(j)
+                t_index_key = t_external_key.child(j)
                 t_index_pubkey = t_index_key.public_key()
                 t_addr = t_index_pubkey.address()
 
