@@ -91,7 +91,7 @@ def main():
             else:
                 unknown_bytes = None
 
-            ua = encode_unified(rng, receivers, "u")
+            ua = encode_unified(receivers, "u")
 
             expected_lengths = {
                 ORCHARD_ITEM: 43,
