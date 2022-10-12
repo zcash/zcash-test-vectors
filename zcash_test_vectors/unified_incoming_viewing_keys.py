@@ -86,7 +86,7 @@ def main():
             (P2PKH_ITEM, t_key_bytes),
             (unknown_tc, unknown_bytes),
         ]
-        uivk = encode_unified(rng, receivers, "uivk")
+        uivk = encode_unified(receivers, "uivk")
 
         expected_lengths = {
             P2PKH_ITEM: 65,
