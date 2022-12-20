@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+import sys;
+
+from zcash_test_vectors.orchard.asset_id import asset_id, native_asset
+
+assert sys.version_info[0] >= 3, "Python 3 required."
 
 from .group_hash import group_hash
-from .pallas import Fp, Scalar
+from .pallas import Fp, Scalar, Point
 from .sinsemilla import sinsemilla_hash_to_point
 from ..utils import i2lebsp
 
@@ -15,8 +19,8 @@ L_ORCHARD_BASE = 255
 def homomorphic_pedersen_commitment(rcv: Scalar, D, v: Scalar):
     return group_hash(D, b"v") * v + group_hash(D, b"r") * rcv
 
-def value_commit(rcv: Scalar, v: Scalar):
-    return homomorphic_pedersen_commitment(rcv, b"z.cash:Orchard-cv", v)
+def value_commit(rcv: Scalar, v: Scalar, asset: Point):
+    return asset * v + group_hash(b"z.cash:Orchard-cv", b"r") * rcv
 
 def rcv_trapdoor(rand):
     return Scalar.random(rand)
@@ -32,9 +36,9 @@ def sinsemilla_short_commit(r: Scalar, D, M):
     return sinsemilla_commit(r, D, M).extract()
 
 # ZIP-226 (https://github.com/zcash/zips/pull/628)
-def note_commit(rcm, g_d, pk_d, v, note_type, rho, psi):
-    if note_type:
-        return note_commit_zsa(rcm, g_d, pk_d, v, note_type, rho, psi)
+def note_commit(rcm, g_d, pk_d, v, asset, rho, psi):
+    if asset:
+        return note_commit_zsa(rcm, g_d, pk_d, v, asset, rho, psi)
     else:
         return note_commit_orchard(rcm, g_d, pk_d, v, rho, psi)
 
@@ -46,11 +50,11 @@ def note_commit_orchard(rcm, g_d, pk_d, v, rho, psi):
         g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho.s) + i2lebsp(L_ORCHARD_BASE, psi.s)
     )
 
-def note_commit_zsa(rcm, g_d, pk_d, v, note_type, rho, psi):
+def note_commit_zsa(rcm, g_d, pk_d, v, asset, rho, psi):
     return sinsemilla_commit(
         rcm,
         b"z.cash:ZSA-NoteCommit",
-        g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho.s) + i2lebsp(L_ORCHARD_BASE, psi.s) + note_type
+        g_d + pk_d + i2lebsp(64, v) + i2lebsp(L_ORCHARD_BASE, rho.s) + i2lebsp(L_ORCHARD_BASE, psi.s) + asset
     )
 
 def rcm_trapdoor(rand):
@@ -71,7 +75,7 @@ def rivk_trapdoor(rand):
 def test_value_commit():
     from random import Random
     from ..rand import Rand
-    from .generators import VALUE_COMMITMENT_RANDOMNESS_BASE, VALUE_COMMITMENT_VALUE_BASE
+    from .generators import VALUE_COMMITMENT_RANDOMNESS_BASE
 
     rng = Random(0xabad533d)
     def randbytes(l):
@@ -82,9 +86,15 @@ def test_value_commit():
     rand = Rand(randbytes)
 
     rcv = rcv_trapdoor(rand)
-    v = Scalar(100000000)
+    v = Scalar(rand.u64())
 
-    assert value_commit(rcv, v) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + VALUE_COMMITMENT_VALUE_BASE * v
+    # Native asset
+    asset = native_asset()
+    assert value_commit(rcv, v, asset) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + asset * v
+
+    # Random non-native asset
+    asset = asset_id(randbytes(32), randbytes(512))
+    assert value_commit(rcv, v, asset) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + asset * v
 
 if __name__ == '__main__':
     test_value_commit()

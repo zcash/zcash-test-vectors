@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+import sys;
+
+from zcash_test_vectors.orchard.asset_id import native_asset
+
+assert sys.version_info[0] >= 3, "Python 3 required."
 
 from chacha20poly1305 import ChaCha20Poly1305
 from hashlib import blake2b
@@ -133,7 +137,7 @@ class TransmittedNoteCipherText(object):
             return None
 
         pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
-        note = OrchardNote(np.d, pk_d, np.v, np.note_type, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v, np.asset, rho, np.rseed)
 
         cm = note.note_commitment()
         if cm is None:
@@ -170,7 +174,7 @@ class TransmittedNoteCipherText(object):
         if OrchardKeyAgreement.esk(np.rseed, rho) != esk:
             return None
         g_d = diversify_hash(np.d)
-        note = OrchardNote(np.d, pk_d, np.v, np.note_type, rho, np.rseed)
+        note = OrchardNote(np.d, pk_d, np.v, np.asset, rho, np.rseed)
 
         cm = note.note_commitment()
         if cm is None:
@@ -208,28 +212,28 @@ def main():
         g_d = diversify_hash(d)
 
         is_native = i < 10
-        note_type = None if is_native else bytes(Point.rand(rand))
-
+        asset_point = native_asset() if is_native else Point.rand(rand)
+        asset_bytes_opt = None if is_native else bytes(asset_point)
         rseed = rand.b(32)
 
         memo = b'\xff' + rand.b(511)
-        if note_type:
+        if not is_native:
             # Set the end of the memo to zeros
             memo = memo[:512-32] + bytes(32)
 
         np = OrchardNotePlaintext(
             d,
             rand.u64(),
-            note_type,
+            asset_bytes_opt,
             rseed,
             memo
         )
 
         rcv = rcv_trapdoor(rand)
-        cv = value_commit(rcv, Scalar(np.v))
+        cv = value_commit(rcv, Scalar(np.v), asset_point)
 
         rho = np.dummy_nullifier(rand)
-        note = OrchardNote(d, pk_d, np.v, note_type, rho, rseed)
+        note = OrchardNote(d, pk_d, np.v, asset_bytes_opt, rho, rseed)
         cm = note.note_commitment()
 
         ne = OrchardNoteEncryption(rand)
@@ -268,7 +272,7 @@ def main():
             'ock': ne.ock,
             'op': ne.op,
             'c_out': transmitted_note_ciphertext.c_out,
-            'note_type': option(note_type),
+            'asset': asset_bytes_opt,
         })
 
     render_tv(
@@ -294,7 +298,7 @@ def main():
             ('ock', '[u8; 32]'),
             ('op', '[u8; 64]'),
             ('c_out', '[u8; 80]'),
-            ('note_type', 'Option<[u8; 32]>'),
+            ('asset', 'Option<[u8; 32]>'),
         ),
         test_vectors,
     )
