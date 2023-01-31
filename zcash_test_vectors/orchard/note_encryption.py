@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
 import sys;
 
-from zcash_test_vectors.orchard.asset_id import native_asset
+from .asset_id import native_asset
 
 assert sys.version_info[0] >= 3, "Python 3 required."
 
 from chacha20poly1305 import ChaCha20Poly1305
 from hashlib import blake2b
-import os
-import struct
 
 from ..transaction import MAX_MONEY
-from ..output import render_args, render_tv, option, Some
+from ..output import render_args, render_tv
 from ..rand import Rand
 
-from .generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
 from .pallas import Point, Scalar
 from .commitments import rcv_trapdoor, value_commit
 from .key_components import diversify_hash, prf_expand, FullViewingKey, SpendingKey
 from .note import OrchardNote, OrchardNotePlaintext
 from .utils import to_scalar
-from ..utils import leos2bsp
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardkdf
 def kdf_orchard(shared_secret, ephemeral_key):
@@ -213,27 +209,17 @@ def main():
 
         is_native = i < 10
         asset_point = native_asset() if is_native else Point.rand(rand)
-        asset_bytes_opt = None if is_native else bytes(asset_point)
+        asset_bytes = bytes(asset_point)
         rseed = rand.b(32)
-
         memo = b'\xff' + rand.b(511)
-        if not is_native:
-            # Set the end of the memo to zeros
-            memo = memo[:512-32] + bytes(32)
 
-        np = OrchardNotePlaintext(
-            d,
-            rand.u64(),
-            asset_bytes_opt,
-            rseed,
-            memo
-        )
+        np = OrchardNotePlaintext(d, rand.u64(), rseed, asset_bytes, memo)
 
         rcv = rcv_trapdoor(rand)
         cv = value_commit(rcv, Scalar(np.v), asset_point)
 
         rho = np.dummy_nullifier(rand)
-        note = OrchardNote(d, pk_d, np.v, asset_bytes_opt, rho, rseed)
+        note = OrchardNote(d, pk_d, np.v, asset_bytes, rho, rseed)
         cm = note.note_commitment()
 
         ne = OrchardNoteEncryption(rand)
@@ -259,6 +245,7 @@ def main():
             'default_pk_d': bytes(pk_d),
             'v': np.v,
             'rseed': note.rseed,
+            'asset': asset_bytes,
             'memo': np.memo,
             'cv_net': bytes(cv),
             'rho': bytes(rho),
@@ -272,7 +259,6 @@ def main():
             'ock': ne.ock,
             'op': ne.op,
             'c_out': transmitted_note_ciphertext.c_out,
-            'asset': asset_bytes_opt,
         })
 
     render_tv(
@@ -285,6 +271,7 @@ def main():
             ('default_pk_d', '[u8; 32]'),
             ('v', 'u64'),
             ('rseed', '[u8; 32]'),
+            ('asset', '[u8; 32]'),
             ('memo', '[u8; 512]'),
             ('cv_net', '[u8; 32]'),
             ('rho', '[u8; 32]'),
@@ -293,12 +280,11 @@ def main():
             ('ephemeral_key', '[u8; 32]'),
             ('shared_secret', '[u8; 32]'),
             ('k_enc', '[u8; 32]'),
-            ('p_enc', '[u8; 564]'),
-            ('c_enc', '[u8; 580]'),
+            ('p_enc', '[u8; 596]'),
+            ('c_enc', '[u8; 612]'),
             ('ock', '[u8; 32]'),
             ('op', '[u8; 64]'),
             ('c_out', '[u8; 80]'),
-            ('asset', 'Option<[u8; 32]>'),
         ),
         test_vectors,
     )

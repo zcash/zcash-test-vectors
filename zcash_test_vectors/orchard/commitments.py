@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-import sys;
-
-from zcash_test_vectors.orchard.asset_id import asset_id, native_asset
+import sys
 
 assert sys.version_info[0] >= 3, "Python 3 required."
 
 from .group_hash import group_hash
 from .pallas import Fp, Scalar, Point
 from .sinsemilla import sinsemilla_hash_to_point
-from ..utils import i2lebsp
+from .asset_id import asset_id, native_asset
+from ..utils import i2lebsp, leos2bsp
 
 # Commitment schemes used in Orchard https://zips.z.cash/protocol/nu5.pdf#concretecommit
 
@@ -37,10 +36,10 @@ def sinsemilla_short_commit(r: Scalar, D, M):
 
 # ZIP-226 (https://github.com/zcash/zips/pull/628)
 def note_commit(rcm, g_d, pk_d, v, asset, rho, psi):
-    if asset:
-        return note_commit_zsa(rcm, g_d, pk_d, v, asset, rho, psi)
-    else:
+    if asset == leos2bsp(bytes(native_asset())):
         return note_commit_orchard(rcm, g_d, pk_d, v, rho, psi)
+    else:
+        return note_commit_zsa(rcm, g_d, pk_d, v, asset, rho, psi)
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardnotecommit
 def note_commit_orchard(rcm, g_d, pk_d, v, rho, psi):
