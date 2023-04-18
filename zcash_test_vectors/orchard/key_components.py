@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+import sys;
+
+from zcash_test_vectors.orchard.asset_id import native_asset
+
+assert sys.version_info[0] >= 3, "Python 3 required."
 
 from hashlib import blake2b
 
@@ -137,21 +141,22 @@ def main():
     rand = Rand(randbytes)
 
     test_vectors = []
-    for _ in range(0, 10):
+    for i in range(0, 10):
         sk = SpendingKey(rand.b(32))
         fvk = FullViewingKey.from_spending_key(sk)
         default_d = fvk.default_d()
         default_pk_d = fvk.default_pkd()
 
         note_v = rand.u64()
-        asset = None
+        is_native = i < 5
+        asset_base = native_asset() if is_native else Point.rand(rand)
         note_rho = Fp.random(rand)
         note_rseed = rand.b(32)
         note = OrchardNote(
             default_d,
             default_pk_d,
             note_v,
-            asset,
+            asset_base,
             note_rho,
             note_rseed,
         )
@@ -176,6 +181,7 @@ def main():
             'internal_ivk': bytes(internal.ivk()),
             'internal_ovk': internal.ovk,
             'internal_dk': internal.dk,
+            'asset': bytes(asset_base),
             'note_v': note_v,
             'note_rho': bytes(note_rho),
             'note_rseed': bytes(note_rseed),
@@ -203,6 +209,7 @@ def main():
             ('internal_ivk', '[u8; 32]'),
             ('internal_ovk', '[u8; 32]'),
             ('internal_dk', '[u8; 32]'),
+            ('asset', '[u8; 32]'),
             ('note_v', 'u64'),
             ('note_rho', '[u8; 32]'),
             ('note_rseed', '[u8; 32]'),

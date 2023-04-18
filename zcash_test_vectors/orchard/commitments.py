@@ -6,7 +6,7 @@ assert sys.version_info[0] >= 3, "Python 3 required."
 from .group_hash import group_hash
 from .pallas import Fp, Scalar, Point
 from .sinsemilla import sinsemilla_hash_to_point
-from .asset_id import asset_id, native_asset
+from .asset_id import zsa_value_base, asset_digest, encode_asset_id, native_asset
 from ..utils import i2lebsp, leos2bsp
 
 # Commitment schemes used in Orchard https://zips.z.cash/protocol/nu5.pdf#concretecommit
@@ -88,12 +88,13 @@ def test_value_commit():
     v = Scalar(rand.u64())
 
     # Native asset
-    asset = native_asset()
-    assert value_commit(rcv, v, asset) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + asset * v
+    asset_base = native_asset()
+    assert value_commit(rcv, v, asset_base) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + asset_base * v
 
     # Random non-native asset
-    asset = asset_id(randbytes(32), randbytes(512))
-    assert value_commit(rcv, v, asset) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + asset * v
+    asset_base = zsa_value_base(asset_digest(encode_asset_id(randbytes(32), randbytes(512))))
+    assert value_commit(rcv, v, asset_base) == VALUE_COMMITMENT_RANDOMNESS_BASE * rcv + asset_base * v
+
 
 if __name__ == '__main__':
     test_value_commit()

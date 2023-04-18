@@ -5,6 +5,7 @@ assert sys.version_info[0] >= 3, "Python 3 required."
 
 import random
 
+from hashlib import blake2b
 from ..orchard.group_hash import group_hash
 from ..output import render_args, render_tv, option
 
@@ -12,8 +13,21 @@ from ..output import render_args, render_tv, option
 def native_asset():
     return group_hash(b"z.cash:Orchard-cv", b"v")
 
-def asset_id(key, description):
-    return group_hash(b"z.cash:Orchard-cv", key + description)
+
+def encode_asset_id(key, description):
+    version_byte = b"\x00"
+    return version_byte + key + description
+
+
+def asset_digest(encoded_asset_id):
+    h = blake2b(person=b"ZSA-Asset-Digest")
+    h.update(encoded_asset_id)
+    return h.digest()
+
+
+def zsa_value_base(asset_digest_value):
+    return group_hash(b"z.cash:OrchardZSA", asset_digest_value)
+
 
 def get_random_unicode_bytes(length):
     try:
@@ -70,12 +84,12 @@ def main():
 
         key_bytes = bytes(fvk.ivk())
         description_bytes = get_random_unicode_bytes(512)
-        asset = asset_id(key_bytes, description_bytes)
+        asset_base = zsa_value_base(asset_digest(encode_asset_id(key_bytes, description_bytes)))
 
         test_vectors.append({
             'key': key_bytes,
             'description': description_bytes,
-            'asset_id': bytes(asset),
+            'asset_base': bytes(asset_base),
         })
 
     render_tv(
@@ -84,7 +98,7 @@ def main():
         (
             ('key', '[u8; 32]'),
             ('description', '[u8; 512]'),
-            ('asset_id', '[u8; 32]'),
+            ('asset_base', '[u8; 32]'),
         ),
         test_vectors,
     )
