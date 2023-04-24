@@ -8,7 +8,7 @@ from ..sapling.key_components import prf_expand
 
 from .generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
 from .pallas import Fp, Scalar, Point
-from . import poseidon
+from . import poseidon_fp
 from .commitments import commit_ivk
 from ..utils import i2leosp, i2lebsp, lebs2osp
 from .utils import to_base, to_scalar
@@ -25,7 +25,7 @@ def diversify_hash(d):
     return P
 
 def prf_nf_orchard(nk, rho):
-    return poseidon.hash(nk, rho)
+    return poseidon_fp.hash(nk, rho)
 
 def derive_nullifier(nk, rho: Fp, psi: Fp, cm):
     scalar = prf_nf_orchard(nk, rho) + psi  # addition mod p

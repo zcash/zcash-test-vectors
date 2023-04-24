@@ -18,7 +18,7 @@ R_P = 56
 # Width
 t = 3
 
-def perm(input_words):
+def perm(input_words, ROUND_CONSTANTS, MDS_MATRIX):
     R_f = int(R_F / 2)
 
     round_constants_counter = 0
@@ -157,7 +157,7 @@ CAPACITY_ELEMENT = Fp(1 << 65)
 def hash(x, y):
     assert isinstance(x, Fp)
     assert isinstance(y, Fp)
-    return perm([x, y, CAPACITY_ELEMENT])[0]
+    return perm([x, y, CAPACITY_ELEMENT], ROUND_CONSTANTS, MDS_MATRIX)[0]
 
 
 def main():
@@ -173,7 +173,7 @@ def main():
         Fp(0x0a49c868c6976544256fcd597984561af7cfdfe1bda42c7b359029a1d34e9ddd),
     ]
 
-    assert perm(fixed_test_input) == fixed_test_output
+    assert perm(fixed_test_input, ROUND_CONSTANTS, MDS_MATRIX) == fixed_test_output
 
     test_vectors = [fixed_test_input]
 
@@ -203,7 +203,7 @@ def main():
         ),
         [{
             'initial_state': list(map(bytes, input)),
-            'final_state': list(map(bytes, perm(input))),
+            'final_state': list(map(bytes, perm(input, ROUND_CONSTANTS, MDS_MATRIX))),
         } for input in test_vectors],
     )
 
