@@ -248,6 +248,23 @@ def main():
     m_1_2hv_3 = m_1_2hv.child(3)
 
     keys_and_internals = [(k, k.internal()) for k in (m, m_1, m_1_2h, m_1_2hv, m_1_2hv_3)]
+
+    render_tvs(args, keys_and_internals)
+
+def hard():
+    args = render_args()
+
+    seed = bytes(range(32))
+    m = ExtendedSpendingKey.master(seed)
+    m_1h = m.child(hardened(1))
+    m_1h_2h = m_1h.child(hardened(2))
+    m_1h_2h_3h = m_1h_2h.child(hardened(3))
+
+    keys_and_internals = [(k, k.internal()) for k in (m, m_1h, m_1h_2h, m_1h_2h_3h)]
+
+    render_tvs(args, keys_and_internals)
+
+def render_tvs(args, keys_and_internals):
     test_vectors = [
         {'ask' : Some(bytes(k.ask())) if k.is_xsk() else None,
          'nsk' : Some(bytes(k.nsk())) if k.is_xsk() else None,
