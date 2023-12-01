@@ -50,10 +50,11 @@ class RedJubjub(object):
 
     def sign(self, sk, M):
         T = self._random((self.l_H + 128) // 8)
-        r = h_star(T + M)
+        vk_bar = bytes(self.derive_public(sk))
+        r = h_star(T + vk_bar + M)
         R = self.P_g * r
         Rbar = bytes(R)
-        S = r + h_star(Rbar + M) * sk
+        S = r + h_star(Rbar + vk_bar + M) * sk
         Sbar = bytes(S) # TODO: bitlength(r_j)
         return Rbar + Sbar
 
@@ -62,7 +63,8 @@ class RedJubjub(object):
         (Rbar, Sbar) = (sig[:mid], sig[mid:]) # TODO: bitlength(r_j)
         R = Point.from_bytes(Rbar)
         S = leos2ip(Sbar)
-        c = h_star(Rbar + M)
+        vk_bar = bytes(vk)
+        c = h_star(Rbar + vk_bar + M)
         return R and S < r_j and self.P_g * Fr(S) == R + vk * c
 
 
