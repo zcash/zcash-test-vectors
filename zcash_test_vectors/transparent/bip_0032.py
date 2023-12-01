@@ -6,6 +6,7 @@ import base58
 import hashlib
 import hmac
 import re
+from ripemd import ripemd160
 from secp256k1 import PrivateKey, PublicKey
 
 from .zip_0316 import derive_ovks
@@ -76,9 +77,9 @@ class ExtendedPublicKey:
         return self.chaincode + self.pubkey_bytes()
 
     def address(self):
-        ripemd160 = hashlib.new('ripemd160')
-        ripemd160.update(hashlib.sha256(self.pubkey_bytes()).digest())
-        return ripemd160.digest()
+        h = ripemd160.new()
+        h.update(hashlib.sha256(self.pubkey_bytes()).digest())
+        return h.digest()
 
     def child(self, i):
         assert 0 <= i and i <= 0xFFFFFFFF
