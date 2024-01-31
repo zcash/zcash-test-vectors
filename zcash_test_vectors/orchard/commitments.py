@@ -6,7 +6,7 @@ assert sys.version_info[0] >= 3, "Python 3 required."
 from .group_hash import group_hash
 from .pallas import Fp, Scalar, Point
 from .sinsemilla import sinsemilla_hash_to_point
-from .asset_id import zsa_value_base, asset_digest, encode_asset_id, native_asset
+from .asset_base import zsa_value_base, asset_digest, encode_asset_id, native_asset
 from ..utils import i2lebsp, leos2bsp
 
 # Commitment schemes used in Orchard https://zips.z.cash/protocol/nu5.pdf#concretecommit

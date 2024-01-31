@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys;
 
-from .asset_id import native_asset
+from .asset_base import native_asset
 
 assert sys.version_info[0] >= 3, "Python 3 required."
 

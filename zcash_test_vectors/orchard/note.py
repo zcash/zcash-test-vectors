@@ -1,6 +1,6 @@
 import struct
 
-from .asset_id import native_asset
+from .asset_base import native_asset
 from .commitments import note_commit
 from .key_components import diversify_hash, prf_expand, derive_nullifier, FullViewingKey, SpendingKey
 from .pallas import Point, Scalar

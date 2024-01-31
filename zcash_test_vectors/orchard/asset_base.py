@@ -65,6 +65,8 @@ def main():
     from zcash_test_vectors.rand import Rand
     from zcash_test_vectors.orchard.key_components import SpendingKey
     from zcash_test_vectors.orchard.key_components import FullViewingKey
+    from zcash_test_vectors.orchard.key_components import IssuanceAuthorizingKey
+
     from random import Random
 
     rng = Random(0xabad533d)
@@ -81,8 +83,9 @@ def main():
     for i in range(0, 20):
         sk = SpendingKey(rand.b(32))
         fvk = FullViewingKey.from_spending_key(sk)
+        isk = IssuanceAuthorizingKey(rand.b(32))
 
-        key_bytes = bytes(fvk.ivk())
+        key_bytes = bytes(isk.ik)
         description_bytes = get_random_unicode_bytes(512)
         asset_base = zsa_value_base(asset_digest(encode_asset_id(key_bytes, description_bytes)))
 
