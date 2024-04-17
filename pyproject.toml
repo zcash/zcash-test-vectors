@@ -22,12 +22,13 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-numpy = "1.21.0"
+python = "^3.8"
+numpy = "1.23.3"
 chacha20poly1305 = "0.0.3"
-cryptography = "36.0.0"
+cryptography = "38.0.1"
 secp256k1 = "0.14.0"
 base58 = "2.1.1"
+ripemd-hash = "^1.0.1"
 
 [tool.poetry.scripts]
 # General test vectors
@@ -50,6 +51,7 @@ sapling_key_components = "zcash_test_vectors.sapling.key_components:main"
 sapling_note_encryption = "zcash_test_vectors.sapling.note_encryption:main"
 sapling_signatures = "zcash_test_vectors.sapling.redjubjub:main"
 sapling_zip32 = "zcash_test_vectors.sapling.zip32:main"
+sapling_zip32_hard = "zcash_test_vectors.sapling.zip32:hard"
 
 # Orchard test vectors
 orchard_empty_roots = "zcash_test_vectors.orchard.empty_roots:main"

@@ -18,7 +18,7 @@ def padding(hrp):
     assert(len(hrp) <= 16)
     return bytes(hrp, "utf8") + bytes(16 - len(hrp))
 
-def encode_unified(rng, items, hrp):
+def encode_unified(items, hrp):
     encoded_items = []
 
     has_p2pkh = False
