@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+import sys;
+
+from zcash_test_vectors.bip340_reference import pubkey_gen
+from zcash_test_vectors.orchard.asset_base import native_asset
+
+assert sys.version_info[0] >= 3, "Python 3 required."
 
 from hashlib import blake2b
 
@@ -14,6 +19,7 @@ from ..utils import i2leosp, i2lebsp, lebs2osp
 from .utils import to_base, to_scalar
 from ..output import render_args, render_tv
 
+
 #
 # PRFs and hashes
 #
@@ -24,13 +30,16 @@ def diversify_hash(d):
         P = group_hash(b'z.cash:Orchard-gd', b'')
     return P
 
+
 def prf_nf_orchard(nk, rho):
     return poseidon.hash(nk, rho)
+
 
 def derive_nullifier(nk, rho: Fp, psi: Fp, cm):
     scalar = prf_nf_orchard(nk, rho) + psi  # addition mod p
     point = NULLIFIER_K_BASE * Scalar(scalar.s) + cm
     return point.extract()
+
 
 #
 # Key components
@@ -40,8 +49,8 @@ class SpendingKey(object):
     def __init__(self, data):
         self.data = data
 
-        self.ask  = to_scalar(prf_expand(self.data, b'\x06'))
-        self.nk   = to_base(prf_expand(self.data, b'\x07'))
+        self.ask = to_scalar(prf_expand(self.data, b'\x06'))
+        self.nk = to_base(prf_expand(self.data, b'\x07'))
         self.rivk = to_scalar(prf_expand(self.data, b'\x08'))
         if self.ask == Scalar.ZERO:
             raise ValueError("invalid spending key")
@@ -63,7 +72,7 @@ class ExtendedSpendingKey(SpendingKey):
     def master(cls, S):
         digest = blake2b(person=b'ZcashIP32Orchard')
         digest.update(S)
-        I   = digest.digest()
+        I = digest.digest()
         I_L = I[:32]
         I_R = I[32:]
         return cls(I_R, I_L)
@@ -71,10 +80,22 @@ class ExtendedSpendingKey(SpendingKey):
     def child(self, i):
         assert 0x80000000 <= i and i <= 0xFFFFFFFF
 
-        I   = prf_expand(self.chaincode, b'\x81' + self.data + i2leosp(32, i))
+        I = prf_expand(self.chaincode, b'\x81' + self.data + i2leosp(32, i))
         I_L = I[:32]
         I_R = I[32:]
         return self.__class__(I_R, I_L)
+
+
+# The IssuanceKeys class contains the two issuance keys, isk and ik.
+# It is initialized with data that is the byte representation of isk, and it generates ik appropriately.
+class IssuanceKeys(object):
+    def __init__(self, data):
+        self.isk = data
+
+        if self.isk == b'\0' * 32:
+            raise ValueError("invalid issuer key")
+
+        self.ik = pubkey_gen(self.isk)
 
 
 class FullViewingKey(object):
@@ -121,27 +142,33 @@ def main():
     from ..rand import Rand
 
     rng = Random(0xabad533d)
+
     def randbytes(l):
         ret = []
         while len(ret) < l:
             ret.append(rng.randrange(0, 256))
         return bytes(ret)
+
     rand = Rand(randbytes)
 
     test_vectors = []
-    for _ in range(0, 10):
+    for i in range(0, 10):
         sk = SpendingKey(rand.b(32))
+        isk = IssuanceAuthorizingKey(rand.b(32))
         fvk = FullViewingKey.from_spending_key(sk)
         default_d = fvk.default_d()
         default_pk_d = fvk.default_pkd()
 
         note_v = rand.u64()
+        is_native = i < 5
+        asset_base = native_asset() if is_native else Point.rand(rand)
         note_rho = Fp.random(rand)
         note_rseed = rand.b(32)
         note = OrchardNote(
             default_d,
             default_pk_d,
             note_v,
+            asset_base,
             note_rho,
             note_rseed,
         )
@@ -153,6 +180,8 @@ def main():
             'sk': sk.data,
             'ask': bytes(sk.ask),
             'ak': bytes(fvk.ak),
+            'isk': bytes(isk.isk),
+            'ik': bytes(isk.ik),
             'nk': bytes(fvk.nk),
             'rivk': bytes(fvk.rivk),
             'ivk': bytes(fvk.ivk()),
@@ -164,6 +193,7 @@ def main():
             'internal_ivk': bytes(internal.ivk()),
             'internal_ovk': internal.ovk,
             'internal_dk': internal.dk,
+            'asset': bytes(asset_base),
             'note_v': note_v,
             'note_rho': bytes(note_rho),
             'note_rseed': bytes(note_rseed),
@@ -178,6 +208,8 @@ def main():
             ('sk', '[u8; 32]'),
             ('ask', '[u8; 32]'),
             ('ak', '[u8; 32]'),
+            ('isk', '[u8; 32]'),
+            ('ik', '[u8; 32]'),
             ('nk', '[u8; 32]'),
             ('rivk', '[u8; 32]'),
             ('ivk', '[u8; 32]'),
@@ -189,6 +221,7 @@ def main():
             ('internal_ivk', '[u8; 32]'),
             ('internal_ovk', '[u8; 32]'),
             ('internal_dk', '[u8; 32]'),
+            ('asset', '[u8; 32]'),
             ('note_v', 'u64'),
             ('note_rho', '[u8; 32]'),
             ('note_rseed', '[u8; 32]'),
