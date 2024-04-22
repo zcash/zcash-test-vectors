@@ -43,6 +43,7 @@ zip_0244 = "zcash_test_vectors.zip_0244:main"
 # Transparent test vectors
 bip_0032 = "zcash_test_vectors.transparent.bip_0032:main"
 zip_0316 = "zcash_test_vectors.transparent.zip_0316:main"
+zip_0320 = "zcash_test_vectors.transparent.zip_0320:main"
 
 # Sapling test vectors
 sapling_generators = "zcash_test_vectors.sapling.generators:main"

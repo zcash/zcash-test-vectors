@@ -25,7 +25,8 @@ tv_scripts=(
     zip_0143
     zip_0243
     zip_0244
-    zip_0316)
+    zip_0316
+    zip_0320)
 
 for generator in "${tv_scripts[@]}"
 do
