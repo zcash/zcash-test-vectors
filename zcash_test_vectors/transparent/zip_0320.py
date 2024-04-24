@@ -66,7 +66,7 @@ def main():
 
     render_tv(
         args,
-        'transparent/zip_0320',
+        'zcash_test_vectors/transparent/zip_0320',
         (
             ('t_addr',            {'rust_type': '&\'static str'}),
             ('p2pkh_bytes',       '[u8; 20]'),

@@ -1,5 +1,5 @@
 [
-    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/transparent/zip_0320.py"],
+    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0320.py"],
     ["t_addr, p2pkh_bytes, tex_addr, account, child_index"],
     ["t1V9mnyk5Z5cTNMCkLbaDwSskgJZucTLdgW", "7bb83570b8fae146e03c5331a020b1e0892f631d", "tex10wur2u9clts5dcpu2vc6qg93uzyj7cca2xm732", 0, 0],
     ["t1LZdE42PAt1wREUv1YMYRFwJDPHPW8toLL", "1d81e86791c72d292f906e7c039a729e4b1ff7fc", "tex1rkq7seu3cukjjtusde7q8xnjne93laluyvdxu7", 0, 1],
