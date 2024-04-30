@@ -5,7 +5,7 @@ from .orchard.pallas import (
     Scalar as PallasScalar,
 )
 from .orchard.sinsemilla import group_hash as pallas_group_hash
-from .sapling.generators import find_group_hash, SPENDING_KEY_BASE
+from .sapling.generators import find_group_hash
 from .sapling.jubjub import (
     Fq,
     Point,
@@ -26,6 +26,9 @@ SAPLING_TX_VERSION = 4
 NU5_VERSION_GROUP_ID = 0x26A7270A
 NU5_TX_VERSION = 5
 
+NU6_VERSION_GROUP_ID = 0x124A69F8
+NU6_TX_VERSION = 6
+
 # Sapling note magic values, copied from src/zcash/Zcash.h
 NOTEENCRYPTION_AUTH_BYTES = 16
 ZC_NOTEPLAINTEXT_LEADING = 1
@@ -34,7 +37,6 @@ ZC_RHO_SIZE = 32
 ZC_R_SIZE = 32
 ZC_MEMO_SIZE = 512
 ZC_DIVERSIFIER_SIZE = 11
-ZC_ORCHARD_ZSA_ASSET_SIZE = 32
 ZC_JUBJUB_POINT_SIZE = 32
 ZC_JUBJUB_SCALAR_SIZE = 32
 ZC_NOTEPLAINTEXT_SIZE = ZC_NOTEPLAINTEXT_LEADING + ZC_V_SIZE + ZC_RHO_SIZE + ZC_R_SIZE + ZC_MEMO_SIZE
@@ -42,6 +44,9 @@ ZC_SAPLING_ENCPLAINTEXT_SIZE = ZC_NOTEPLAINTEXT_LEADING + ZC_DIVERSIFIER_SIZE + 
 ZC_SAPLING_OUTPLAINTEXT_SIZE = ZC_JUBJUB_POINT_SIZE + ZC_JUBJUB_SCALAR_SIZE
 ZC_SAPLING_ENCCIPHERTEXT_SIZE = ZC_SAPLING_ENCPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
 ZC_SAPLING_OUTCIPHERTEXT_SIZE = ZC_SAPLING_OUTPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
+
+# Orchard ZSA note values
+ZC_ORCHARD_ZSA_ASSET_SIZE = 32
 ZC_ORCHARD_ZSA_ENCPLAINTEXT_SIZE = ZC_SAPLING_ENCPLAINTEXT_SIZE + ZC_ORCHARD_ZSA_ASSET_SIZE
 ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE = ZC_ORCHARD_ZSA_ENCPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
 
@@ -170,7 +175,7 @@ class OrchardActionDescription(object):
         self.rk = pallas_group_hash(b'TVRandPt', rand.b(32))
         self.cmx = PallasBase(leos2ip(rand.b(32)))
         self.ephemeralKey = pallas_group_hash(b'TVRandPt', rand.b(32))
-        self.encCiphertext = rand.b(ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE)
+        self.encCiphertext = rand.b(ZC_SAPLING_ENCCIPHERTEXT_SIZE)
         self.outCiphertext = rand.b(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
         self.spendAuthSig = RedPallasSignature(rand)
 
@@ -183,6 +188,30 @@ class OrchardActionDescription(object):
             bytes(self.ephemeralKey) +
             self.encCiphertext +
             self.outCiphertext
+        )
+
+class OrchardZSAActionDescription(object):
+    def __init__(self, rand):
+        # We don't need to take account of whether this is a coinbase transaction,
+        # because we're only generating random fields.
+        self.cv = pallas_group_hash(b'TVRandPt', rand.b(32))
+        self.nullifier = PallasBase(leos2ip(rand.b(32)))
+        self.rk = pallas_group_hash(b'TVRandPt', rand.b(32))
+        self.cmx = PallasBase(leos2ip(rand.b(32)))
+        self.ephemeralKey = pallas_group_hash(b'TVRandPt', rand.b(32))
+        self.encCiphertext = rand.b(ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE)
+        self.outCiphertext = rand.b(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
+        self.spendAuthSig = RedPallasSignature(rand)
+
+    def __bytes__(self):
+        return (
+                bytes(self.cv) +
+                bytes(self.nullifier) +
+                bytes(self.rk) +
+                bytes(self.cmx) +
+                bytes(self.ephemeralKey) +
+                self.encCiphertext +
+                self.outCiphertext
         )
 
 class JoinSplit(object):

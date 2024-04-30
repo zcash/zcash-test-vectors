@@ -1,16 +1,17 @@
-        struct TestVector {
-            skb: [u8; 32],
-            nkb: [u8; 32],
-            vcvb: [u8; 32],
-            vcrb: [u8; 32],
-            cmb: [u8; 32],
-            cmq: [u8; 32],
-            ivkb: [u8; 32],
-            ivkq: [u8; 32],
-            mcq: [u8; 32],
-        };
+// From https://github.com/zcash-hackworks/zcash-test-vectors/ (orchard_generators)
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_generators.py
+pub(crate) struct TestVector {
+    pub(crate) skb: [u8; 32],
+    pub(crate) nkb: [u8; 32],
+    pub(crate) vcvb: [u8; 32],
+    pub(crate) vcrb: [u8; 32],
+    pub(crate) cmb: [u8; 32],
+    pub(crate) cmq: [u8; 32],
+    pub(crate) ivkb: [u8; 32],
+    pub(crate) ivkq: [u8; 32],
+    pub(crate) mcq: [u8; 32],
+}
+
         let test_vector = TestVector {
             skb: [
                 0x63, 0xc9, 0x75, 0xb8, 0x84, 0x72, 0x1a, 0x8d, 0x0c, 0xa1, 0x70, 0x7b, 0xe3, 0x0c, 0x7f, 0x0c, 0x5f, 0x44, 0x5f, 0x3e, 0x7c, 0x18, 0x8d, 0x3b, 0x06, 0xd6, 0xf1, 0x28, 0xb3, 0x23, 0x55, 0xb7

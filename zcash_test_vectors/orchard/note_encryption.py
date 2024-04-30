@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import sys;
 
-from .asset_base import native_asset
-
 assert sys.version_info[0] >= 3, "Python 3 required."
 
 from chacha20poly1305 import ChaCha20Poly1305
 from hashlib import blake2b
+import struct
 
-from ..transaction import MAX_MONEY
 from ..output import render_args, render_tv
 from ..rand import Rand
 
@@ -124,7 +122,7 @@ class TransmittedNoteCipherText(object):
         if p_enc is None:
             return None
 
-        np = OrchardNotePlaintext.from_bytes(p_enc)
+        np = self.parse_bytes_as_note_plaintext(p_enc)
 
         g_d = diversify_hash(np.d)
 
@@ -133,7 +131,8 @@ class TransmittedNoteCipherText(object):
             return None
 
         pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
-        note = OrchardNote(np.d, pk_d, np.v, np.asset, rho, np.rseed)
+
+        note = self.construct_note(np, pk_d, rho)
 
         cm = note.note_commitment()
         if cm is None:
@@ -166,11 +165,13 @@ class TransmittedNoteCipherText(object):
         if p_enc is None:
             return None
 
-        np = OrchardNotePlaintext.from_bytes(p_enc)
+        np = self.parse_bytes_as_note_plaintext(p_enc)
+
         if OrchardKeyAgreement.esk(np.rseed, rho) != esk:
             return None
         g_d = diversify_hash(np.d)
-        note = OrchardNote(np.d, pk_d, np.v, np.asset, rho, np.rseed)
+
+        note = self.construct_note(np, pk_d, rho)
 
         cm = note.note_commitment()
         if cm is None:
@@ -182,6 +183,21 @@ class TransmittedNoteCipherText(object):
             return None
 
         return (note, np.memo)
+
+    @staticmethod
+    def parse_bytes_as_note_plaintext(p_enc):
+        leadbyte = p_enc[0]
+        assert(leadbyte == 2)
+        return OrchardNotePlaintext(
+            p_enc[1:12],   # d
+            struct.unpack('<Q', p_enc[12:20])[0],  # v
+            p_enc[20:52],  # rseed
+            p_enc[52:564], # memo
+        )
+
+    @staticmethod
+    def construct_note(np: OrchardNotePlaintext, pk_d, rho):
+        return OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
 
 
 def main():
@@ -197,7 +213,7 @@ def main():
     rand = Rand(randbytes)
 
     test_vectors = []
-    for i in range(0, 20):
+    for _ in range(0, 10):
         sender_ovk = rand.b(32)
 
         receiver_sk = SpendingKey(rand.b(32))
@@ -207,19 +223,15 @@ def main():
         pk_d = receiver_fvk.default_pkd()
         g_d = diversify_hash(d)
 
-        is_native = i < 10
-        asset_point = native_asset() if is_native else Point.rand(rand)
-        asset_bytes = bytes(asset_point)
         rseed = rand.b(32)
         memo = b'\xff' + rand.b(511)
-
-        np = OrchardNotePlaintext(d, rand.u64(), rseed, asset_bytes, memo)
+        np = OrchardNotePlaintext(d, rand.u64(), rseed, memo)
 
         rcv = rcv_trapdoor(rand)
-        cv = value_commit(rcv, Scalar(np.v), asset_point)
+        cv = value_commit(rcv, Scalar(np.v))
 
         rho = np.dummy_nullifier(rand)
-        note = OrchardNote(d, pk_d, np.v, asset_bytes, rho, rseed)
+        note = OrchardNote(d, pk_d, np.v, rho, rseed)
         cm = note.note_commitment()
 
         ne = OrchardNoteEncryption(rand)
@@ -245,7 +257,6 @@ def main():
             'default_pk_d': bytes(pk_d),
             'v': np.v,
             'rseed': note.rseed,
-            'asset': asset_bytes,
             'memo': np.memo,
             'cv_net': bytes(cv),
             'rho': bytes(rho),
@@ -271,7 +282,6 @@ def main():
             ('default_pk_d', '[u8; 32]'),
             ('v', 'u64'),
             ('rseed', '[u8; 32]'),
-            ('asset', '[u8; 32]'),
             ('memo', '[u8; 512]'),
             ('cv_net', '[u8; 32]'),
             ('rho', '[u8; 32]'),
@@ -280,8 +290,8 @@ def main():
             ('ephemeral_key', '[u8; 32]'),
             ('shared_secret', '[u8; 32]'),
             ('k_enc', '[u8; 32]'),
-            ('p_enc', '[u8; 596]'),
-            ('c_enc', '[u8; 612]'),
+            ('p_enc', '[u8; 564]'),
+            ('c_enc', '[u8; 580]'),
             ('ock', '[u8; 32]'),
             ('op', '[u8; 64]'),
             ('c_out', '[u8; 80]'),

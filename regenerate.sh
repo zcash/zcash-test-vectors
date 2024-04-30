@@ -4,17 +4,19 @@ tv_scripts=(
     bip_0032
     f4jumble
     f4jumble_long
-    orchard_asset_id
     orchard_empty_roots
     orchard_generators
     orchard_group_hash
-    orchard_key_components
     orchard_map_to_curve
     orchard_merkle_tree
     orchard_note_encryption
     orchard_poseidon
     orchard_poseidon_hash
     orchard_sinsemilla
+    orchard_zsa_asset_base
+    orchard_zsa_issuance_auth_sig
+    orchard_zsa_key_components
+    orchard_zsa_note_encryption
     sapling_generators
     sapling_key_components
     sapling_note_encryption

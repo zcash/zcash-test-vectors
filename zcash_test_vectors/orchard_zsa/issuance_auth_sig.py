@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import sys;
 
-from zcash_test_vectors.bip340_reference import pubkey_gen, schnorr_sign, hash_sha256
-from zcash_test_vectors.orchard.key_components import IssuanceKeys
+from zcash_test_vectors.bip340_reference import schnorr_sign
+from zcash_test_vectors.orchard_zsa.key_components import IssuanceKeys
 
 from ..output import render_args, render_tv
 
@@ -52,7 +52,7 @@ def main():
 
     render_tv(
         args,
-        'issuance_auth_sig',
+        'orchard_zsa_issuance_auth_sig',
         (
             ('isk', '[u8; 32]'),
             ('ik', '[u8; 32]'),

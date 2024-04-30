@@ -35,6 +35,8 @@ def get_random_unicode_bytes(length):
     except NameError:
         get_char = chr
 
+    random.seed(0xabad533d)
+
     # Update this to include code point ranges to be sampled
     include_ranges = [
         ( 0x0021, 0x0021 ),
@@ -63,9 +65,7 @@ def main():
     args = render_args()
 
     from zcash_test_vectors.rand import Rand
-    from zcash_test_vectors.orchard.key_components import SpendingKey
-    from zcash_test_vectors.orchard.key_components import FullViewingKey
-    from zcash_test_vectors.orchard.key_components import IssuanceAuthorizingKey
+    from zcash_test_vectors.orchard_zsa.key_components import IssuanceKeys
 
     from random import Random
 
@@ -81,9 +81,7 @@ def main():
 
     test_vectors = []
     for i in range(0, 20):
-        sk = SpendingKey(rand.b(32))
-        fvk = FullViewingKey.from_spending_key(sk)
-        isk = IssuanceAuthorizingKey(rand.b(32))
+        isk = IssuanceKeys(rand.b(32))
 
         key_bytes = bytes(isk.ik)
         description_bytes = get_random_unicode_bytes(512)
@@ -97,7 +95,7 @@ def main():
 
     render_tv(
         args,
-        'orchard_asset_id',
+        'orchard_zsa_asset_base',
         (
             ('key', '[u8; 32]'),
             ('description', '[u8; 512]'),

@@ -6,7 +6,6 @@ import struct
 
 from .transaction import (
     MAX_MONEY,
-    NU5_TX_VERSION,
     Script,
     TransactionV5,
 )
@@ -160,13 +159,13 @@ def orchard_actions_compact_digest(tx):
         digest.update(bytes(desc.nullifier))
         digest.update(bytes(desc.cmx))
         digest.update(bytes(desc.ephemeralKey))
-        digest.update(desc.encCiphertext[:84])
+        digest.update(desc.encCiphertext[:52])
     return digest.digest()
 
 def orchard_actions_memos_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcActMHash')
     for desc in tx.vActionsOrchard:
-        digest.update(desc.encCiphertext[84:596])
+        digest.update(desc.encCiphertext[52:564])
     return digest.digest()
 
 def orchard_actions_noncompact_digest(tx):
@@ -174,7 +173,7 @@ def orchard_actions_noncompact_digest(tx):
     for desc in tx.vActionsOrchard:
         digest.update(bytes(desc.cv))
         digest.update(bytes(desc.rk))
-        digest.update(desc.encCiphertext[596:])
+        digest.update(desc.encCiphertext[564:])
         digest.update(desc.outCiphertext)
     return digest.digest()
 
