@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import sys;
-
-assert sys.version_info[0] >= 3, "Python 3 required."
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from chacha20poly1305 import ChaCha20Poly1305
 from hashlib import blake2b
@@ -225,7 +223,12 @@ def main():
 
         rseed = rand.b(32)
         memo = b'\xff' + rand.b(511)
-        np = OrchardNotePlaintext(d, rand.u64(), rseed, memo)
+        np = OrchardNotePlaintext(
+            d,
+            rand.u64(),
+            rseed,
+            memo
+        )
 
         rcv = rcv_trapdoor(rand)
         cv = value_commit(rcv, Scalar(np.v))

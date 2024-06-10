@@ -1,4 +1,5 @@
-# This file has been copied from https://github.com/bitcoin/bips/blob/master/bip-0340/reference.py
+# This file has been copied from https://github.com/bitcoin/bips/blob/200f9b26fe0a2f235a2af8b30c4be9f12f6bc9cb/bip-0340/reference.py
+
 
 from typing import Tuple, Optional, Any
 import hashlib

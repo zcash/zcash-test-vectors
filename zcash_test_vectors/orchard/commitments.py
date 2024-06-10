@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import sys
-
-assert sys.version_info[0] >= 3, "Python 3 required."
+import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from .group_hash import group_hash
 from .pallas import Fp, Scalar
@@ -33,7 +31,7 @@ def sinsemilla_commit(r: Scalar, D, M):
 def sinsemilla_short_commit(r: Scalar, D, M):
     return sinsemilla_commit(r, D, M).extract()
 
-# ZIP-226 (https://github.com/zcash/zips/pull/628)
+# https://zips.z.cash/protocol/nu5.pdf#concreteorchardnotecommit
 def note_commit(rcm, g_d, pk_d, v, rho, psi):
     return sinsemilla_commit(
         rcm,

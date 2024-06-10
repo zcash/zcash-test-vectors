@@ -7,6 +7,7 @@ tv_scripts=(
     orchard_empty_roots
     orchard_generators
     orchard_group_hash
+    orchard_key_components
     orchard_map_to_curve
     orchard_merkle_tree
     orchard_note_encryption
