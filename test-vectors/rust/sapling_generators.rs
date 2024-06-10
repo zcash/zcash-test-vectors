@@ -1,5 +1,3 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/ (sapling_generators)
-
 pub(crate) struct TestVector {
     pub(crate) skb: [u8; 32],
     pub(crate) pkb: [u8; 32],
@@ -13,6 +11,7 @@ pub(crate) struct TestVector {
     pub(crate) pb3: [u8; 32],
 }
 
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_generators.py
         let test_vector = TestVector {
             skb: [
                 0x30, 0xb5, 0xf2, 0xaa, 0xad, 0x32, 0x56, 0x30, 0xbc, 0xdd, 0xdb, 0xce, 0x4d, 0x67, 0x65, 0x6d, 0x05, 0xfd, 0x1c, 0xc2, 0xd0, 0x37, 0xbb, 0x53, 0x75, 0xb6, 0xe9, 0x6d, 0x9e, 0x01, 0xa1, 0xd7
