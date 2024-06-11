@@ -1,18 +1,19 @@
-        struct TestVector {
-            p2pkh_bytes: Option<[u8; 20]>,
-            p2sh_bytes: Option<[u8; 20]>,
-            sapling_raw_addr: Option<[u8; 43]>,
-            orchard_raw_addr: Option<[u8; 43]>,
-            unknown_typecode: Option<u32>,
-            unknown_bytes: Option<Vec<u8>>,
-            unified_addr: &'static str,
-            root_seed: Vec<u8>,
-            account: u32,
-            diversifier_index: u32,
-        };
+pub(crate) struct TestVector {
+    pub(crate) p2pkh_bytes: Option<[u8; 20]>,
+    pub(crate) p2sh_bytes: Option<[u8; 20]>,
+    pub(crate) sapling_raw_addr: Option<[u8; 43]>,
+    pub(crate) orchard_raw_addr: Option<[u8; 43]>,
+    pub(crate) unknown_typecode: Option<u32>,
+    pub(crate) unknown_bytes: Option<Vec<u8>>,
+    pub(crate) unified_addr: &'static str,
+    pub(crate) root_seed: Vec<u8>,
+    pub(crate) account: u32,
+    pub(crate) diversifier_index: u32,
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/unified_address.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/unified_address.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 p2pkh_bytes: Some([
                     0x7b, 0xb8, 0x35, 0x70, 0xb8, 0xfa, 0xe1, 0x46, 0xe0, 0x3c, 0x53, 0x31, 0xa0, 0x20, 0xb1, 0xe0, 0x89, 0x2f, 0x63, 0x1d
@@ -1105,4 +1106,5 @@
                 account: 19,
                 diversifier_index: 15,
             },
-        ];
+        ]
+}

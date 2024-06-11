@@ -1,11 +1,12 @@
-        struct TestVector {
-            domain: Vec<u8>,
-            msg: Vec<u8>,
-            point: [u8; 32],
-        };
+pub(crate) struct TestVector {
+    pub(crate) domain: Vec<u8>,
+    pub(crate) msg: Vec<u8>,
+    pub(crate) point: [u8; 32],
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_group_hash.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_group_hash.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 domain: vec![
                     0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74
@@ -127,4 +128,5 @@
                     0xb6, 0x17, 0x44, 0xc0, 0xc7, 0x0d, 0x65, 0x4c, 0x02, 0x53, 0x70, 0x55, 0x7a, 0xac, 0x7f, 0xbe, 0x42, 0x1a, 0x49, 0x70, 0x77, 0x18, 0xba, 0x90, 0xff, 0x7d, 0x9e, 0xbd, 0xc5, 0x1d, 0x19, 0x19
                 ],
             },
-        ];
+        ]
+}

@@ -1,26 +1,27 @@
-        struct TestVector {
-            ovk: [u8; 32],
-            ivk: [u8; 32],
-            default_d: [u8; 11],
-            default_pk_d: [u8; 32],
-            v: u64,
-            rcm: [u8; 32],
-            memo: [u8; 512],
-            cv: [u8; 32],
-            cmu: [u8; 32],
-            esk: [u8; 32],
-            epk: [u8; 32],
-            shared_secret: [u8; 32],
-            k_enc: [u8; 32],
-            p_enc: [u8; 564],
-            c_enc: [u8; 580],
-            ock: [u8; 32],
-            op: [u8; 64],
-            c_out: [u8; 80],
-        };
+pub(crate) struct TestVector {
+    pub(crate) ovk: [u8; 32],
+    pub(crate) ivk: [u8; 32],
+    pub(crate) default_d: [u8; 11],
+    pub(crate) default_pk_d: [u8; 32],
+    pub(crate) v: u64,
+    pub(crate) rcm: [u8; 32],
+    pub(crate) memo: [u8; 512],
+    pub(crate) cv: [u8; 32],
+    pub(crate) cmu: [u8; 32],
+    pub(crate) esk: [u8; 32],
+    pub(crate) epk: [u8; 32],
+    pub(crate) shared_secret: [u8; 32],
+    pub(crate) k_enc: [u8; 32],
+    pub(crate) p_enc: [u8; 564],
+    pub(crate) c_enc: [u8; 580],
+    pub(crate) ock: [u8; 32],
+    pub(crate) op: [u8; 64],
+    pub(crate) c_out: [u8; 80],
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_note_encryption.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_note_encryption.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 ovk: [
                     0x98, 0xd1, 0x69, 0x13, 0xd9, 0x9b, 0x04, 0x17, 0x7c, 0xab, 0xa4, 0x4f, 0x6e, 0x4d, 0x22, 0x4e, 0x03, 0xb5, 0xac, 0x03, 0x1d, 0x7c, 0xe4, 0x5e, 0x86, 0x51, 0x38, 0xe1, 0xb9, 0x96, 0xd6, 0x3b
@@ -561,4 +562,5 @@
                     0xe2, 0x7a, 0x46, 0x4d, 0x6f, 0x44, 0xcc, 0x44, 0xf6, 0x17, 0xe2, 0x3c, 0x9f, 0xb1, 0xb7, 0x1f, 0xff, 0xd4, 0x6a, 0xeb, 0xf0, 0x36, 0x77, 0xcf, 0x7d, 0xd2, 0x4d, 0x71, 0x1b, 0xa0, 0xc6, 0xca, 0x38, 0x53, 0x09, 0x7b, 0x24, 0x7a, 0xb7, 0x4c, 0x15, 0xbb, 0x93, 0x8e, 0xd6, 0x02, 0xfb, 0xcd, 0x30, 0xf4, 0xa6, 0x59, 0x56, 0x43, 0x0f, 0x47, 0xa0, 0xfb, 0xcb, 0xe8, 0xe0, 0x8a, 0xad, 0xa3, 0x86, 0x30, 0x78, 0x5a, 0x80, 0x57, 0x53, 0xba, 0x33, 0xb3, 0x34, 0xcd, 0x2a, 0x4b, 0xfc, 0x3d
                 ],
             },
-        ];
+        ]
+}

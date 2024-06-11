@@ -1,13 +1,14 @@
-        struct TestVector {
-            t_addr: &'static str,
-            p2pkh_bytes: [u8; 20],
-            tex_addr: &'static str,
-            account: u32,
-            child_index: u32,
-        };
+pub(crate) struct TestVector {
+    pub(crate) t_addr: &'static str,
+    pub(crate) p2pkh_bytes: [u8; 20],
+    pub(crate) tex_addr: &'static str,
+    pub(crate) account: u32,
+    pub(crate) child_index: u32,
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0320.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0320.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 t_addr: "t1V9mnyk5Z5cTNMCkLbaDwSskgJZucTLdgW",
                 p2pkh_bytes: [
@@ -143,4 +144,5 @@
                 account: 4,
                 child_index: 2,
             },
-        ];
+        ]
+}

@@ -2,7 +2,7 @@ import struct
 
 from .commitments import note_commit
 from .key_components import diversify_hash, prf_expand, derive_nullifier, FullViewingKey, SpendingKey
-from .pallas import Point, Scalar
+from .pallas import Point
 from .utils import to_base, to_scalar
 
 from ..utils import leos2bsp

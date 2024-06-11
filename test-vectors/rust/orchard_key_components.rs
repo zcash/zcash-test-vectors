@@ -1,27 +1,28 @@
-        struct TestVector {
-            sk: [u8; 32],
-            ask: [u8; 32],
-            ak: [u8; 32],
-            nk: [u8; 32],
-            rivk: [u8; 32],
-            ivk: [u8; 32],
-            ovk: [u8; 32],
-            dk: [u8; 32],
-            default_d: [u8; 11],
-            default_pk_d: [u8; 32],
-            internal_rivk: [u8; 32],
-            internal_ivk: [u8; 32],
-            internal_ovk: [u8; 32],
-            internal_dk: [u8; 32],
-            note_v: u64,
-            note_rho: [u8; 32],
-            note_rseed: [u8; 32],
-            note_cmx: [u8; 32],
-            note_nf: [u8; 32],
-        };
+pub(crate) struct TestVector {
+    pub(crate) sk: [u8; 32],
+    pub(crate) ask: [u8; 32],
+    pub(crate) ak: [u8; 32],
+    pub(crate) nk: [u8; 32],
+    pub(crate) rivk: [u8; 32],
+    pub(crate) ivk: [u8; 32],
+    pub(crate) ovk: [u8; 32],
+    pub(crate) dk: [u8; 32],
+    pub(crate) default_d: [u8; 11],
+    pub(crate) default_pk_d: [u8; 32],
+    pub(crate) internal_rivk: [u8; 32],
+    pub(crate) internal_ivk: [u8; 32],
+    pub(crate) internal_ovk: [u8; 32],
+    pub(crate) internal_dk: [u8; 32],
+    pub(crate) note_v: u64,
+    pub(crate) note_rho: [u8; 32],
+    pub(crate) note_rseed: [u8; 32],
+    pub(crate) note_cmx: [u8; 32],
+    pub(crate) note_nf: [u8; 32],
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_key_components.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_key_components.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 sk: [
                     0x5d, 0x7a, 0x8f, 0x73, 0x9a, 0x2d, 0x9e, 0x94, 0x5b, 0x0c, 0xe1, 0x52, 0xa8, 0x04, 0x9e, 0x29, 0x4c, 0x4d, 0x6e, 0x66, 0xb1, 0x64, 0x93, 0x9d, 0xaf, 0xfa, 0x2e, 0xf6, 0xee, 0x69, 0x21, 0x48
@@ -592,4 +593,5 @@
                     0x95, 0x64, 0x97, 0x28, 0x46, 0x5e, 0x68, 0x2a, 0xc0, 0x57, 0xad, 0x87, 0x62, 0x94, 0xd7, 0x00, 0xc2, 0x7f, 0xeb, 0xa2, 0xf7, 0x50, 0x92, 0x2f, 0x95, 0x51, 0x85, 0x70, 0x62, 0x61, 0xc3, 0x0c
                 ],
             },
-        ];
+        ]
+}

@@ -1,14 +1,15 @@
-        struct TestVector {
-            c: [u8; 32],
-            pk: [u8; 33],
-            address: [u8; 20],
-            external_ovk: [u8; 32],
-            internal_ovk: [u8; 32],
-            account: u32,
-        };
+pub(crate) struct TestVector {
+    pub(crate) c: [u8; 32],
+    pub(crate) pk: [u8; 33],
+    pub(crate) address: [u8; 20],
+    pub(crate) external_ovk: [u8; 32],
+    pub(crate) internal_ovk: [u8; 32],
+    pub(crate) account: u32,
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/bip_0032.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/bip_0032.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 c: [
                     0x9b, 0xa0, 0x43, 0x9c, 0x6a, 0x2d, 0x3d, 0x90, 0x38, 0x83, 0xd4, 0x53, 0x7c, 0x36, 0x22, 0x88, 0x62, 0x6d, 0xa6, 0x2c, 0x62, 0x99, 0x01, 0x2e, 0x36, 0x2d, 0x8f, 0xb6, 0xef, 0xeb, 0xab, 0x47
@@ -189,4 +190,5 @@
                 ],
                 account: 9,
             },
-        ];
+        ]
+}

@@ -209,24 +209,28 @@ def tv_part_rust(name, value, config, indent=3):
         raise ValueError('Invalid type(%s): %s' % (name, type(value)))
 
 def tv_rust(filename, parts, vectors):
-    print('        struct TestVector {')
-    for p in parts: print('            %s: %s,' % (p[0], p[1]['rust_type']))
-    print('''        };
-
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py''' % (
-            filename,
-        ))
+    visibility = 'pub(crate) '
+    print(visibility + 'struct TestVector {')
+    for [name, config] in parts:
+        print('    %s%s: %s,' % (visibility, name, config['rust_type']))
+    print('}')
+    print()
+    print('// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py' % (
+        filename,
+    ))
     if type(vectors) == type({}):
         print('        let test_vector = TestVector {')
         for p in parts: tv_part_rust(p[0], vectors[p[0]], p[1])
         print('        };')
     elif type(vectors) == type([]):
-        print('        let test_vectors = vec![')
+        print('pub(crate) fn test_vectors() -> Vec<TestVector> {')
+        print('    vec![')
         for vector in vectors:
             print('            TestVector {')
             for p in parts: tv_part_rust(p[0], vector[p[0]], p[1], 4)
             print('            },')
-        print('        ];')
+        print('        ]')
+        print('}')
     else:
         raise ValueError('Invalid type(vectors)')
 

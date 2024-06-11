@@ -1,22 +1,23 @@
-        struct TestVector {
-            sk: [u8; 32],
-            ask: [u8; 32],
-            nsk: [u8; 32],
-            ovk: [u8; 32],
-            ak: [u8; 32],
-            nk: [u8; 32],
-            ivk: [u8; 32],
-            default_d: [u8; 11],
-            default_pk_d: [u8; 32],
-            note_v: u64,
-            note_r: [u8; 32],
-            note_cmu: [u8; 32],
-            note_pos: u64,
-            note_nf: [u8; 32],
-        };
+pub(crate) struct TestVector {
+    pub(crate) sk: [u8; 32],
+    pub(crate) ask: [u8; 32],
+    pub(crate) nsk: [u8; 32],
+    pub(crate) ovk: [u8; 32],
+    pub(crate) ak: [u8; 32],
+    pub(crate) nk: [u8; 32],
+    pub(crate) ivk: [u8; 32],
+    pub(crate) default_d: [u8; 11],
+    pub(crate) default_pk_d: [u8; 32],
+    pub(crate) note_v: u64,
+    pub(crate) note_r: [u8; 32],
+    pub(crate) note_cmu: [u8; 32],
+    pub(crate) note_pos: u64,
+    pub(crate) note_nf: [u8; 32],
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_key_components.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_key_components.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 sk: [
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -417,4 +418,5 @@
                     0x65, 0x36, 0x74, 0x87, 0x3b, 0x3c, 0x67, 0x0c, 0x58, 0x85, 0x84, 0x73, 0xe7, 0xfe, 0x72, 0x19, 0x72, 0xfb, 0x96, 0xe2, 0x15, 0xb8, 0x73, 0x77, 0xa1, 0x7c, 0xa3, 0x71, 0x0d, 0x93, 0xc9, 0xe9
                 ],
             },
-        ];
+        ]
+}

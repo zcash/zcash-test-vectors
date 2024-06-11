@@ -1,16 +1,17 @@
-        struct TestVector {
-            t_key_bytes: Option<[u8; 65]>,
-            sapling_ivk_bytes: Option<[u8; 64]>,
-            orchard_ivk_bytes: Option<[u8; 64]>,
-            unknown_ivk_typecode: u32,
-            unknown_ivk_bytes: Option<Vec<u8>>,
-            unified_ivk: Vec<u8>,
-            root_seed: Vec<u8>,
-            account: u32,
-        };
+pub(crate) struct TestVector {
+    pub(crate) t_key_bytes: Option<[u8; 65]>,
+    pub(crate) sapling_ivk_bytes: Option<[u8; 64]>,
+    pub(crate) orchard_ivk_bytes: Option<[u8; 64]>,
+    pub(crate) unknown_ivk_typecode: u32,
+    pub(crate) unknown_ivk_bytes: Option<Vec<u8>>,
+    pub(crate) unified_ivk: Vec<u8>,
+    pub(crate) root_seed: Vec<u8>,
+    pub(crate) account: u32,
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/unified_incoming_viewing_keys.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/unified_incoming_viewing_keys.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 t_key_bytes: Some([
                     0x42, 0xd6, 0x7b, 0x57, 0x0a, 0x66, 0x4b, 0x8d, 0xc3, 0xce, 0xbb, 0x8f, 0x0a, 0xf4, 0x24, 0x3f, 0xf9, 0xe7, 0xe6, 0xe8, 0xd0, 0x86, 0x08, 0x4e, 0x23, 0x25, 0x67, 0x88, 0x03, 0xb1, 0x42, 0xd1, 0x03, 0x87, 0xeb, 0xa0, 0x4d, 0xbf, 0xb4, 0x06, 0xb2, 0xb2, 0xf0, 0x46, 0xe6, 0x61, 0x40, 0x84, 0x59, 0xbc, 0x3d, 0x1e, 0x0e, 0x7a, 0xa0, 0xf1, 0x47, 0x04, 0x3b, 0x07, 0x6d, 0x00, 0xd5, 0xe1, 0x11
@@ -367,4 +368,5 @@
                 ],
                 account: 19,
             },
-        ];
+        ]
+}

@@ -3,20 +3,16 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 from chacha20poly1305 import ChaCha20Poly1305
 from hashlib import blake2b
-import os
 import struct
 
-from ..transaction import MAX_MONEY
 from ..output import render_args, render_tv
 from ..rand import Rand
 
-from .generators import VALUE_COMMITMENT_VALUE_BASE, VALUE_COMMITMENT_RANDOMNESS_BASE
 from .pallas import Point, Scalar
 from .commitments import rcv_trapdoor, value_commit
 from .key_components import diversify_hash, prf_expand, FullViewingKey, SpendingKey
 from .note import OrchardNote, OrchardNotePlaintext
 from .utils import to_scalar
-from ..utils import leos2bsp
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardkdf
 def kdf_orchard(shared_secret, ephemeral_key):
@@ -124,14 +120,7 @@ class TransmittedNoteCipherText(object):
         if p_enc is None:
             return None
 
-        leadbyte = p_enc[0]
-        assert(leadbyte == 2)
-        np = OrchardNotePlaintext(
-            p_enc[1:12],   # d
-            struct.unpack('<Q', p_enc[12:20])[0],  # v
-            p_enc[20:52],  # rseed
-            p_enc[52:564], # memo
-        )
+        np = self.parse_bytes_as_note_plaintext(p_enc)
 
         g_d = diversify_hash(np.d)
 
@@ -140,7 +129,8 @@ class TransmittedNoteCipherText(object):
             return None
 
         pk_d = OrchardKeyAgreement.derive_public(ivk, g_d)
-        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+
+        note = self.construct_note(np, pk_d, rho)
 
         cm = note.note_commitment()
         if cm is None:
@@ -173,18 +163,13 @@ class TransmittedNoteCipherText(object):
         if p_enc is None:
             return None
 
-        leadbyte = p_enc[0]
-        assert(leadbyte == 2)
-        np = OrchardNotePlaintext(
-            p_enc[1:12],   # d
-            struct.unpack('<Q', p_enc[12:20])[0],  # v
-            p_enc[20:52],  # rseed
-            p_enc[52:564], # memo
-        )
+        np = self.parse_bytes_as_note_plaintext(p_enc)
+
         if OrchardKeyAgreement.esk(np.rseed, rho) != esk:
             return None
         g_d = diversify_hash(np.d)
-        note = OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+
+        note = self.construct_note(np, pk_d, rho)
 
         cm = note.note_commitment()
         if cm is None:
@@ -196,6 +181,22 @@ class TransmittedNoteCipherText(object):
             return None
 
         return (note, np.memo)
+
+    @staticmethod
+    def parse_bytes_as_note_plaintext(p_enc):
+        leadbyte = p_enc[0]
+        assert(leadbyte == 2)
+        return OrchardNotePlaintext(
+            p_enc[1:12],   # d
+            struct.unpack('<Q', p_enc[12:20])[0],  # v
+            p_enc[20:52],  # rseed
+            p_enc[52:564], # memo
+        )
+
+    @staticmethod
+    def construct_note(np: OrchardNotePlaintext, pk_d, rho):
+        return OrchardNote(np.d, pk_d, np.v, rho, np.rseed)
+
 
 def main():
     args = render_args()

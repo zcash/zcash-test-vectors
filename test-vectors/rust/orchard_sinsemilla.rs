@@ -1,12 +1,13 @@
-        struct TestVector {
-            domain: Vec<u8>,
-            msg: Vec<bool>,
-            point: [u8; 32],
-            hash: [u8; 32],
-        };
+pub(crate) struct TestVector {
+    pub(crate) domain: Vec<u8>,
+    pub(crate) msg: Vec<bool>,
+    pub(crate) point: [u8; 32],
+    pub(crate) hash: [u8; 32],
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_sinsemilla.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_sinsemilla.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 domain: vec![
                     0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69, 0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61
@@ -161,4 +162,5 @@
                     0x80, 0x6a, 0xcc, 0x24, 0x7a, 0xc9, 0xba, 0x90, 0xd2, 0x5f, 0x58, 0x3d, 0xad, 0xb5, 0xe0, 0xee, 0x5c, 0x03, 0xe1, 0xab, 0x35, 0x70, 0xb3, 0x62, 0xb4, 0xbe, 0x5a, 0x8b, 0xce, 0xb6, 0x0b, 0x00
                 ],
             },
-        ];
+        ]
+}

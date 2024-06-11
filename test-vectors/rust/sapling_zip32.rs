@@ -1,31 +1,32 @@
-        struct TestVector {
-            ask: Option<[u8; 32]>,
-            nsk: Option<[u8; 32]>,
-            ovk: [u8; 32],
-            dk: [u8; 32],
-            c: [u8; 32],
-            ak: [u8; 32],
-            nk: [u8; 32],
-            ivk: [u8; 32],
-            xsk: Option<[u8; 169]>,
-            xfvk: [u8; 169],
-            fp: [u8; 32],
-            d0: Option<[u8; 11]>,
-            d1: Option<[u8; 11]>,
-            d2: Option<[u8; 11]>,
-            dmax: Option<[u8; 11]>,
-            internal_nsk: Option<[u8; 32]>,
-            internal_ovk: [u8; 32],
-            internal_dk: [u8; 32],
-            internal_nk: [u8; 32],
-            internal_ivk: [u8; 32],
-            internal_xsk: Option<[u8; 169]>,
-            internal_xfvk: [u8; 169],
-            internal_fp: [u8; 32],
-        };
+pub(crate) struct TestVector {
+    pub(crate) ask: Option<[u8; 32]>,
+    pub(crate) nsk: Option<[u8; 32]>,
+    pub(crate) ovk: [u8; 32],
+    pub(crate) dk: [u8; 32],
+    pub(crate) c: [u8; 32],
+    pub(crate) ak: [u8; 32],
+    pub(crate) nk: [u8; 32],
+    pub(crate) ivk: [u8; 32],
+    pub(crate) xsk: Option<[u8; 169]>,
+    pub(crate) xfvk: [u8; 169],
+    pub(crate) fp: [u8; 32],
+    pub(crate) d0: Option<[u8; 11]>,
+    pub(crate) d1: Option<[u8; 11]>,
+    pub(crate) d2: Option<[u8; 11]>,
+    pub(crate) dmax: Option<[u8; 11]>,
+    pub(crate) internal_nsk: Option<[u8; 32]>,
+    pub(crate) internal_ovk: [u8; 32],
+    pub(crate) internal_dk: [u8; 32],
+    pub(crate) internal_nk: [u8; 32],
+    pub(crate) internal_ivk: [u8; 32],
+    pub(crate) internal_xsk: Option<[u8; 169]>,
+    pub(crate) internal_xfvk: [u8; 169],
+    pub(crate) internal_fp: [u8; 32],
+}
 
-        // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_zip32.py
-        let test_vectors = vec![
+// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_zip32.py
+pub(crate) fn test_vectors() -> Vec<TestVector> {
+    vec![
             TestVector {
                 ask: Some([
                     0xb6, 0xc0, 0x0c, 0x93, 0xd3, 0x60, 0x32, 0xb9, 0xa2, 0x68, 0xe9, 0x9e, 0x86, 0xa8, 0x60, 0x77, 0x65, 0x60, 0xbf, 0x0e, 0x83, 0xc1, 0xa1, 0x0b, 0x51, 0xf6, 0x07, 0xc9, 0x54, 0x74, 0x25, 0x06
@@ -345,4 +346,5 @@
                     0xba, 0x64, 0xe4, 0x0d, 0x08, 0x6d, 0x36, 0x2c, 0xa5, 0xa1, 0x7f, 0x5e, 0x3b, 0x1b, 0xee, 0x63, 0x24, 0xc8, 0x4f, 0x10, 0x12, 0x44, 0xa4, 0x00, 0x2a, 0x2e, 0xca, 0xaf, 0x05, 0xbd, 0xd9, 0x81
                 ],
             },
-        ];
+        ]
+}
