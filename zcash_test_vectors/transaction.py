@@ -5,7 +5,7 @@ from .orchard.pallas import (
     Scalar as PallasScalar,
 )
 from .orchard.sinsemilla import group_hash as pallas_group_hash
-from .sapling.generators import find_group_hash
+from .sapling.generators import find_group_hash, SPENDING_KEY_BASE
 from .sapling.jubjub import (
     Fq,
     Point,
@@ -41,11 +41,6 @@ ZC_SAPLING_ENCPLAINTEXT_SIZE = ZC_NOTEPLAINTEXT_LEADING + ZC_DIVERSIFIER_SIZE + 
 ZC_SAPLING_OUTPLAINTEXT_SIZE = ZC_JUBJUB_POINT_SIZE + ZC_JUBJUB_SCALAR_SIZE
 ZC_SAPLING_ENCCIPHERTEXT_SIZE = ZC_SAPLING_ENCPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
 ZC_SAPLING_OUTCIPHERTEXT_SIZE = ZC_SAPLING_OUTPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
-
-# Orchard ZSA note values
-ZC_ORCHARD_ZSA_ASSET_SIZE = 32
-ZC_ORCHARD_ZSA_ENCPLAINTEXT_SIZE = ZC_SAPLING_ENCPLAINTEXT_SIZE + ZC_ORCHARD_ZSA_ASSET_SIZE
-ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE = ZC_ORCHARD_ZSA_ENCPLAINTEXT_SIZE + NOTEENCRYPTION_AUTH_BYTES
 
 # BN254 encoding of G1 elements. p[1] is big-endian.
 def pack_g1(p):
@@ -185,30 +180,6 @@ class OrchardActionDescription(object):
             bytes(self.ephemeralKey) +
             self.encCiphertext +
             self.outCiphertext
-        )
-
-class OrchardZSAActionDescription(object):
-    def __init__(self, rand):
-        # We don't need to take account of whether this is a coinbase transaction,
-        # because we're only generating random fields.
-        self.cv = pallas_group_hash(b'TVRandPt', rand.b(32))
-        self.nullifier = PallasBase(leos2ip(rand.b(32)))
-        self.rk = pallas_group_hash(b'TVRandPt', rand.b(32))
-        self.cmx = PallasBase(leos2ip(rand.b(32)))
-        self.ephemeralKey = pallas_group_hash(b'TVRandPt', rand.b(32))
-        self.encCiphertext = rand.b(ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE)
-        self.outCiphertext = rand.b(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
-        self.spendAuthSig = RedPallasSignature(rand)
-
-    def __bytes__(self):
-        return (
-                bytes(self.cv) +
-                bytes(self.nullifier) +
-                bytes(self.rk) +
-                bytes(self.cmx) +
-                bytes(self.ephemeralKey) +
-                self.encCiphertext +
-                self.outCiphertext
         )
 
 class JoinSplit(object):
