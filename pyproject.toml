@@ -21,9 +21,13 @@ classifiers = [
     "Private :: Do Not Upload",
 ]
 
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry.dependencies]
-python = "^3.8"
-numpy = "1.23.3"
+python = "^3.9"
+numpy = "1.26.4"
 chacha20poly1305 = "0.0.3"
 cryptography = "38.0.1"
 secp256k1 = "0.14.0"
