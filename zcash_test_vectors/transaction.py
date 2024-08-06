@@ -26,6 +26,9 @@ SAPLING_TX_VERSION = 4
 NU5_VERSION_GROUP_ID = 0x26A7270A
 NU5_TX_VERSION = 5
 
+ZFUTURE_VERSION_GROUP_ID = 0xFFFFFFFF
+ZFUTURE_TX_VERSION = 0x0000FFFF
+
 # Sapling note magic values, copied from src/zcash/Zcash.h
 NOTEENCRYPTION_AUTH_BYTES = 16
 ZC_NOTEPLAINTEXT_LEADING = 1
@@ -413,7 +416,7 @@ class LegacyTransaction(object):
 
 
 class TransactionV5(object):
-    def __init__(self, rand, consensus_branch_id):
+    def __init__(self, rand, consensus_branch_id, version_group_id):
         # Decide which transaction parts will be generated.
         flip_coins = rand.u8()
         have_transparent_in = (flip_coins >> 0) % 2
@@ -423,7 +426,7 @@ class TransactionV5(object):
         is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
         # Common Transaction Fields
-        self.nVersionGroupId = NU5_VERSION_GROUP_ID
+        self.nVersionGroupId = version_group_id
         self.nConsensusBranchId = consensus_branch_id
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
@@ -549,12 +552,29 @@ class TransactionV5(object):
 
         return ret
 
+class TransactionNSM(TransactionV5):
+    def __init__(self, rand, consensus_branch_id, version_group_id):
+        super().__init__(rand, consensus_branch_id, version_group_id)
+
+        self.burnAmount = rand.u64() % (MAX_MONEY + 1)
+
+    def version_bytes(self):
+        return ZFUTURE_TX_VERSION | (1 << 31)
+
+    def __bytes__(self):
+        ret = super().__bytes__()
+        ret += struct.pack('<Q', self.burnAmount)
+        return ret
+
 
 class Transaction(object):
     def __init__(self, rand, version, consensus_branch_id=None):
         if version == NU5_TX_VERSION:
             assert consensus_branch_id is not None
-            self.inner = TransactionV5(rand, consensus_branch_id)
+            self.inner = TransactionV5(rand, consensus_branch_id, NU5_VERSION_GROUP_ID)
+        elif version == ZFUTURE_TX_VERSION:
+            assert consensus_branch_id is not None
+            self.inner = TransactionNSM(rand, consensus_branch_id, ZFUTURE_VERSION_GROUP_ID)
         else:
             self.inner = LegacyTransaction(rand, version)
 
