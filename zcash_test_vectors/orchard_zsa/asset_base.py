@@ -7,7 +7,7 @@ import random
 
 from hashlib import blake2b
 from ..orchard.group_hash import group_hash
-from ..output import render_args, render_tv, option
+from ..output import render_args, render_tv
 
 
 def native_asset():
@@ -29,13 +29,11 @@ def zsa_value_base(asset_digest_value):
     return group_hash(b"z.cash:OrchardZSA", asset_digest_value)
 
 
-def get_random_unicode_bytes(length):
-    try:
-        get_char = unichr
-    except NameError:
-        get_char = chr
+def get_random_unicode_bytes(length, rand):
 
-    random.seed(0xabad533d)
+    get_char = chr
+
+    random.seed(rand.u8())
 
     # Update this to include code point ranges to be sampled
     include_ranges = [
@@ -84,7 +82,7 @@ def main():
         isk = IssuanceKeys(rand.b(32))
 
         key_bytes = bytes(isk.ik)
-        description_bytes = get_random_unicode_bytes(512)
+        description_bytes = get_random_unicode_bytes(512, rand)
         asset_base = zsa_value_base(asset_digest(encode_asset_id(key_bytes, description_bytes)))
 
         test_vectors.append({

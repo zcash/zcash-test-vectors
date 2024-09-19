@@ -30,6 +30,7 @@ tv_scripts=(
     zip_0143
     zip_0243
     zip_0244
+    orchard_zsa_digests
     zip_0316
     zip_0320)
 
