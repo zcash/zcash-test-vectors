@@ -81,7 +81,7 @@ class IssueNote(object):
         return ret
 
 
-class TransactionZSA(TransactionBase):
+class TransactionV6(TransactionBase):
     def __init__(self, rand, consensus_branch_id, have_orchard_zsa=True, have_burn=True, have_issuance=True):
 
         # We cannot have burns without an OrchardZSA bundle.
@@ -178,7 +178,7 @@ def main():
 
     for choice in allowed_choices:
         for _ in range(2):    # We generate two test vectors for each choice.
-            tx = TransactionZSA(rand, consensus_branch_id, *choice)
+            tx = TransactionV6(rand, consensus_branch_id, *choice)
             populate_test_vector(rand, test_vectors, tx)
 
     generate_test_vectors('orchard_zsa_digests', test_vectors)
