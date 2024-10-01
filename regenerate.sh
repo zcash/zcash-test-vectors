@@ -14,6 +14,7 @@ tv_scripts=(
     orchard_poseidon
     orchard_poseidon_hash
     orchard_sinsemilla
+    orchard_zip32
     sapling_generators
     sapling_key_components
     sapling_note_encryption
