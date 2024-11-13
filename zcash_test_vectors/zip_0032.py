@@ -71,7 +71,12 @@ def arbitrary_key_derivation_tvs():
     m_1h_2h = m_1h.child(hardened(2))
     m_1h_2h_3h = m_1h_2h.child(hardened(3))
 
-    keys = [m, m_1h, m_1h_2h, m_1h_2h_3h]
+    # Derive a path matching Zcash mainnet account index 0.
+    m_32h = m.child(hardened(32))
+    m_32h_133h = m_32h.child(hardened(133))
+    m_32h_133h_0h = m_32h_133h.child(hardened(0))
+
+    keys = [m, m_1h, m_1h_2h, m_1h_2h_3h, m_32h, m_32h_133h, m_32h_133h_0h]
 
     test_vectors = [
         {
