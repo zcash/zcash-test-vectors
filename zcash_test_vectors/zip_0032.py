@@ -38,7 +38,9 @@ def CKDh(Context, sk_par, c_par, i):
 class ArbitraryKey(object):
     Arbitrary = HardenedOnlyContext(b'ZcashArbitraryKD', b'\xAB')
 
-    def __init__(self, sk, chaincode):
+    def __init__(self, IKM, path, sk, chaincode):
+        self.IKM = IKM
+        self.path = path
         self.sk = sk
         self.chaincode = chaincode
 
@@ -50,15 +52,13 @@ class ArbitraryKey(object):
         assert length_ContextString <= 252
         assert 32 <= length_S <= 252
 
-        (sk, chaincode) = MKGh(
-            cls.Arbitrary,
-            bytes([length_ContextString]) + ContextString + bytes([length_S]) + S,
-        )
-        return cls(sk, chaincode)
+        IKM = bytes([length_ContextString]) + ContextString + bytes([length_S]) + S
+        (sk, chaincode) = MKGh(cls.Arbitrary, IKM)
+        return cls(IKM, [], sk, chaincode)
 
     def child(self, i):
         (sk_i, c_i) = CKDh(self.Arbitrary, self.sk, self.chaincode, i)
-        return self.__class__(sk_i, c_i)
+        return self.__class__(None, self.path + [i], sk_i, c_i)
 
 
 def arbitrary_key_derivation_tvs():
@@ -71,10 +71,19 @@ def arbitrary_key_derivation_tvs():
     m_1h_2h = m_1h.child(hardened(2))
     m_1h_2h_3h = m_1h_2h.child(hardened(3))
 
-    keys = [m, m_1h, m_1h_2h, m_1h_2h_3h]
+    # Derive a path matching Zcash mainnet account index 0.
+    m_32h = m.child(hardened(32))
+    m_32h_133h = m_32h.child(hardened(133))
+    m_32h_133h_0h = m_32h_133h.child(hardened(0))
+
+    keys = [m, m_1h, m_1h_2h, m_1h_2h_3h, m_32h, m_32h_133h, m_32h_133h_0h]
 
     test_vectors = [
         {
+            'context_string': context_string,
+            'seed': seed,
+            'ikm':  k.IKM,
+            'path': k.path,
             'sk' : k.sk,
             'c'  : k.chaincode
         }
@@ -85,6 +94,10 @@ def arbitrary_key_derivation_tvs():
         args,
         'zip_0032_arbitrary',
         (
+            ('context_string', 'Vec<u8>'),
+            ('seed', '[u8; 32]'),
+            ('ikm',  'Option<Vec<u8>>'),
+            ('path', 'Vec<u32>'),
             ('sk',  '[u8; 32]'),
             ('c',   '[u8; 32]'),
         ),
