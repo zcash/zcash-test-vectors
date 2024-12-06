@@ -188,6 +188,7 @@ def header_digest(tx):
     digest.update(struct.pack('<I', tx.nConsensusBranchId))
     digest.update(struct.pack('<I', tx.nLockTime))
     digest.update(struct.pack('<I', tx.nExpiryHeight))
+    digest.update(struct.pack('<Q', tx.burnAmount))
 
     return digest.digest()
 

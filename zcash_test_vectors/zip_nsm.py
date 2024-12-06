@@ -19,65 +19,6 @@ from .zip_0143 import (
 
 from .zip_0244 import *
 
-def auth_digest(tx):
-    digest = blake2b(
-        digest_size=32,
-        person=b'ZTxAuthHash_' + struct.pack('<I', tx.nConsensusBranchId),
-    )
-
-    digest.update(transparent_scripts_digest(tx))
-    digest.update(sapling_auth_digest(tx))
-    digest.update(orchard_auth_digest(tx))
-    digest.update(burn_amount_digest(tx))
-
-    return digest.digest()
-
-# NSM
-def burn_amount_digest(tx):
-    digest = blake2b(digest_size=32, person=b'ZTxBurnAmnt_Hash')
-
-    digest.update(struct.pack('<Q', tx.burnAmount))
-
-    return digest.digest()
-
-def txid_digest(tx):
-    digest = blake2b(
-        digest_size=32,
-        person=b'ZcashTxHash_' + struct.pack('<I', tx.nConsensusBranchId),
-    )
-
-    digest.update(header_digest(tx))
-    digest.update(transparent_digest(tx))
-    digest.update(sapling_digest(tx))
-    digest.update(orchard_digest(tx))
-    digest.update(burn_amount_digest(tx))
-
-    return digest.digest()
-
-def signature_digest(tx, t_inputs, nHashType, txin):
-    digest = blake2b(
-        digest_size=32,
-        person=b'ZcashTxHash_' + struct.pack('<I', tx.nConsensusBranchId),
-    )
-
-    digest.update(header_digest(tx))
-    digest.update(transparent_sig_digest(tx, t_inputs, nHashType, txin))
-    digest.update(sapling_digest(tx))
-    digest.update(orchard_digest(tx))
-    digest.update(burn_amount_digest(tx))
-
-    return digest.digest()
-
-def txin_sig_digest(tx, txin):
-    digest = blake2b(digest_size=32, person=b'Zcash___TxInHash')
-    if txin is not None:
-        digest.update(bytes(tx.vin[txin.nIn].prevout))
-        digest.update(struct.pack('<Q', txin.amount))
-        digest.update(bytes(txin.scriptPubKey))
-        digest.update(struct.pack('<I', tx.vin[txin.nIn].nSequence))
-    return digest.digest()
-
-
 def main():
     args = render_args()
 
