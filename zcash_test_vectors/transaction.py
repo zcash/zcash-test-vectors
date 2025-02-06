@@ -465,7 +465,6 @@ class TransactionBase(object):
             self.valueBalanceSapling = 0
 
         # Orchard Transaction Fields that are present in both V5 and V6
-        self.vActionsOrchard = []
         if have_orchard:
             self.valueBalanceOrchard = rand.u64() % (MAX_MONEY + 1)
             self.anchorOrchard = PallasBase(leos2ip(rand.b(32)))
@@ -523,21 +522,6 @@ class TransactionBase(object):
         if hasSapling:
             ret += bytes(self.bindingSigSapling)
 
-        # Orchard Transaction Fields
-        ret += write_compact_size(len(self.vActionsOrchard))
-        if len(self.vActionsOrchard) > 0:
-            # Not explicitly gated in the protocol spec, but if the gate
-            # were inactive then these loops would be empty by definition.
-            for desc in self.vActionsOrchard:
-                ret += bytes(desc) # Excludes spendAuthSig
-            ret += struct.pack('B', self.flagsOrchard)
-            ret += struct.pack('<Q', self.valueBalanceOrchard)
-            ret += bytes(self.anchorOrchard)
-            ret += write_compact_size(len(self.proofsOrchard))
-            ret += self.proofsOrchard
-            for desc in self.vActionsOrchard:
-                ret += bytes(desc.spendAuthSig)
-
         return ret
 
 class TransactionV5(TransactionBase):
@@ -551,6 +535,7 @@ class TransactionV5(TransactionBase):
         self.nConsensusBranchId = consensus_branch_id
 
         # Orchard Transaction Fields
+        self.vActionsOrchard = []
         if have_orchard:
             for _ in range(rand.u8() % 5):
                 self.vActionsOrchard.append(OrchardActionDescription(rand))
@@ -571,7 +556,19 @@ class TransactionV5(TransactionBase):
         ret += super().to_bytes(self.version_bytes(), self.nVersionGroupId, self.nConsensusBranchId)
 
         # Orchard Transaction Fields
+        ret += write_compact_size(len(self.vActionsOrchard))
         if len(self.vActionsOrchard) > 0:
+            # Not explicitly gated in the protocol spec, but if the gate
+            # were inactive then these loops would be empty by definition.
+            for desc in self.vActionsOrchard:
+                ret += bytes(desc) # Excludes spendAuthSig
+            ret += struct.pack('B', self.flagsOrchard)
+            ret += struct.pack('<Q', self.valueBalanceOrchard)
+            ret += bytes(self.anchorOrchard)
+            ret += write_compact_size(len(self.proofsOrchard))
+            ret += self.proofsOrchard
+            for desc in self.vActionsOrchard:
+                ret += bytes(desc.spendAuthSig)
             ret += bytes(self.bindingSigOrchard)
 
         return ret

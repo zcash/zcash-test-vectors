@@ -23,12 +23,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
 
       - name: Install gnome-keyring
         run: sudo apt-get install gnome-keyring
 
       - name: Install poetry
         run: pip install --user poetry
+
+      - name: Set Python 3.9 as the version to use
+        run: poetry env use $(which python3.9)
 
       - name: Install dependencies
         run: poetry install --no-root

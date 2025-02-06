@@ -81,6 +81,39 @@ class IssueNote(object):
         return ret
 
 
+class ActionGroupDescription(object):
+    def __init__(self, rand, anchor_orchard, proofs_orchard, is_coinbase):
+        self.vActionsOrchard = []
+        # There must always be a non-zero number of Action Descriptions in an Action Group.
+        for _ in range(rand.u8() % 4 + 1):
+            self.vActionsOrchard.append(OrchardZSAActionDescription(rand))
+        # Three flag bits are defined, ensure only 3 bits used (mask with 0b00000111).
+        self.flagsOrchard = (rand.u8() & 7)
+        # Set the enableZSAs flag to true by OR with 0b00000100
+        self.flagsOrchard |= 4
+        if is_coinbase:
+            # set enableSpendsOrchard = 0
+            self.flagsOrchard &= 2
+        self.anchorOrchard = anchor_orchard
+        self.proofsOrchard = proofs_orchard
+        self.nAGExpiryHeight = 0
+
+    def __bytes__(self):
+        ret = b''
+        ret += write_compact_size(len(self.vActionsOrchard))
+        for desc in self.vActionsOrchard:
+            ret += bytes(desc)  # Excludes spendAuthSig
+        ret += struct.pack('B', self.flagsOrchard)
+        ret += bytes(self.anchorOrchard)
+        ret += write_compact_size(len(self.proofsOrchard))
+        ret += self.proofsOrchard
+        ret += struct.pack('<I', self.nAGExpiryHeight)
+        for desc in self.vActionsOrchard:
+            ret += bytes(desc.spendAuthSig)
+
+        return ret
+
+
 class TransactionV6(TransactionBase):
     def __init__(self, rand, consensus_branch_id, have_orchard_zsa=True, have_burn=True, have_issuance=True):
 
@@ -95,15 +128,10 @@ class TransactionV6(TransactionBase):
         self.nConsensusBranchId = consensus_branch_id
 
         # OrchardZSA Transaction Fields
+        self.vActionGroupsOrchard = []
         if have_orchard_zsa:
-            for _ in range(rand.u8() % 5):
-                self.vActionsOrchard.append(OrchardZSAActionDescription(rand))
-            self.flagsOrchard = rand.u8()
-            # Three flag bits are defined, we set enableZSA to true.
-            self.flagsOrchard = (self.flagsOrchard & 7) | 4
-            if self.is_coinbase():
-                # set enableSpendsOrchard = 0
-                self.flagsOrchard &= 2
+            # For NU7 we have a maximum of one Action Group.
+            self.vActionGroupsOrchard.append(ActionGroupDescription(rand, self.anchorOrchard, self.proofsOrchard, self.is_coinbase()))
 
         # OrchardZSA Burn Fields
         self.vAssetBurnOrchardZSA = []
@@ -150,7 +178,11 @@ class TransactionV6(TransactionBase):
         ret += super().to_bytes(self.version_bytes(), self.nVersionGroupId, self.nConsensusBranchId)
 
         # OrchardZSA Transaction Fields
-        if len(self.vActionsOrchard) > 0:
+        ret += write_compact_size(len(self.vActionGroupsOrchard))
+        if len(self.vActionGroupsOrchard) > 0:
+            for ag in self.vActionGroupsOrchard:
+                ret += bytes(ag)
+            ret += struct.pack('<Q', self.valueBalanceOrchard)
             ret += self.orchard_zsa_burn_field_bytes()
             ret += bytes(self.bindingSigOrchard)
 
@@ -161,7 +193,7 @@ class TransactionV6(TransactionBase):
 
 
 def main():
-    consensus_branch_id = 0x77777777  # NU7
+    consensus_branch_id = 0x77190AD8  # NU7
     rand = rand_gen()
     test_vectors = []
 

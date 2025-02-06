@@ -4,9 +4,88 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 from hashlib import blake2b
 import struct
 
-NU7_VERSION_GROUP_ID = 0x124A69F8
+NU7_VERSION_GROUP_ID = 0x77777777
 NU7_TX_VERSION = 6
 NU7_TX_VERSION_BYTES = NU7_TX_VERSION | (1 << 31)
+
+
+def orchard_zsa_digest(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxIdOrchardHash')
+
+    if len(tx.vActionGroupsOrchard) > 0:
+        digest.update(orchard_zsa_action_groups_digest(tx))
+        digest.update(orchard_zsa_burn_digest(tx))
+        digest.update(struct.pack('<Q', tx.valueBalanceOrchard))
+
+    return digest.digest()
+
+
+def orchard_zsa_action_groups_digest(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxIdOrcActGHash')
+
+    if len(tx.vActionGroupsOrchard) > 0:
+        for ag in tx.vActionGroupsOrchard:
+            digest.update(orchard_zsa_actions_compact_digest(ag))
+            digest.update(orchard_zsa_actions_memos_digest(ag))
+            digest.update(orchard_zsa_actions_noncompact_digest(ag))
+            digest.update(struct.pack('<B', ag.flagsOrchard))
+            digest.update(bytes(ag.anchorOrchard))
+            digest.update(struct.pack('<I', ag.nAGExpiryHeight))
+
+    return digest.digest()
+
+
+def orchard_zsa_auth_digest(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxAuthOrchaHash')
+
+    if len(tx.vActionGroupsOrchard) > 0:
+        digest.update(orchard_zsa_action_groups_auth_digest(tx))
+        digest.update(bytes(tx.bindingSigOrchard))
+
+    return digest.digest()
+
+
+def orchard_zsa_action_groups_auth_digest(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxAuthOrcAGHash')
+
+    if len(tx.vActionGroupsOrchard) > 0:
+        for ag in tx.vActionGroupsOrchard:
+            digest.update(ag.proofsOrchard)
+            for desc in ag.vActionsOrchard:
+                digest.update(bytes(desc.spendAuthSig))
+
+    return digest.digest()
+
+
+def orchard_zsa_actions_compact_digest(ag):
+    digest = blake2b(digest_size=32, person=b'ZTxIdOrcActCHash')
+    for desc in ag.vActionsOrchard:
+        digest.update(bytes(desc.nullifier))
+        digest.update(bytes(desc.cmx))
+        digest.update(bytes(desc.ephemeralKey))
+        digest.update(desc.encCiphertext[:84])
+
+    return digest.digest()
+
+
+def orchard_zsa_actions_memos_digest(ag):
+    digest = blake2b(digest_size=32, person=b'ZTxIdOrcActMHash')
+    for desc in ag.vActionsOrchard:
+        digest.update(desc.encCiphertext[84:596])
+
+    return digest.digest()
+
+
+def orchard_zsa_actions_noncompact_digest(ag):
+    digest = blake2b(digest_size=32, person=b'ZTxIdOrcActNHash')
+    for desc in ag.vActionsOrchard:
+        digest.update(bytes(desc.cv))
+        digest.update(bytes(desc.rk))
+        digest.update(desc.encCiphertext[596:])
+        digest.update(desc.outCiphertext)
+
+    return digest.digest()
+
 
 def orchard_zsa_burn_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcBurnHash')

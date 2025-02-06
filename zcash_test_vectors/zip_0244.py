@@ -4,10 +4,10 @@ import sys;
 assert sys.version_info[0] >= 3, "Python 3 required."
 
 from hashlib import blake2b
-from collections import namedtuple
 import struct
 
-from .orchard_zsa.digests import NU7_TX_VERSION_BYTES, orchard_zsa_burn_digest, issuance_digest, issuance_auth_digest
+from .orchard_zsa.digests import NU7_TX_VERSION_BYTES, issuance_digest, issuance_auth_digest, orchard_zsa_digest, \
+ orchard_zsa_auth_digest
 from .transaction import (
     MAX_MONEY,
     Script,
@@ -139,8 +139,6 @@ def orchard_digest(tx):
         digest.update(orchard_actions_compact_digest(tx))
         digest.update(orchard_actions_memos_digest(tx))
         digest.update(orchard_actions_noncompact_digest(tx))
-        if tx.version_bytes() == NU7_TX_VERSION_BYTES:
-            digest.update(orchard_zsa_burn_digest(tx))
         digest.update(struct.pack('<B', tx.flagsOrchard))
         digest.update(struct.pack('<Q', tx.valueBalanceOrchard))
         digest.update(bytes(tx.anchorOrchard))
@@ -159,44 +157,29 @@ def orchard_auth_digest(tx):
     return digest.digest()
 
 
-# - helper for Actions functions
-def ciphertext_offset(tx_version_bytes):
-    Offsets = namedtuple('Offsets', ['compact_end', 'memo_end'])
-    if tx_version_bytes == NU5_TX_VERSION_BYTES:
-        # Compact ends at 52, Memo ends at 564 for V5
-        return Offsets(compact_end=52, memo_end=564)
-    elif tx_version_bytes == NU7_TX_VERSION_BYTES:
-        # Compact ends at 84, Memo ends at 596 for V6
-        return Offsets(compact_end=84, memo_end=596)
-    else:
-        raise ValueError("Unsupported transaction version")
-
 # - Actions
 
 def orchard_actions_compact_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcActCHash')
-    o = ciphertext_offset(tx.version_bytes())
     for desc in tx.vActionsOrchard:
         digest.update(bytes(desc.nullifier))
         digest.update(bytes(desc.cmx))
         digest.update(bytes(desc.ephemeralKey))
-        digest.update(desc.encCiphertext[:o.compact_end])
+        digest.update(desc.encCiphertext[:52])
     return digest.digest()
 
 def orchard_actions_memos_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcActMHash')
-    o = ciphertext_offset(tx.version_bytes())
     for desc in tx.vActionsOrchard:
-        digest.update(desc.encCiphertext[o.compact_end:o.memo_end])
+        digest.update(desc.encCiphertext[52:564])
     return digest.digest()
 
 def orchard_actions_noncompact_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcActNHash')
-    o = ciphertext_offset(tx.version_bytes())
     for desc in tx.vActionsOrchard:
         digest.update(bytes(desc.cv))
         digest.update(bytes(desc.rk))
-        digest.update(desc.encCiphertext[o.memo_end:])
+        digest.update(desc.encCiphertext[564:])
         digest.update(desc.outCiphertext)
     return digest.digest()
 
@@ -222,9 +205,11 @@ def txid_digest(tx):
     digest.update(header_digest(tx))
     digest.update(transparent_digest(tx))
     digest.update(sapling_digest(tx))
-    digest.update(orchard_digest(tx))
     if tx.version_bytes() == NU7_TX_VERSION_BYTES:
+        digest.update(orchard_zsa_digest(tx))
         digest.update(issuance_digest(tx))
+    else:
+        digest.update(orchard_digest(tx))
 
     return digest.digest()
 
@@ -238,9 +223,11 @@ def auth_digest(tx):
 
     digest.update(transparent_scripts_digest(tx))
     digest.update(sapling_auth_digest(tx))
-    digest.update(orchard_auth_digest(tx))
     if tx.version_bytes() == NU7_TX_VERSION_BYTES:
+        digest.update(orchard_zsa_auth_digest(tx))
         digest.update(issuance_auth_digest(tx))
+    else:
+        digest.update(orchard_auth_digest(tx))
 
     return digest.digest()
 
@@ -261,9 +248,11 @@ def signature_digest(tx, t_inputs, nHashType, txin):
     digest.update(header_digest(tx))
     digest.update(transparent_sig_digest(tx, t_inputs, nHashType, txin))
     digest.update(sapling_digest(tx))
-    digest.update(orchard_digest(tx))
     if tx.version_bytes() == NU7_TX_VERSION_BYTES:
+        digest.update(orchard_zsa_digest(tx))
         digest.update(issuance_digest(tx))
+    else:
+        digest.update(orchard_digest(tx))
 
     return digest.digest()
 
