@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "Zcash test vectors"
 authors = [
     "Jack Grigg <jack@z.cash>",
-    "Daira Hopwood <daira@jacaranda.org>",
-    "ying tong <yingtong@z.cash>",
+    "Daira-Emma Hopwood <daira@jacaranda.org>",
+    "Ying Tong Lai <yingtong@ethereum.org>",
     "Taylor Hornby <taylor@defuse.ca>",
     "Kris Nuttycombe <kris@electriccoin.co>",
     "Simon <simon@bitcartel.com>",
