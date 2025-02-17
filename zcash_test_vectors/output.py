@@ -28,6 +28,9 @@ def tv_value_json(value, bitcoin_flavoured):
         value = value.thing
 
     def bitcoinify(value):
+        if type(value) == tuple:
+            return tuple((bitcoinify(v) for v in value))
+
         if type(value) == list:
             return [bitcoinify(v) for v in value]
 
@@ -62,23 +65,13 @@ def tv_json(filename, parts, vectors, bitcoin_flavoured):
 # Rust
 #
 
-def tv_bytes_rust(name, value, pad):
-    print('''%s%s: [
+def tv_bytes_rust(name, value, pad, kind=""):
+    print('''%s%s: %s[
     %s%s
 %s],''' % (
         pad,
         name,
-        pad,
-        chunk(hexlify(value)),
-        pad,
-    ))
-
-def tv_vec_bytes_rust(name, value, pad):
-    print('''%s%s: vec![
-    %s%s
-%s],''' % (
-        pad,
-        name,
+        kind,
         pad,
         chunk(hexlify(value)),
         pad,
@@ -95,6 +88,13 @@ def tv_vec_bool_rust(name, value, pad):
         pad,
     ))
 
+def tv_tuple_int_bytes_rust(name, value, pad):
+    print("%s%s: &[" % (pad, name))
+    for (i, t) in value:
+        print("%s    (%d, &[%s])," % (pad, i, chunk(hexlify(t))))
+
+    print("%s]," % (pad,))
+
 def tv_str_rust(name, value, pad):
     print('''%s%s: "%s",''' % (
         pad,
@@ -102,27 +102,14 @@ def tv_str_rust(name, value, pad):
         value,
     ))
 
-def tv_option_bytes_rust(name, value, pad):
+def tv_option_bytes_rust(name, value, pad, kind=""):
     if value:
-        print('''%s%s: Some([
+        print('''%s%s: Some(%s[
     %s%s
 %s]),''' % (
             pad,
             name,
-            pad,
-            chunk(hexlify(value.thing)),
-            pad,
-        ))
-    else:
-        print('%s%s: None,' % (pad, name))
-
-def tv_option_vec_bytes_rust(name, value, pad):
-    if value:
-        print('''%s%s: Some(vec![
-    %s%s
-%s]),''' % (
-            pad,
-            name,
+            kind,
             pad,
             chunk(hexlify(value.thing)),
             pad,
@@ -147,14 +134,20 @@ def tv_part_rust(name, value, config, indent=3):
 
     pad = '    ' * indent
     if config['rust_type'] == 'Option<Vec<u8>>':
-        tv_option_vec_bytes_rust(name, value, pad)
+        tv_option_bytes_rust(name, value, pad, kind="vec!")
+    elif config['rust_type'] == 'Option<&\'static [u8]>':
+        tv_option_bytes_rust(name, value, pad, kind="&")
     elif config['rust_type'] == 'Vec<u8>':
-        tv_vec_bytes_rust(name, value, pad)
+        tv_bytes_rust(name, value, pad, kind="vec!")
+    elif config['rust_type'] == '&\'static [u8]':
+        tv_bytes_rust(name, value, pad, kind="&")
     elif config['rust_type'] == 'Vec<bool>':
         tv_vec_bool_rust(name, value, pad)
+    elif config['rust_type'] == '&\'static [(u32, &\'static [u8])]':
+        tv_tuple_int_bytes_rust(name, value, pad)
     elif config['rust_type'] == '&\'static str':
         tv_str_rust(name, value, pad)
-    elif config['rust_type'].startswith('Option<['):
+    elif config['rust_type'].startswith('Option<[u8'):
         tv_option_bytes_rust(name, value, pad)
     elif type(value) == bytes:
         tv_bytes_rust(name, value, pad)
@@ -166,7 +159,7 @@ def tv_part_rust(name, value, config, indent=3):
         print('''%s%s: %s[''' % (
                 pad,
                 name,
-                'vec!' if config['rust_type'].startswith('Vec<') else '',
+                'vec!' if config['rust_type'].startswith('Vec<') else "&" if config['rust_type'].startswith('&') else '',
             ))
         for item in value:
             if 'Vec<u8>' in config['rust_type']:
