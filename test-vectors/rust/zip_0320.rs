@@ -4,10 +4,10 @@
             tex_addr: &'static str,
             account: u32,
             child_index: u32,
-        };
+        }
 
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0320.py
-        let test_vectors = vec![
+        const TEST_VECTORS: &[TestVector] = &[
             TestVector {
                 t_addr: "t1V9mnyk5Z5cTNMCkLbaDwSskgJZucTLdgW",
                 p2pkh_bytes: [

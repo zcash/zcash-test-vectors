@@ -211,17 +211,17 @@ def tv_part_rust(name, value, config, indent=3):
 def tv_rust(filename, parts, vectors):
     print('        struct TestVector {')
     for p in parts: print('            %s: %s,' % (p[0], p[1]['rust_type']))
-    print('''        };
+    print('''        }
 
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py''' % (
             filename,
         ))
     if type(vectors) == type({}):
-        print('        let test_vector = TestVector {')
+        print('        const TEST_VECTOR: TestVector = TestVector {')
         for p in parts: tv_part_rust(p[0], vectors[p[0]], p[1])
         print('        };')
     elif type(vectors) == type([]):
-        print('        let test_vectors = vec![')
+        print('        const TEST_VECTORS: &[TestVector] = &[')
         for vector in vectors:
             print('            TestVector {')
             for p in parts: tv_part_rust(p[0], vector[p[0]], p[1], 4)

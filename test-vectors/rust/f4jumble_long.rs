@@ -1,10 +1,10 @@
         struct TestVector {
             length: usize,
             jumbled_hash: [u8; 64],
-        };
+        }
 
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/f4jumble_long.py
-        let test_vectors = vec![
+        const TEST_VECTORS: &[TestVector] = &[
             TestVector {
                 length: 3246395,
                 jumbled_hash: [
