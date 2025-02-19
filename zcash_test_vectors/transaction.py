@@ -26,8 +26,9 @@ SAPLING_TX_VERSION = 4
 NU5_VERSION_GROUP_ID = 0x26A7270A
 NU5_TX_VERSION = 5
 
-ZFUTURE_VERSION_GROUP_ID = 0xFFFFFFFF
-ZFUTURE_TX_VERSION = 0x0000FFFF
+V6_TX_VERSION = 6
+# TODO: change this
+V6_VERSION_GROUP_ID = 0xFFFFFFFF
 
 # Sapling note magic values, copied from src/zcash/Zcash.h
 NOTEENCRYPTION_AUTH_BYTES = 16
@@ -552,18 +553,18 @@ class TransactionV5(object):
 
         return ret
 
-class TransactionNSM(TransactionV5):
+class TransactionV6(TransactionV5):
     def __init__(self, rand, consensus_branch_id, version_group_id):
         super().__init__(rand, consensus_branch_id, version_group_id)
 
-        self.burnAmount = rand.u64() % (MAX_MONEY + 1)
+        self.zip233Amount = rand.u64() % (MAX_MONEY + 1)
 
     def version_bytes(self):
-        return ZFUTURE_TX_VERSION | (1 << 31)
+        return V6_TX_VERSION | (1 << 31)
 
     def __bytes__(self):
         ret = super().__bytes__()
-        ret += struct.pack('<Q', self.burnAmount)
+        ret += struct.pack('<Q', self.zip233Amount)
         return ret
 
 
@@ -572,9 +573,9 @@ class Transaction(object):
         if version == NU5_TX_VERSION:
             assert consensus_branch_id is not None
             self.inner = TransactionV5(rand, consensus_branch_id, NU5_VERSION_GROUP_ID)
-        elif version == ZFUTURE_TX_VERSION:
+        elif version == V6_TX_VERSION:
             assert consensus_branch_id is not None
-            self.inner = TransactionNSM(rand, consensus_branch_id, ZFUTURE_VERSION_GROUP_ID)
+            self.inner = TransactionV6(rand, consensus_branch_id, V6_VERSION_GROUP_ID)
         else:
             self.inner = LegacyTransaction(rand, version)
 
