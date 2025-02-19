@@ -5,8 +5,8 @@ from hashlib import blake2b
 import struct
 
 from .transaction import (
-    ZFUTURE_VERSION_GROUP_ID,
-    TransactionNSM,
+    V6_VERSION_GROUP_ID,
+    TransactionV6,
 )
 from .output import render_args, render_tv, Some
 from .rand import Rand
@@ -35,7 +35,7 @@ def main():
 
     test_vectors = []
     for _ in range(10):
-        tx = TransactionNSM(rand, consensusBranchId, ZFUTURE_VERSION_GROUP_ID)
+        tx = TransactionV6(rand, consensusBranchId, V6_VERSION_GROUP_ID)
         txid = txid_digest(tx)
         auth = auth_digest(tx)
 
@@ -74,7 +74,7 @@ def main():
             'txid': txid,
             'auth_digest': auth,
             'amounts': [x.amount for x in t_inputs],
-            'burn_amount': tx.burnAmount,
+            'zip233_amount': tx.zip233Amount,
             'script_pubkeys': [x.scriptPubKey.raw() for x in t_inputs],
             'transparent_input': None if txin is None else txin.nIn,
             'sighash_shielded': sighash_shielded,
@@ -88,13 +88,13 @@ def main():
 
     render_tv(
         args,
-        'zip_nsm',
+        'zip_0233',
         (
             ('tx',                    {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('txid',                  '[u8; 32]'),
             ('auth_digest',           '[u8; 32]'),
             ('amounts',               'Vec<i64>'),
-            ('burn_amount',           'u64'),
+            ('zip233_amount',         'u64'),
             ('script_pubkeys',        {'rust_type': 'Vec<Vec<u8>>', 'bitcoin_flavoured': False}),
             ('transparent_input',     'Option<u32>'),
             ('sighash_shielded',      '[u8; 32]'),
