@@ -84,8 +84,8 @@ def arbitrary_key_derivation_tvs():
             'seed': seed,
             'ikm':  k.IKM,
             'path': k.path,
-            'sk' : k.sk,
-            'c'  : k.chaincode
+            'sk':   k.sk,
+            'c':    k.chaincode,
         }
         for k in keys
     ]
@@ -94,12 +94,12 @@ def arbitrary_key_derivation_tvs():
         args,
         'zip_0032_arbitrary',
         (
-            ('context_string', 'Vec<u8>'),
+            ('context_string', '&\'static [u8]'),
             ('seed', '[u8; 32]'),
-            ('ikm',  'Option<Vec<u8>>'),
-            ('path', 'Vec<u32>'),
-            ('sk',  '[u8; 32]'),
-            ('c',   '[u8; 32]'),
+            ('ikm',  'Option<&\'static [u8]>'),
+            ('path', '&\'static [u32]'),
+            ('sk',   '[u8; 32]'),
+            ('c',    '[u8; 32]'),
         ),
         test_vectors,
     )
