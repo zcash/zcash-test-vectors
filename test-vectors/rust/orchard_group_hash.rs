@@ -2,10 +2,10 @@
             domain: Vec<u8>,
             msg: Vec<u8>,
             point: [u8; 32],
-        };
+        }
 
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_group_hash.py
-        let test_vectors = vec![
+        const TEST_VECTORS: &[TestVector] = &[
             TestVector {
                 domain: vec![
                     0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74

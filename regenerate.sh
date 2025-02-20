@@ -45,6 +45,7 @@ case "$2" in
         unified_address
         unified_full_viewing_keys
         unified_incoming_viewing_keys
+        zip_0032_registered
         zip_0032_arbitrary
         zip_0143
         zip_0243

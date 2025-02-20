@@ -3,10 +3,10 @@
             msg: Vec<bool>,
             point: [u8; 32],
             hash: [u8; 32],
-        };
+        }
 
         // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_sinsemilla.py
-        let test_vectors = vec![
+        const TEST_VECTORS: &[TestVector] = &[
             TestVector {
                 domain: vec![
                     0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69, 0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61

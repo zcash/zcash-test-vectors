@@ -26,17 +26,90 @@ def MKGh(Context, IKM):
     I_R = I[32:]
     return (I_L, I_R)
 
-def CKDh(Context, sk_par, c_par, i):
+def CKDh(Context, sk_par, c_par, i, lead, tag):
     assert type(Context) == HardenedOnlyContext
     assert 0x80000000 <= i and i <= 0xFFFFFFFF
+    assert 0x00 <= lead and lead <= 0xFF
+    assert type(tag) == bytes
 
-    I   = prf_expand(c_par, Context.CKDDomain + sk_par + i2leosp(32, i))
+    lead_enc = bytes([] if lead == 0 and tag == b"" else [lead])
+    I = prf_expand(c_par, Context.CKDDomain + sk_par + i2leosp(32, i) + lead_enc + tag)
     I_L = I[:32]
     I_R = I[32:]
     return (I_L, I_R)
 
+
+class RegisteredKey(object):
+    Registered = HardenedOnlyContext(b'ZIPRegistered_KD', b'\xAC')
+
+    def __init__(self, IKM, subpath, sk, chaincode, full_width=None):
+        self.IKM = IKM
+        self.subpath = subpath
+        self.sk = sk
+        self.chaincode = chaincode
+        self.full_width = full_width  # the full-width cryptovalue at this path
+
+    @classmethod
+    def subtree_root(cls, ContextString, S, ZipNumber):
+        length_ContextString = len(ContextString)
+        length_S = len(S)
+
+        assert length_ContextString <= 252
+        assert 32 <= length_S <= 252
+
+        IKM = bytes([length_ContextString]) + ContextString + bytes([length_S]) + S
+        (sk_m, c_m) = MKGh(cls.Registered, IKM)
+        (sk, chaincode) = CKDh(cls.Registered, sk_m, c_m, hardened(ZipNumber), 0, b"")
+        return cls(IKM, [], sk, chaincode)
+
+    def child(self, i, tag):
+        (sk_child, c_child) = CKDh(self.Registered, self.sk, self.chaincode, i, 0, tag)
+        (I_L, I_R) = CKDh(self.Registered, self.sk, self.chaincode, i, 1, tag)
+        return self.__class__(None, self.subpath + [(i, tag)], sk_child, c_child, I_L + I_R)
+
+
+def registered_key_derivation_tvs():
+    args = render_args()
+
+    context_string = b'Zcash test vectors'
+    seed = bytes(range(32))
+    m_1h = RegisteredKey.subtree_root(context_string, seed, 1)
+    m_1h_2h = m_1h.child(hardened(2), b"trans rights are human rights")
+    m_1h_2h_3h = m_1h_2h.child(hardened(3), b"")
+
+    keys = [m_1h, m_1h_2h, m_1h_2h_3h]
+
+    test_vectors = [
+        {
+            'context_string': context_string,
+            'seed':       seed,
+            'zip_number': 1,
+            'subpath':    k.subpath,
+            'sk':         k.sk,
+            'c':          k.chaincode,
+            'full_width': k.full_width,
+        }
+        for k in keys
+    ]
+
+    render_tv(
+        args,
+        'zip_0032_registered',
+        (
+            ('context_string', '&\'static [u8]'),
+            ('seed',       '[u8; 32]'),
+            ('zip_number', 'u16'),
+            ('subpath',    '&\'static [(u32, &\'static [u8])]'),
+            ('sk',         '[u8; 32]'),
+            ('c',          '[u8; 32]'),
+            ('full_width', 'Option<[u8; 64]>'),
+        ),
+        test_vectors,
+    )
+
+
 class ArbitraryKey(object):
-    Arbitrary = HardenedOnlyContext(b'ZcashArbitraryKD', b'\xAB')
+    Adhoc = HardenedOnlyContext(b'ZcashArbitraryKD', b'\xAB')
 
     def __init__(self, IKM, path, sk, chaincode):
         self.IKM = IKM
@@ -53,11 +126,11 @@ class ArbitraryKey(object):
         assert 32 <= length_S <= 252
 
         IKM = bytes([length_ContextString]) + ContextString + bytes([length_S]) + S
-        (sk, chaincode) = MKGh(cls.Arbitrary, IKM)
+        (sk, chaincode) = MKGh(cls.Adhoc, IKM)
         return cls(IKM, [], sk, chaincode)
 
     def child(self, i):
-        (sk_i, c_i) = CKDh(self.Arbitrary, self.sk, self.chaincode, i)
+        (sk_i, c_i) = CKDh(self.Adhoc, self.sk, self.chaincode, i, 0, b"")
         return self.__class__(None, self.path + [i], sk_i, c_i)
 
 
@@ -84,8 +157,8 @@ def arbitrary_key_derivation_tvs():
             'seed': seed,
             'ikm':  k.IKM,
             'path': k.path,
-            'sk' : k.sk,
-            'c'  : k.chaincode
+            'sk':   k.sk,
+            'c':    k.chaincode,
         }
         for k in keys
     ]
@@ -94,12 +167,12 @@ def arbitrary_key_derivation_tvs():
         args,
         'zip_0032_arbitrary',
         (
-            ('context_string', 'Vec<u8>'),
+            ('context_string', '&\'static [u8]'),
             ('seed', '[u8; 32]'),
-            ('ikm',  'Option<Vec<u8>>'),
-            ('path', 'Vec<u32>'),
-            ('sk',  '[u8; 32]'),
-            ('c',   '[u8; 32]'),
+            ('ikm',  'Option<&\'static [u8]>'),
+            ('path', '&\'static [u32]'),
+            ('sk',   '[u8; 32]'),
+            ('c',    '[u8; 32]'),
         ),
         test_vectors,
     )
