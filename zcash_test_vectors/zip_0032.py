@@ -38,6 +38,76 @@ def CKDh(Context, sk_par, c_par, i, lead, tag):
     I_R = I[32:]
     return (I_L, I_R)
 
+
+class RegisteredKey(object):
+    Registered = HardenedOnlyContext(b'ZIPRegistered_KD', b'\xAC')
+
+    def __init__(self, IKM, subpath, sk, chaincode, full_width=None):
+        self.IKM = IKM
+        self.subpath = subpath
+        self.sk = sk
+        self.chaincode = chaincode
+        self.full_width = full_width  # the full-width cryptovalue at this path
+
+    @classmethod
+    def subtree_root(cls, ContextString, S, ZipNumber):
+        length_ContextString = len(ContextString)
+        length_S = len(S)
+
+        assert length_ContextString <= 252
+        assert 32 <= length_S <= 252
+
+        IKM = bytes([length_ContextString]) + ContextString + bytes([length_S]) + S
+        (sk_m, c_m) = MKGh(cls.Registered, IKM)
+        (sk, chaincode) = CKDh(cls.Registered, sk_m, c_m, hardened(ZipNumber), 0, b"")
+        return cls(IKM, [], sk, chaincode)
+
+    def child(self, i, tag):
+        (sk_child, c_child) = CKDh(self.Registered, self.sk, self.chaincode, i, 0, tag)
+        (I_L, I_R) = CKDh(self.Registered, self.sk, self.chaincode, i, 1, tag)
+        return self.__class__(None, self.subpath + [(i, tag)], sk_child, c_child, I_L + I_R)
+
+
+def registered_key_derivation_tvs():
+    args = render_args()
+
+    context_string = b'Zcash test vectors'
+    seed = bytes(range(32))
+    m_1h = RegisteredKey.subtree_root(context_string, seed, 1)
+    m_1h_2h = m_1h.child(hardened(2), b"trans rights are human rights")
+    m_1h_2h_3h = m_1h_2h.child(hardened(3), b"")
+
+    keys = [m_1h, m_1h_2h, m_1h_2h_3h]
+
+    test_vectors = [
+        {
+            'context_string': context_string,
+            'seed':       seed,
+            'zip_number': 1,
+            'subpath':    k.subpath,
+            'sk':         k.sk,
+            'c':          k.chaincode,
+            'full_width': k.full_width,
+        }
+        for k in keys
+    ]
+
+    render_tv(
+        args,
+        'zip_0032_registered',
+        (
+            ('context_string', '&\'static [u8]'),
+            ('seed',       '[u8; 32]'),
+            ('zip_number', 'u16'),
+            ('subpath',    '&\'static [(u32, &\'static [u8])]'),
+            ('sk',         '[u8; 32]'),
+            ('c',          '[u8; 32]'),
+            ('full_width', 'Option<[u8; 64]>'),
+        ),
+        test_vectors,
+    )
+
+
 class ArbitraryKey(object):
     Adhoc = HardenedOnlyContext(b'ZcashArbitraryKD', b'\xAB')
 
