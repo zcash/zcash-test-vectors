@@ -26,17 +26,20 @@ def MKGh(Context, IKM):
     I_R = I[32:]
     return (I_L, I_R)
 
-def CKDh(Context, sk_par, c_par, i):
+def CKDh(Context, sk_par, c_par, i, lead, tag):
     assert type(Context) == HardenedOnlyContext
     assert 0x80000000 <= i and i <= 0xFFFFFFFF
+    assert 0x00 <= lead and lead <= 0xFF
+    assert type(tag) == bytes
 
-    I   = prf_expand(c_par, Context.CKDDomain + sk_par + i2leosp(32, i))
+    lead_enc = bytes([] if lead == 0 and tag == b"" else [lead])
+    I = prf_expand(c_par, Context.CKDDomain + sk_par + i2leosp(32, i) + lead_enc + tag)
     I_L = I[:32]
     I_R = I[32:]
     return (I_L, I_R)
 
 class ArbitraryKey(object):
-    Arbitrary = HardenedOnlyContext(b'ZcashArbitraryKD', b'\xAB')
+    Adhoc = HardenedOnlyContext(b'ZcashArbitraryKD', b'\xAB')
 
     def __init__(self, IKM, path, sk, chaincode):
         self.IKM = IKM
@@ -53,11 +56,11 @@ class ArbitraryKey(object):
         assert 32 <= length_S <= 252
 
         IKM = bytes([length_ContextString]) + ContextString + bytes([length_S]) + S
-        (sk, chaincode) = MKGh(cls.Arbitrary, IKM)
+        (sk, chaincode) = MKGh(cls.Adhoc, IKM)
         return cls(IKM, [], sk, chaincode)
 
     def child(self, i):
-        (sk_i, c_i) = CKDh(self.Arbitrary, self.sk, self.chaincode, i)
+        (sk_i, c_i) = CKDh(self.Adhoc, self.sk, self.chaincode, i, 0, b"")
         return self.__class__(None, self.path + [i], sk_i, c_i)
 
 

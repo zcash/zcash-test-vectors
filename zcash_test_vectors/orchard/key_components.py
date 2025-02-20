@@ -66,7 +66,7 @@ class ExtendedSpendingKey(SpendingKey):
         return cls(chaincode, sk)
 
     def child(self, i):
-        (sk_i, c_i) = CKDh(self.Orchard, self.data, self.chaincode, i)
+        (sk_i, c_i) = CKDh(self.Orchard, self.data, self.chaincode, i, 0, b"")
         return self.__class__(c_i, sk_i)
 
 
