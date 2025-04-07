@@ -120,7 +120,7 @@ def issue_actions_digest(tx):
 
     for action in tx.vIssueActions:
         digest.update(issue_notes_digest(action))
-        digest.update(action.asset_desc)
+        digest.update(action.asset_desc_hash)
         digest.update(struct.pack('<B', action.flagsIssuance))
 
     return digest.digest()

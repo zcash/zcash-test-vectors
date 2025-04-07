@@ -5,7 +5,7 @@ from .orchard.key_components import FullViewingKey, SpendingKey
 from .orchard.pallas import Point
 from .orchard_zsa.key_components import IssuanceKeys
 from .orchard_zsa.digests import NU7_VERSION_GROUP_ID, NU7_TX_VERSION_BYTES
-from .orchard_zsa.asset_base import zsa_value_base, asset_digest, encode_asset_id, get_random_unicode_bytes
+from .orchard_zsa.asset_base import zsa_value_base, asset_digest, encode_asset_id, get_random_unicode_bytes, asset_desc_digest
 from .zc_utils import write_compact_size
 from .transaction import (
     NOTEENCRYPTION_AUTH_BYTES, ZC_SAPLING_ENCPLAINTEXT_SIZE,
@@ -40,17 +40,17 @@ class AssetBurnDescription(object):
 class IssueActionDescription(object):
     def __init__(self, rand, ik):
         self.assetDescSize = rand.u32() % 512 + 1
-        self.asset_desc = get_random_unicode_bytes(self.assetDescSize, rand)
+        self.asset_desc_hash = asset_desc_digest(get_random_unicode_bytes(self.assetDescSize, rand))
         self.vNotes = []
         for _ in range(rand.u8() % 5):
-            self.vNotes.append(IssueNote(rand, ik, self.asset_desc))
+            self.vNotes.append(IssueNote(rand, ik, self.asset_desc_hash))
         self.flagsIssuance = rand.u8() & 1  # Only one bit is reserved for the finalize flag currently
 
     def __bytes__(self):
         ret = b''
 
         ret += write_compact_size(self.assetDescSize)
-        ret += bytes(self.asset_desc)
+        ret += bytes(self.asset_desc_hash)
         ret += write_compact_size(len(self.vNotes))
         if len(self.vNotes) > 0:
             for note in self.vNotes:
@@ -61,11 +61,11 @@ class IssueActionDescription(object):
 
 
 class IssueNote(object):
-    def __init__(self, rand, ik, asset_desc):
+    def __init__(self, rand, ik, asset_desc_hash):
         fvk_r = FullViewingKey.from_spending_key(SpendingKey(rand.b(32)))
         self.recipient = fvk_r.default_d() + bytes(fvk_r.default_pkd())
         self.value = rand.u64()
-        asset_digest_bytes = asset_digest(encode_asset_id(ik, asset_desc))
+        asset_digest_bytes = asset_digest(encode_asset_id(ik, asset_desc_hash))
         self.assetBase = zsa_value_base(asset_digest_bytes)
         self.rho = Point.rand(rand).extract()
         self.rseed = rand.b(32)
