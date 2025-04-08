@@ -11,13 +11,10 @@ jobs:
         kind: ['rust', 'json', 'zcash']
         include:
           - kind: 'rust'
-            extension: 'rs'
             name: 'Rust'
           - kind: 'json'
-            extension: 'json'
             name: 'JSON'
           - kind: 'zcash'
-            extension: 'json'
             name: 'Bitcoin-flavoured JSON'
       fail-fast: false
 
@@ -40,7 +37,7 @@ jobs:
         run: poetry install --no-root
 
       - name: Regenerate test vectors
-        run: ./regenerate.sh ${{ matrix.kind }} ${{ matrix.extension }}
+        run: ./regenerate.sh ${{ matrix.kind }} all
 
       - name: Verify there are no changes
         run: git diff; git ls-files --others --exclude-standard; test -z "$(git status --porcelain)"

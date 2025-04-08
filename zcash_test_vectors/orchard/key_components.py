@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from hashlib import blake2b
-
 from ..ff1 import ff1_aes256_encrypt
 from ..sapling.key_components import prf_expand
+from ..zip_0032 import CKDh, HardenedOnlyContext, MKGh
 
 from .generators import NULLIFIER_K_BASE, SPENDING_KEY_BASE, group_hash
 from .pallas import Fp, Scalar, Point
@@ -55,26 +54,20 @@ class SpendingKey(object):
 
 
 class ExtendedSpendingKey(SpendingKey):
+    Orchard = HardenedOnlyContext(b'ZcashIP32Orchard', b'\x81')
+
     def __init__(self, chaincode, data):
         SpendingKey.__init__(self, data)
         self.chaincode = chaincode
 
     @classmethod
     def master(cls, S):
-        digest = blake2b(person=b'ZcashIP32Orchard')
-        digest.update(S)
-        I   = digest.digest()
-        I_L = I[:32]
-        I_R = I[32:]
-        return cls(I_R, I_L)
+        (sk, chaincode) = MKGh(cls.Orchard, S)
+        return cls(chaincode, sk)
 
     def child(self, i):
-        assert 0x80000000 <= i and i <= 0xFFFFFFFF
-
-        I   = prf_expand(self.chaincode, b'\x81' + self.data + i2leosp(32, i))
-        I_L = I[:32]
-        I_R = I[32:]
-        return self.__class__(I_R, I_L)
+        (sk_i, c_i) = CKDh(self.Orchard, self.data, self.chaincode, i, 0, b"")
+        return self.__class__(c_i, sk_i)
 
 
 class FullViewingKey(object):
