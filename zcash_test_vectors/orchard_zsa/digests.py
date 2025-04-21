@@ -14,7 +14,6 @@ def orchard_zsa_digest(tx):
 
     if len(tx.vActionGroupsOrchard) > 0:
         digest.update(orchard_zsa_action_groups_digest(tx))
-        digest.update(orchard_zsa_burn_digest(tx))
         digest.update(struct.pack('<Q', tx.valueBalanceOrchard))
 
     return digest.digest()
@@ -31,6 +30,7 @@ def orchard_zsa_action_groups_digest(tx):
             digest.update(struct.pack('<B', ag.flagsOrchard))
             digest.update(bytes(ag.anchorOrchard))
             digest.update(struct.pack('<I', ag.nAGExpiryHeight))
+            digest.update(orchard_zsa_burn_digest(ag))
 
     return digest.digest()
 
@@ -87,11 +87,11 @@ def orchard_zsa_actions_noncompact_digest(ag):
     return digest.digest()
 
 
-def orchard_zsa_burn_digest(tx):
+def orchard_zsa_burn_digest(ag):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcBurnHash')
 
-    if len(tx.vAssetBurnOrchardZSA) > 0:
-        for desc in tx.vAssetBurnOrchardZSA:
+    if len(ag.vAssetBurnOrchardZSA) > 0:
+        for desc in ag.vAssetBurnOrchardZSA:
             digest.update(bytes(desc.assetBase))
             digest.update(struct.pack('<Q', desc.valueBurn))
 

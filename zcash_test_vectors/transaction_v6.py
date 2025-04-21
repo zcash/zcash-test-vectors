@@ -49,7 +49,6 @@ class IssueActionDescription(object):
     def __bytes__(self):
         ret = b''
 
-        ret += write_compact_size(self.assetDescSize)
         ret += bytes(self.asset_desc_hash)
         ret += write_compact_size(len(self.vNotes))
         if len(self.vNotes) > 0:
@@ -82,7 +81,7 @@ class IssueNote(object):
 
 
 class ActionGroupDescription(object):
-    def __init__(self, rand, anchor_orchard, proofs_orchard, is_coinbase):
+    def __init__(self, rand, anchor_orchard, proofs_orchard, is_coinbase, have_burn):
         self.vActionsOrchard = []
         # There must always be a non-zero number of Action Descriptions in an Action Group.
         for _ in range(rand.u8() % 4 + 1):
@@ -98,6 +97,13 @@ class ActionGroupDescription(object):
         self.proofsOrchard = proofs_orchard
         self.nAGExpiryHeight = 0
 
+        # OrchardZSA Burn Fields
+        self.vAssetBurnOrchardZSA = []
+        if have_burn:
+            for _ in range(rand.u8() % 5):
+                self.vAssetBurnOrchardZSA.append(AssetBurnDescription(rand))
+
+
     def __bytes__(self):
         ret = b''
         ret += write_compact_size(len(self.vActionsOrchard))
@@ -105,12 +111,21 @@ class ActionGroupDescription(object):
             ret += bytes(desc)  # Excludes spendAuthSig
         ret += struct.pack('B', self.flagsOrchard)
         ret += bytes(self.anchorOrchard)
+        ret += struct.pack('<I', self.nAGExpiryHeight)
+        ret += self.orchard_zsa_burn_field_bytes()
         ret += write_compact_size(len(self.proofsOrchard))
         ret += self.proofsOrchard
-        ret += struct.pack('<I', self.nAGExpiryHeight)
         for desc in self.vActionsOrchard:
             ret += bytes(desc.spendAuthSig)
 
+        return ret
+
+    def orchard_zsa_burn_field_bytes(self):
+        ret = b''
+        ret += write_compact_size(len(self.vAssetBurnOrchardZSA))
+        if len(self.vAssetBurnOrchardZSA) > 0:
+            for desc in self.vAssetBurnOrchardZSA:
+                ret += bytes(desc)
         return ret
 
 
@@ -131,13 +146,7 @@ class TransactionV6(TransactionBase):
         self.vActionGroupsOrchard = []
         if have_orchard_zsa:
             # For NU7 we have a maximum of one Action Group.
-            self.vActionGroupsOrchard.append(ActionGroupDescription(rand, self.anchorOrchard, self.proofsOrchard, self.is_coinbase()))
-
-        # OrchardZSA Burn Fields
-        self.vAssetBurnOrchardZSA = []
-        if have_burn:
-            for _ in range(rand.u8() % 5):
-                self.vAssetBurnOrchardZSA.append(AssetBurnDescription(rand))
+            self.vActionGroupsOrchard.append(ActionGroupDescription(rand, self.anchorOrchard, self.proofsOrchard, self.is_coinbase(), have_burn))
 
         # OrchardZSA Issuance Fields
         self.vIssueActions = []
@@ -152,14 +161,6 @@ class TransactionV6(TransactionBase):
     @staticmethod
     def version_bytes():
         return NU7_TX_VERSION_BYTES
-
-    def orchard_zsa_burn_field_bytes(self):
-        ret = b''
-        ret += write_compact_size(len(self.vAssetBurnOrchardZSA))
-        if len(self.vAssetBurnOrchardZSA) > 0:
-            for desc in self.vAssetBurnOrchardZSA:
-                ret += bytes(desc)
-        return ret
 
     def issuance_field_bytes(self):
         ret = b''
@@ -183,7 +184,6 @@ class TransactionV6(TransactionBase):
             for ag in self.vActionGroupsOrchard:
                 ret += bytes(ag)
             ret += struct.pack('<Q', self.valueBalanceOrchard)
-            ret += self.orchard_zsa_burn_field_bytes()
             ret += bytes(self.bindingSigOrchard)
 
         # OrchardZSA Issuance Fields
