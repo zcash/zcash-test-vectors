@@ -31,7 +31,7 @@ def main():
         return bytes(ret)
     rand = Rand(randbytes)
 
-    consensusBranchId = 0xFFFF_FFFF # ZFUTURE
+    consensusBranchId = 0x77190ad8 # NU7
 
     test_vectors = []
     for _ in range(10):
