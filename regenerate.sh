@@ -83,5 +83,11 @@ do
       echo "# $generator"
       poetry run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
   done
+
+  if [ "$gen_type" = "rust" ]; then
+    echo "Running rustfmt on generated Rust files..."
+    rustfmt --edition 2021 test-vectors/rust/*.rs
+  fi
+
   echo "Finished $gen_type."
 done
