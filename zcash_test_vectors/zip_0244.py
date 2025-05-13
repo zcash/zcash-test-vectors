@@ -7,6 +7,7 @@ import struct
 from .transaction import (
     MAX_MONEY,
     NU5_TX_VERSION,
+    NU5_VERSION_GROUP_ID,
     Script,
     TransactionV5,
 )
@@ -188,7 +189,10 @@ def header_digest(tx):
     digest.update(struct.pack('<I', tx.nConsensusBranchId))
     digest.update(struct.pack('<I', tx.nLockTime))
     digest.update(struct.pack('<I', tx.nExpiryHeight))
-    digest.update(struct.pack('<Q', tx.zip233Amount))
+    if hasattr(tx, 'zip233Amount'):
+        digest.update(struct.pack('<Q', tx.zip233Amount))
+    else:
+        digest.update(struct.pack('<Q', 0))
 
     return digest.digest()
 
@@ -353,7 +357,7 @@ def main():
 
     test_vectors = []
     for _ in range(10):
-        tx = TransactionV5(rand, consensusBranchId)
+        tx = TransactionV5(rand, consensusBranchId, NU5_VERSION_GROUP_ID)
         txid = txid_digest(tx)
         auth = auth_digest(tx)
 
