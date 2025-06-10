@@ -420,17 +420,23 @@ class TransactionV5(object):
     def __init__(self, rand, consensus_branch_id, version_group_id):
         # Decide which transaction parts will be generated.
         flip_coins = rand.u8()
-        have_transparent_in = (flip_coins >> 0) % 2
-        have_transparent_out = (flip_coins >> 1) % 2
-        have_sapling = (flip_coins >> 2) % 2
-        have_orchard = (flip_coins >> 3) % 2
-        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
+        self.init_header(consensus_branch_id, version_group_id, rand)
+        self.init_transparent(rand, flip_coins)
+        self.init_sapling(rand, flip_coins)
+        self.init_orchard(rand, flip_coins)
+
+    def init_header(self, consensus_branch_id, version_group_id, rand):
         # Common Transaction Fields
         self.nVersionGroupId = version_group_id
         self.nConsensusBranchId = consensus_branch_id
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
+
+    def init_transparent(self, rand, flip_coins):
+        have_transparent_in = (flip_coins >> 0) % 2
+        have_transparent_out = (flip_coins >> 1) % 2
+        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
         # Transparent Transaction Fields
         self.vin = []
@@ -446,6 +452,11 @@ class TransactionV5(object):
         if have_transparent_out:
             for _ in range((rand.u8() % 3) + 1):
                 self.vout.append(TxOut(rand))
+
+    def init_sapling(self, rand, flip_coins):
+        have_transparent_in = (flip_coins >> 0) % 2
+        have_sapling = (flip_coins >> 2) % 2
+        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
         # Sapling Transaction Fields
         self.vSpendsSapling = []
@@ -465,6 +476,11 @@ class TransactionV5(object):
             # If valueBalanceSapling is not present in the serialized transaction, then
             # v^balanceSapling is defined to be 0.
             self.valueBalanceSapling = 0
+
+    def init_orchard(self, rand, flip_coins):
+        have_transparent_in = (flip_coins >> 0) % 2
+        have_orchard = (flip_coins >> 3) % 2
+        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
         # Orchard Transaction Fields
         self.vActionsOrchard = []
@@ -497,6 +513,16 @@ class TransactionV5(object):
     def __bytes__(self):
         ret = b''
 
+        ret += self.header_bytes()
+        ret += self.transparent_bytes()
+        ret += self.sapling_bytes()
+        ret += self.orchard_bytes()
+
+        return ret
+
+    def header_bytes(self):
+        ret = b''
+
         # Common Transaction Fields
         ret += struct.pack('<I', self.version_bytes())
         ret += struct.pack('<I', self.nVersionGroupId)
@@ -504,6 +530,10 @@ class TransactionV5(object):
         ret += struct.pack('<I', self.nLockTime)
         ret += struct.pack('<I', self.nExpiryHeight)
 
+        return ret
+
+    def transparent_bytes(self): 
+        ret = b''
         # Transparent Transaction Fields
         ret += write_compact_size(len(self.vin))
         for x in self.vin:
@@ -512,6 +542,10 @@ class TransactionV5(object):
         for x in self.vout:
             ret += bytes(x)
 
+        return ret
+
+    def sapling_bytes(self): 
+        ret = b''
         # Sapling Transaction Fields
         hasSapling = len(self.vSpendsSapling) + len(self.vOutputsSapling) > 0
         ret += write_compact_size(len(self.vSpendsSapling))
@@ -535,6 +569,10 @@ class TransactionV5(object):
         if hasSapling:
             ret += bytes(self.bindingSigSapling)
 
+        return ret
+    
+    def orchard_bytes(self): 
+        ret = b''
         # Orchard Transaction Fields
         ret += write_compact_size(len(self.vActionsOrchard))
         if len(self.vActionsOrchard) > 0:
@@ -554,19 +592,24 @@ class TransactionV5(object):
         return ret
 
 class TransactionV6(TransactionV5):
-    def __init__(self, rand, consensus_branch_id, version_group_id):
-        super().__init__(rand, consensus_branch_id, version_group_id)
-
+    def init_header(self, consensus_branch_id, version_group_id, rand):
+        # Common Transaction Fields
+        self.nVersionGroupId = version_group_id
+        self.nConsensusBranchId = consensus_branch_id
+        self.nLockTime = rand.u32()
+        self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
         self.zip233Amount = rand.u64() % (MAX_MONEY + 1)
 
     def version_bytes(self):
         return V6_TX_VERSION | (1 << 31)
 
-    def __bytes__(self):
-        ret = super().__bytes__()
-        ret += struct.pack('<Q', self.zip233Amount)
-        return ret
+    def header_bytes(self):
+        ret = b''
 
+        ret += super().header_bytes()
+        ret += struct.pack('<Q', self.zip233Amount)
+
+        return ret
 
 class Transaction(object):
     def __init__(self, rand, version, consensus_branch_id=None):

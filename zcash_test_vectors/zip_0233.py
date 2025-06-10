@@ -36,14 +36,24 @@ def main():
     test_vectors = []
     for _ in range(10):
         tx = TransactionV6(rand, consensusBranchId, V6_VERSION_GROUP_ID)
-        txid = txid_digest(tx)
-        auth = auth_digest(tx)
 
         # Generate amounts and scriptCodes for each non-dummy transparent input.
         if tx.is_coinbase():
             t_inputs = []
         else:
             t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
+            sum_amount = sum(x.amount for x in t_inputs)
+
+            # Be sure total amount doesn't exceed MAX_AMOUNT
+            if sum_amount > MAX_MONEY:
+                t_inputs[-1] = MAX_MONEY - sum_amount
+                sum_amount = MAX_MONEY
+
+            if tx.zip233Amount + sum_amount > MAX_MONEY:
+                tx.zip233Amount = MAX_MONEY - sum_amount
+
+        txid = txid_digest(tx)
+        auth = auth_digest(tx)
 
         # If there are any non-dummy transparent inputs, derive a corresponding transparent sighash.
         if len(t_inputs) > 0:
