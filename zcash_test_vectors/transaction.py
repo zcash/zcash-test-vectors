@@ -417,18 +417,18 @@ class LegacyTransaction(object):
 
 
 class TransactionV5(object):
-    def __init__(self, rand, consensus_branch_id, version_group_id):
+    def __init__(self, rand, consensus_branch_id):
         # Decide which transaction parts will be generated.
         flip_coins = rand.u8()
 
-        self.init_header(consensus_branch_id, version_group_id, rand)
+        self.init_header(consensus_branch_id, rand)
         self.init_transparent(rand, flip_coins)
         self.init_sapling(rand, flip_coins)
         self.init_orchard(rand, flip_coins)
 
-    def init_header(self, consensus_branch_id, version_group_id, rand):
+    def init_header(self, consensus_branch_id, rand):
         # Common Transaction Fields
-        self.nVersionGroupId = version_group_id
+        self.nVersionGroupId = NU5_VERSION_GROUP_ID
         self.nConsensusBranchId = consensus_branch_id
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
@@ -592,9 +592,9 @@ class TransactionV5(object):
         return ret
 
 class TransactionV6(TransactionV5):
-    def init_header(self, consensus_branch_id, version_group_id, rand):
+    def init_header(self, consensus_branch_id, rand):
         # Common Transaction Fields
-        self.nVersionGroupId = version_group_id
+        self.nVersionGroupId = V6_VERSION_GROUP_ID
         self.nConsensusBranchId = consensus_branch_id
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
@@ -615,10 +615,10 @@ class Transaction(object):
     def __init__(self, rand, version, consensus_branch_id=None):
         if version == NU5_TX_VERSION:
             assert consensus_branch_id is not None
-            self.inner = TransactionV5(rand, consensus_branch_id, NU5_VERSION_GROUP_ID)
+            self.inner = TransactionV5(rand, consensus_branch_id)
         elif version == V6_TX_VERSION:
             assert consensus_branch_id is not None
-            self.inner = TransactionV6(rand, consensus_branch_id, V6_VERSION_GROUP_ID)
+            self.inner = TransactionV6(rand, consensus_branch_id)
         else:
             self.inner = LegacyTransaction(rand, version)
 

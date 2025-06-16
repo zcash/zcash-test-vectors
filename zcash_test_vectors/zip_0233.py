@@ -4,10 +4,7 @@ import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 from hashlib import blake2b
 import struct
 
-from .transaction import (
-    V6_VERSION_GROUP_ID,
-    TransactionV6,
-)
+from .transaction import TransactionV6
 from .output import render_args, render_tv, Some
 from .rand import Rand
 from .zip_0143 import (
@@ -35,7 +32,7 @@ def main():
 
     test_vectors = []
     for _ in range(10):
-        tx = TransactionV6(rand, consensusBranchId, V6_VERSION_GROUP_ID)
+        tx = TransactionV6(rand, consensusBranchId)
 
         # Generate amounts and scriptCodes for each non-dummy transparent input.
         if tx.is_coinbase():
