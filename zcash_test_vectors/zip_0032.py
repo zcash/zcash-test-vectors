@@ -1,5 +1,6 @@
 from hashlib import blake2b
 
+from .bech32m import bech32_encode, bech32_decode, convertbits, Encoding
 from .sapling.key_components import prf_expand
 from .utils import i2leosp
 
@@ -37,6 +38,13 @@ def CKDh(Context, sk_par, c_par, i, lead, tag):
     I_L = I[:32]
     I_R = I[32:]
     return (I_L, I_R)
+
+def SeedFingerprint(seed):
+    digest = blake2b(person=b'Zcash_HD_Seed_FP', digest_size=32)
+    digest.update(i2leosp(8, len(seed)))
+    digest.update(seed)
+    seedfp = digest.digest()
+    return bech32_encode('zip32seedfp', convertbits(seedfp, 8, 5), Encoding.BECH32M)
 
 
 class RegisteredKey(object):
@@ -83,6 +91,7 @@ def registered_key_derivation_tvs():
         {
             'context_string': context_string,
             'seed':       seed,
+            'seedfp':     SeedFingerprint(seed),
             'zip_number': 1,
             'subpath':    k.subpath,
             'sk':         k.sk,
@@ -98,6 +107,7 @@ def registered_key_derivation_tvs():
         (
             ('context_string', '&\'static [u8]'),
             ('seed',       '[u8; 32]'),
+            ('seedfp',     '&\'static str'),
             ('zip_number', 'u16'),
             ('subpath',    '&\'static [(u32, &\'static [u8])]'),
             ('sk',         '[u8; 32]'),
@@ -155,6 +165,7 @@ def arbitrary_key_derivation_tvs():
         {
             'context_string': context_string,
             'seed': seed,
+            'seedfp': SeedFingerprint(seed),
             'ikm':  k.IKM,
             'path': k.path,
             'sk':   k.sk,
@@ -169,6 +180,7 @@ def arbitrary_key_derivation_tvs():
         (
             ('context_string', '&\'static [u8]'),
             ('seed', '[u8; 32]'),
+            ('seedfp', '&\'static str'),
             ('ikm',  'Option<&\'static [u8]>'),
             ('path', '&\'static [u32]'),
             ('sk',   '[u8; 32]'),
