@@ -419,12 +419,17 @@ class LegacyTransaction(object):
 class TransactionV5(object):
     def __init__(self, rand, consensus_branch_id):
         # Decide which transaction parts will be generated.
-        flip_coins = rand.u8()
+        flip_coins_result = rand.u8()
+
+        have_transparent_in = (flip_coins_result >> 0) % 2
+        is_coinbase = (not have_transparent_in) and (flip_coins_result >> 4) % 2
 
         self.init_header(consensus_branch_id, rand)
-        self.init_transparent(rand, flip_coins)
-        self.init_sapling(rand, flip_coins)
-        self.init_orchard(rand, flip_coins)
+        self.init_transparent(rand, flip_coins_result, have_transparent_in, is_coinbase)
+        self.init_sapling(rand, flip_coins_result, is_coinbase)
+        self.init_orchard(rand, flip_coins_result, is_coinbase)
+
+        assert is_coinbase == self.is_coinbase()
 
     def init_header(self, consensus_branch_id, rand):
         # Common Transaction Fields
@@ -433,10 +438,8 @@ class TransactionV5(object):
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
 
-    def init_transparent(self, rand, flip_coins):
-        have_transparent_in = (flip_coins >> 0) % 2
-        have_transparent_out = (flip_coins >> 1) % 2
-        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
+    def init_transparent(self, rand, flip_coins_result, have_transparent_in, is_coinbase):
+        have_transparent_out = (flip_coins_result >> 1) % 2
 
         # Transparent Transaction Fields
         self.vin = []
@@ -453,10 +456,8 @@ class TransactionV5(object):
             for _ in range((rand.u8() % 3) + 1):
                 self.vout.append(TxOut(rand))
 
-    def init_sapling(self, rand, flip_coins):
-        have_transparent_in = (flip_coins >> 0) % 2
-        have_sapling = (flip_coins >> 2) % 2
-        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
+    def init_sapling(self, rand, flip_coins_result, is_coinbase):
+        have_sapling = (flip_coins_result >> 2) % 2
 
         # Sapling Transaction Fields
         self.vSpendsSapling = []
@@ -477,10 +478,8 @@ class TransactionV5(object):
             # v^balanceSapling is defined to be 0.
             self.valueBalanceSapling = 0
 
-    def init_orchard(self, rand, flip_coins):
-        have_transparent_in = (flip_coins >> 0) % 2
-        have_orchard = (flip_coins >> 3) % 2
-        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
+    def init_orchard(self, rand, flip_coins_result, is_coinbase):
+        have_orchard = (flip_coins_result >> 3) % 2
 
         # Orchard Transaction Fields
         self.vActionsOrchard = []
@@ -499,8 +498,6 @@ class TransactionV5(object):
             # If valueBalanceOrchard is not present in the serialized transaction, then
             # v^balanceOrchard is defined to be 0.
             self.valueBalanceOrchard = 0
-
-        assert is_coinbase == self.is_coinbase()
 
     def version_bytes(self):
         return NU5_TX_VERSION | (1 << 31)
