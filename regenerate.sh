@@ -51,7 +51,8 @@ case "$2" in
         zip_0243
         zip_0244
         zip_0316
-        zip_0320)
+        zip_0320
+        zip_0325)
     ;;
   *)
     tv_scripts=($2)
