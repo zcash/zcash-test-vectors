@@ -3,17 +3,22 @@
 Code to generate test vectors for various parts of Zcash.
 
 The generated test vectors are checked into the repository:
-- `test-vectors/json/`: JSON format.
-- `test-vectors/rust/`: Rust format, suitable for copying into a Rust library or
+
+- `test-vectors/json/*.json`: JSON format.
+- `test-vectors/rust/*.rs`: Rust format, suitable for copying into a Rust library or
   application to use from `#[cfg(test)]` code.
-- `test-vectors/zcash/`: Bitcoin-flavoured JSON format (where 256-bit values are
+- `test-vectors/zcash/*.json`: Bitcoin-flavoured JSON format (where 256-bit values are
   encoded as byte-reversed hex strings), for use in `zcashd` unit tests.
 
 To generate the test vectors yourself (for example, to generate a larger set
-after adjusting:
+after adjusting):
 
 - Install [`poetry`](https://python-poetry.org/).
 - `poetry install`
+- `./regenerate.sh rust|zcash|json|all <scripts>|all`
+
+To generate an individual output file:
+
 - `poetry run SCRIPT_NAME [-t json|rust|zcash]`
   - `SCRIPT_NAME` is one of the scripts listed in `pyproject.toml`.
 
