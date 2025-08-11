@@ -35,19 +35,20 @@ def main():
         tx = TransactionV6(rand, consensusBranchId)
 
         # Generate amounts and scriptCodes for each non-dummy transparent input.
-        if tx.is_coinbase():
-            t_inputs = []
-        else:
-            t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
+        t_inputs = []
+        sum_amount = 0
+        in_count = len(tx.vin)
+        if not tx.is_coinbase() and in_count > 0:
+            t_inputs = [TransparentInput(i, rand, MAX_MONEY // (in_count-1)) for i in range(in_count-1)]
             sum_amount = sum(x.amount for x in t_inputs)
-
-            # Be sure total amount doesn't exceed MAX_AMOUNT
-            if sum_amount > MAX_MONEY:
-                t_inputs[-1] = MAX_MONEY - sum_amount
-                sum_amount = MAX_MONEY
-
-            if tx.zip233Amount + sum_amount > MAX_MONEY:
-                tx.zip233Amount = MAX_MONEY - sum_amount
+            # Ensure that at least one of the inputs can reach the full range.
+            t_inputs.append(TransparentInput(in_count-1, rand, MAX_MONEY - sum_amount))
+            sum_amount += t_inputs[in_count-1].amount
+       
+        tx.zip233Amount = rand.u64() % (MAX_MONEY - sum_amount + 1)
+        # Make half the zip233Amounts = 0 for a more realistic distribution.
+        if rand.u8() % 2 == 0:
+            tx.zip233Amount = 0
 
         txid = txid_digest(tx)
         auth = auth_digest(tx)

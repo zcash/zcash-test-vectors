@@ -422,12 +422,21 @@ class TransactionV5(object):
         flip_coins_result = rand.u8()
 
         have_transparent_in = (flip_coins_result >> 0) % 2
+        have_transparent_out = (flip_coins_result >> 1) % 2
+        have_sapling = (flip_coins_result >> 2) % 2
+        have_orchard = (flip_coins_result >> 3) % 2
         is_coinbase = (not have_transparent_in) and (flip_coins_result >> 4) % 2
 
         self.init_header(consensus_branch_id, rand)
-        self.init_transparent(rand, flip_coins_result, have_transparent_in, is_coinbase)
-        self.init_sapling(rand, flip_coins_result, is_coinbase)
-        self.init_orchard(rand, flip_coins_result, is_coinbase)
+        self.init_transparent(rand, have_transparent_in, have_transparent_out, is_coinbase)
+        self.init_sapling(rand, have_sapling, is_coinbase)
+
+        # Satisfy consensus rules that require at least one input and at least one output.
+        if (not (is_coinbase or have_transparent_in or have_sapling)
+                or not (have_transparent_out or have_sapling)):
+            have_orchard = True
+
+        self.init_orchard(rand, have_orchard, is_coinbase)
 
         assert is_coinbase == self.is_coinbase()
 
@@ -438,9 +447,7 @@ class TransactionV5(object):
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
 
-    def init_transparent(self, rand, flip_coins_result, have_transparent_in, is_coinbase):
-        have_transparent_out = (flip_coins_result >> 1) % 2
-
+    def init_transparent(self, rand, have_transparent_in, have_transparent_out, is_coinbase):
         # Transparent Transaction Fields
         self.vin = []
         self.vout = []
@@ -456,13 +463,12 @@ class TransactionV5(object):
             for _ in range((rand.u8() % 3) + 1):
                 self.vout.append(TxOut(rand))
 
-    def init_sapling(self, rand, flip_coins_result, is_coinbase):
-        have_sapling = (flip_coins_result >> 2) % 2
-
+    def init_sapling(self, rand, have_sapling, is_coinbase):
         # Sapling Transaction Fields
         self.vSpendsSapling = []
         self.vOutputsSapling = []
         if have_sapling:
+            # This anchor will be ignored if there are no Sapling spends.
             self.anchorSapling = Fq(leos2ip(rand.b(32)))
             # We use the randomness unconditionally here to avoid unnecessary test vector changes.
             for _ in range(rand.u8() % 3):
@@ -471,20 +477,31 @@ class TransactionV5(object):
                     self.vSpendsSapling.append(spend)
             for _ in range(rand.u8() % 3):
                 self.vOutputsSapling.append(OutputDescription(rand))
-            self.valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
+
+            # valueBalanceSapling is "The net value of Sapling spends minus outputs."
+            # So it's invalid to have a positive valueBalanceSapling if there are no spends,
+            # or a negative valueBalanceSapling if there are no outputs (this is not enforced
+            # as a separate consensus rule but it holds under the assumption of soundness
+            # of the spend and output circuits).
+            valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
+            if len(self.vSpendsSapling) == 0:
+                valueBalanceSapling = min(0, valueBalanceSapling)
+            if len(self.vOutputsSapling) == 0:
+                valueBalanceSapling = max(0, valueBalanceSapling)
+            self.valueBalanceSapling = valueBalanceSapling
+
+            # This binding sig will be ignored if there are neither Sapling spends nor outputs.
             self.bindingSigSapling = RedJubjubSignature(rand)
         else:
             # If valueBalanceSapling is not present in the serialized transaction, then
             # v^balanceSapling is defined to be 0.
             self.valueBalanceSapling = 0
 
-    def init_orchard(self, rand, flip_coins_result, is_coinbase):
-        have_orchard = (flip_coins_result >> 3) % 2
-
+    def init_orchard(self, rand, have_orchard, is_coinbase):
         # Orchard Transaction Fields
         self.vActionsOrchard = []
         if have_orchard:
-            for _ in range(rand.u8() % 5):
+            for _ in range(max(1, rand.u8() % 5)):
                 self.vActionsOrchard.append(OrchardActionDescription(rand))
             self.flagsOrchard = rand.u8() & 3 # Only two flag bits are currently defined.
             if is_coinbase:
@@ -595,7 +612,7 @@ class TransactionV6(TransactionV5):
         self.nConsensusBranchId = consensus_branch_id
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
-        self.zip233Amount = rand.u64() % (MAX_MONEY + 1)
+        self.zip233Amount = 0
 
     def version_bytes(self):
         return V6_TX_VERSION | (1 << 31)
