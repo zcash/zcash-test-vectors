@@ -46,6 +46,7 @@ zip_0032_arbitrary = "zcash_test_vectors.zip_0032:arbitrary_key_derivation_tvs"
 zip_0143 = "zcash_test_vectors.zip_0143:main"
 zip_0243 = "zcash_test_vectors.zip_0243:main"
 zip_0244 = "zcash_test_vectors.zip_0244:main"
+zip_0233 = "zcash_test_vectors.zip_0233:main"
 
 # Transparent test vectors
 bip_0032 = "zcash_test_vectors.transparent.bip_0032:main"

@@ -6,7 +6,6 @@ import struct
 
 from .transaction import (
     MAX_MONEY,
-    NU5_TX_VERSION,
     Script,
     TransactionV5,
 )
@@ -188,6 +187,8 @@ def header_digest(tx):
     digest.update(struct.pack('<I', tx.nConsensusBranchId))
     digest.update(struct.pack('<I', tx.nLockTime))
     digest.update(struct.pack('<I', tx.nExpiryHeight))
+    if hasattr(tx, 'zip233Amount'):
+        digest.update(struct.pack('<Q', tx.zip233Amount))
 
     return digest.digest()
 
@@ -221,10 +222,10 @@ def auth_digest(tx):
 # Signatures
 
 class TransparentInput(object):
-    def __init__(self, nIn, rand):
+    def __init__(self, nIn, rand, limit=MAX_MONEY):
         self.nIn = nIn
         self.scriptPubKey = Script(rand)
-        self.amount = rand.u64() % (MAX_MONEY + 1)
+        self.amount = rand.u64() % (limit + 1)
 
 def signature_digest(tx, t_inputs, nHashType, txin):
     digest = blake2b(
@@ -360,6 +361,7 @@ def main():
         if tx.is_coinbase():
             t_inputs = []
         else:
+            # We don't attempt to avoid generating amounts than sum to more than MAX_MONEY.
             t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
 
         # If there are any non-dummy transparent inputs, derive a corresponding transparent sighash.
