@@ -97,6 +97,13 @@ def tv_tuple_int_bytes_rust(name, value, pad, file=sys.stdout):
 
     print("%s]," % (pad,), file=file)
 
+def tv_tuple_int_str_rust(name, value, pad, file=sys.stdout):
+    print("%s%s: &[" % (pad, name), file=file)
+    for (i, t) in value:
+        print("%s    (%d, \"%s\")," % (pad, i, t), file=file)
+
+    print("%s]," % (pad,), file=file)
+
 def tv_str_rust(name, value, pad, file=sys.stdout):
     print('''%s%s: "%s",''' % (
         pad,
@@ -143,6 +150,8 @@ def tv_part_rust(name, value, config, indent=3, file=sys.stdout):
         tv_slice_bool_rust(name, value, pad, file=file)
     elif config['rust_type'] == '&\'static [(u32, &\'static [u8])]':
         tv_tuple_int_bytes_rust(name, value, pad, file=file)
+    elif config['rust_type'] == '&\'static [(u32, &\'static str)]':
+        tv_tuple_int_str_rust(name, value, pad, file=file)
     elif config['rust_type'] == '&\'static str':
         tv_str_rust(name, value, pad, file=file)
     elif config['rust_type'].startswith('Option<[u8'):
@@ -174,6 +183,8 @@ def tv_part_rust(name, value, config, indent=3, file=sys.stdout):
                     '    ' * (indent + 1),
                     chunk(hexlify(item)),
                 ), file=file)
+            elif type(item) == str:
+                print('%s\"%s\",' % ('    ' * (indent + 1), item), file=file)
             elif type(item) == int:
                 print('%s%d,' % ('    ' * (indent + 1), item), file=file)
             elif type(item) == list:
