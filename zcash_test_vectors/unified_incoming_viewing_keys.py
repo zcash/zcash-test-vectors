@@ -45,7 +45,7 @@ def main():
             # child key at the Change level, i.e. at path m/44'/coin_type'/account'/0."
             t_account_key = t_coin_key.child(hardened(account))
             t_external_key = t_account_key.child(0)
-            t_key_bytes = bytes(t_external_key.public_key())
+            t_key_bytes = bytes(t_external_key.public_key())[-65:]
         else:
             t_key_bytes = None
 

@@ -16,13 +16,30 @@ from ..output import render_args, render_tv
 from ..utils import i2beosp
 
 
-class ExtendedSecretKey:
-    def __init__(self, chaincode, sk):
+class ExtendedBase(object):
+    def depth(self):
+        return self._depth
+
+    def parent_fingerprint(self):
+        return self._parent_tag
+
+    def i(self):
+        return self._i
+
+    def key_fingerprint(self):
+        return self.key_identifier()[:4]
+
+
+class ExtendedSecretKey(ExtendedBase):
+    def __init__(self, chaincode, sk, depth=0, parent_tag=i2beosp(32, 0), i=0):
         assert len(chaincode) == 32
         assert isinstance(sk, PrivateKey)
 
         self.chaincode = chaincode
         self.sk = sk
+        self._depth = depth
+        self._parent_tag = parent_tag
+        self._i     = i
 
     @classmethod
     def master(cls, S):
@@ -35,10 +52,17 @@ class ExtendedSecretKey:
     def __bytes__(self):
         # The extra zero byte is specified in
         # <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#serialization-format>.
-        return self.chaincode + b'\x00' + self.sk.private_key
+        return (i2beosp(8, self.depth()) +
+                self.parent_fingerprint() +
+                i2beosp(32, self.i()) +
+                self.chaincode +
+                b'\x00' + self.sk.private_key)
 
     def public_key(self):
-        return ExtendedPublicKey(self.chaincode, self.sk.pubkey)
+        return ExtendedPublicKey(self.chaincode, self.sk.pubkey, self._depth, self._parent_tag, self._i)
+
+    def key_identifier(self):
+        return self.public_key().address()
 
     def child(self, i):
         assert 0 <= i and i <= 0xFFFFFFFF
@@ -51,7 +75,7 @@ class ExtendedSecretKey:
         I_L = I[:32]
         I_R = I[32:]
         sk_i = PrivateKey(self.sk.tweak_add(I_L), True)
-        child_i = self.__class__(I_R, sk_i)
+        child_i = self.__class__(I_R, sk_i, self.depth()+1, self.key_fingerprint(), i)
 
         if i < 0x80000000:
             assert bytes(self.public_key().child(i)) == bytes(child_i.public_key())
@@ -59,13 +83,16 @@ class ExtendedSecretKey:
         return child_i
 
 
-class ExtendedPublicKey:
-    def __init__(self, chaincode, pk):
+class ExtendedPublicKey(ExtendedBase):
+    def __init__(self, chaincode, pk, depth=0, parent_tag=i2beosp(32, 0), i=0):
         assert len(chaincode) == 32
         assert isinstance(pk, PublicKey)
 
         self.chaincode = chaincode
         self.pk = pk
+        self._depth = depth
+        self._parent_tag = parent_tag
+        self._i     = i
 
     def pubkey_bytes(self):
         pk_bytes = self.pk.serialize(compressed=True)
@@ -74,12 +101,19 @@ class ExtendedPublicKey:
         return pk_bytes
 
     def __bytes__(self):
-        return self.chaincode + self.pubkey_bytes()
+        return (i2beosp(8, self.depth()) +
+                self.parent_fingerprint() +
+                i2beosp(32, self.i()) +
+                self.chaincode +
+                self.pubkey_bytes())
 
     def address(self):
         h = ripemd160.new()
         h.update(hashlib.sha256(self.pubkey_bytes()).digest())
         return h.digest()
+
+    def key_identifier(self):
+        return self.address()
 
     def child(self, i):
         assert 0 <= i and i <= 0xFFFFFFFF
@@ -89,7 +123,7 @@ class ExtendedPublicKey:
         I_L = I[:32]
         I_R = I[32:]
         pk_i = self.pk.tweak_add(I_L)
-        return self.__class__(I_R, pk_i)
+        return self.__class__(I_R, pk_i, self.depth()+1, self.key_fingerprint(), i)
 
     def derive_ovks(self):
         return derive_ovks(self.chaincode, self.pk.serialize(compressed=True))
@@ -212,7 +246,7 @@ BIP32_TEST_VECTORS = [
 
 def to_zip32_key_bytes(key_str):
     decoded = base58.b58decode_check(key_str)
-    return decoded[13:]
+    return decoded[4:]
 
 def assert_keys_match(prv, pub, v):
     assert bytes(prv) == to_zip32_key_bytes(v['ext_prv']), (hexlify(bytes(prv)), hexlify(to_zip32_key_bytes(v['ext_prv'])))
