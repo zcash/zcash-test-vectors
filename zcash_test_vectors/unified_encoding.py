@@ -11,6 +11,19 @@ P2SH_ITEM = 0x01
 SAPLING_ITEM = 0x02
 ORCHARD_ITEM = 0x03
 
+# Returns a key such that sorting in ascending order is equivalent to preference order.
+def preference_order_key(typecode):
+    if typecode == ORCHARD_ITEM:
+        return 0
+    elif typecode == SAPLING_ITEM:
+        return 1
+    elif typecode == P2SH_ITEM or typecode == P2PKH_ITEM:
+        return 2
+    else:
+        # Typecodes must be less than or equal to 0x2000000.
+        # For unknown typecodes, assume larger is more recent and thus preferred.
+        return 0x2000000 - typecode + 3
+
 def tlv(typecode, value):
     return b"".join([write_compact_size(typecode), write_compact_size(len(value)), value])
 
