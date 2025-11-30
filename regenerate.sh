@@ -58,25 +58,15 @@ case "$2" in
     ;;
 esac
 
-for gen_type in "${gen_types[@]}"
+for generator in "${tv_scripts[@]}"
 do
-  echo "Generating $gen_type test vectors..."
-  case "$gen_type" in
-    "rust" )
-      extension="rs"
-      ;;
-    "zcash" )
-      extension="json"
-      ;;
-    "json")
-      extension="json"
-      ;;
-  esac
-
-  for generator in "${tv_scripts[@]}"
+  for gen_type in "${gen_types[@]}"
   do
-      echo "# $generator"
-      poetry run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
+    extension="${gen_type/rust/rs}"
+    extension="${extension/zcash/json}"
+    output_file="test-vectors/$gen_type/$generator.$extension"
+    echo $output_file
+    mkdir -p "test-vectors/$gen_type"
+    poetry run $generator -t $gen_type >$output_file
   done
-  echo "Finished $gen_type."
 done
