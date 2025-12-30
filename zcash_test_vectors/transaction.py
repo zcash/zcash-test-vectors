@@ -427,10 +427,19 @@ class TransactionBase(object):
         have_sapling = (flip_coins >> 2) % 2
         is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
+        self.init_header_base(rand)
+        self.init_transparent(rand, have_transparent_in, have_transparent_out, is_coinbase)
+        self.init_sapling(rand, have_sapling, is_coinbase)
+        self.init_orchard_base(rand, have_orchard)
+
+        assert is_coinbase == self.is_coinbase()
+
+    def init_header_base(self, rand):
         # Common Transaction Fields
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
 
+    def init_transparent(self, rand, have_transparent_in, have_transparent_out, is_coinbase):
         # Transparent Transaction Fields
         self.vin = []
         self.vout = []
@@ -446,6 +455,7 @@ class TransactionBase(object):
             for _ in range((rand.u8() % 3) + 1):
                 self.vout.append(TxOut(rand))
 
+    def init_sapling(self, rand, have_sapling, is_coinbase):
         # Sapling Transaction Fields
         self.vSpendsSapling = []
         self.vOutputsSapling = []
@@ -465,6 +475,7 @@ class TransactionBase(object):
             # v^balanceSapling is defined to be 0.
             self.valueBalanceSapling = 0
 
+    def init_orchard_base(self, rand, have_orchard):
         # Orchard Transaction Fields that are present in both V5 and V6
         if have_orchard:
             self.valueBalanceOrchard = rand.u64() % (MAX_MONEY + 1)
@@ -476,22 +487,30 @@ class TransactionBase(object):
             # v^balanceOrchard is defined to be 0.
             self.valueBalanceOrchard = 0
 
-        assert is_coinbase == self.is_coinbase()
-
     def is_coinbase(self):
         # <https://github.com/zcash/zcash/blob/d8c818bfa507adb845e527f5beb38345c490b330/src/primitives/transaction.h#L969-L972>
         return len(self.vin) == 1 and bytes(self.vin[0].prevout.txid) == b'\x00'*32 and self.vin[0].prevout.n == 0xFFFFFFFF
 
-    def to_bytes(self, version_bytes, nVersionGroupId, nConsensusBranchId):
+    def to_bytes(self, version_bytes, version_group_id, consensus_branch_id):
         ret = b''
+        ret += self.header_bytes(version_bytes, version_group_id, consensus_branch_id)
+        ret += self.transparent_bytes(version_bytes)
+        ret += self.sapling_bytes(version_bytes)
+        return ret
 
+    def header_bytes(self, version_bytes, version_group_id, consensus_branch_id):
+        ret = b''
         # Common Transaction Fields
         ret += struct.pack('<I', version_bytes)
-        ret += struct.pack('<I', nVersionGroupId)
-        ret += struct.pack('<I', nConsensusBranchId)
+        ret += struct.pack('<I', version_group_id)
+        ret += struct.pack('<I', consensus_branch_id)
         ret += struct.pack('<I', self.nLockTime)
         ret += struct.pack('<I', self.nExpiryHeight)
 
+        return ret
+
+    def transparent_bytes(self, version_bytes):
+        ret = b''
         # Transparent Transaction Fields
         ret += write_compact_size(len(self.vin))
         for x in self.vin:
@@ -504,15 +523,19 @@ class TransactionBase(object):
                 ret += write_compact_size(len(sighash_info))
                 ret += bytes(sighash_info)
 
+        return ret
+
+    def sapling_bytes(self, version_bytes):
+        ret = b''
         # Sapling Transaction Fields
-        hasSapling = len(self.vSpendsSapling) + len(self.vOutputsSapling) > 0
+        has_sapling = len(self.vSpendsSapling) + len(self.vOutputsSapling) > 0
         ret += write_compact_size(len(self.vSpendsSapling))
         for desc in self.vSpendsSapling:
             ret += desc.bytes_v5()
         ret += write_compact_size(len(self.vOutputsSapling))
         for desc in self.vOutputsSapling:
             ret += desc.bytes_v5()
-        if hasSapling:
+        if has_sapling:
             ret += struct.pack('<Q', self.valueBalanceSapling)
         if len(self.vSpendsSapling) > 0:
             ret += bytes(self.anchorSapling)
@@ -527,7 +550,7 @@ class TransactionBase(object):
                 ret += bytes(desc.spendAuthSig)
         for desc in self.vOutputsSapling: # vOutputProofsSapling
             ret += bytes(desc.proof)
-        if hasSapling:
+        if has_sapling:
             if version_bytes == NU7_TX_VERSION_BYTES:
                 ret += write_compact_size(len(self.bindingSigSaplingInfo))
                 ret += bytes(self.bindingSigSaplingInfo)
