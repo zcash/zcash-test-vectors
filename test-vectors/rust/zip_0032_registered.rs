@@ -3,6 +3,7 @@
 pub(crate) struct TestVector {
     pub(crate) context_string: &'static [u8],
     pub(crate) seed: [u8; 32],
+    pub(crate) seedfp: &'static str,
     pub(crate) zip_number: u16,
     pub(crate) subpath: &'static [(u32, &'static [u8])],
     pub(crate) sk: [u8; 32],
@@ -21,6 +22,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         zip_number: 1,
         subpath: &[],
         sk: [
@@ -45,6 +47,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         zip_number: 1,
         subpath: &[(
             2147483650,
@@ -82,6 +85,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         zip_number: 1,
         subpath: &[
             (

@@ -3,6 +3,7 @@
 pub(crate) struct TestVector {
     pub(crate) context_string: &'static [u8],
     pub(crate) seed: [u8; 32],
+    pub(crate) seedfp: &'static str,
     pub(crate) ikm: Option<&'static [u8]>,
     pub(crate) path: &'static [u32],
     pub(crate) sk: [u8; 32],
@@ -20,6 +21,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         ikm: Some(&[
             0x12, 0x5a, 0x63, 0x61, 0x73, 0x68, 0x20, 0x74, 0x65, 0x73, 0x74, 0x20, 0x76, 0x65,
             0x63, 0x74, 0x6f, 0x72, 0x73, 0x20, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -48,6 +50,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         ikm: None,
         path: &[2147483649],
         sk: [
@@ -71,6 +74,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         ikm: None,
         path: &[2147483649, 2147483650],
         sk: [
@@ -94,6 +98,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         ikm: None,
         path: &[2147483649, 2147483650, 2147483651],
         sk: [
@@ -117,6 +122,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         ikm: None,
         path: &[2147483680],
         sk: [
@@ -140,6 +146,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         ikm: None,
         path: &[2147483680, 2147483781],
         sk: [
@@ -163,6 +170,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
             0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
             0x1c, 0x1d, 0x1e, 0x1f,
         ],
+        seedfp: "zip32seedfp1mmlkqnpyvug0w9mdatgz4f6x7t7c65uf7urj24kuk42lm0j78t3sne2h0z",
         ikm: None,
         path: &[2147483680, 2147483781, 2147483648],
         sk: [

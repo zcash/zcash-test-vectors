@@ -460,6 +460,7 @@ class TransactionBase(object):
         self.vSpendsSapling = []
         self.vOutputsSapling = []
         if have_sapling:
+            # This anchor will be ignored if there are no Sapling spends.
             self.anchorSapling = Fq(leos2ip(rand.b(32)))
             # We use the randomness unconditionally here to avoid unnecessary test vector changes.
             for _ in range(rand.u8() % 3):
@@ -468,7 +469,20 @@ class TransactionBase(object):
                     self.vSpendsSapling.append(spend)
             for _ in range(rand.u8() % 3):
                 self.vOutputsSapling.append(OutputDescription(rand))
-            self.valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
+
+            # valueBalanceSapling is "The net value of Sapling spends minus outputs."
+            # So it's invalid to have a positive valueBalanceSapling if there are no spends,
+            # or a negative valueBalanceSapling if there are no outputs (this is not enforced
+            # as a separate consensus rule but it holds under the assumption of soundness
+            # of the spend and output circuits).
+            valueBalanceSapling = rand.u64() % (MAX_MONEY + 1)
+            if len(self.vSpendsSapling) == 0:
+                valueBalanceSapling = min(0, valueBalanceSapling)
+            if len(self.vOutputsSapling) == 0:
+                valueBalanceSapling = max(0, valueBalanceSapling)
+            self.valueBalanceSapling = valueBalanceSapling
+
+            # This binding sig will be ignored if there are neither Sapling spends nor outputs.
             self.bindingSigSapling = RedJubjubSignature(rand)
         else:
             # If valueBalanceSapling is not present in the serialized transaction, then

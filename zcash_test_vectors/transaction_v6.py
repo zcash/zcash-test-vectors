@@ -160,6 +160,7 @@ class TransactionV6(TransactionBase):
         # Common Transaction Fields
         self.nVersionGroupId = NU7_VERSION_GROUP_ID
         self.nConsensusBranchId = consensus_branch_id
+        self.zip233Amount = 0
 
         # OrchardZSA Transaction Fields
         self.vActionGroupsOrchard = []
@@ -190,6 +191,12 @@ class TransactionV6(TransactionBase):
     @staticmethod
     def version_bytes():
         return NU7_TX_VERSION_BYTES
+
+    def header_bytes(self, version_bytes, version_group_id, consensus_branch_id):
+        ret = b''
+        ret += super().header_bytes(version_bytes, version_group_id, consensus_branch_id)
+        ret += struct.pack('<Q', self.zip233Amount)
+        return ret
 
     def issuance_field_bytes(self):
         ret = b''

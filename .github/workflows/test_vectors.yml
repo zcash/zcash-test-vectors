@@ -28,7 +28,7 @@ jobs:
         run: sudo apt-get update
 
       - name: Install gnome-keyring
-        run: sudo apt-get install gnome-keyring
+        run: sudo apt-get update && sudo apt-get install -y gnome-keyring
 
       - name: Install poetry
         run: pip install --user poetry
