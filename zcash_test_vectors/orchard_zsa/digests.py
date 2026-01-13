@@ -11,6 +11,7 @@ NU7_TX_VERSION = 6
 NU7_TX_VERSION_BYTES = NU7_TX_VERSION | (1 << 31)
 
 
+# https://zips.z.cash/zip-0246#t-4-orchard-digest
 def orchard_zsa_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrchardHash')
 
@@ -21,13 +22,13 @@ def orchard_zsa_digest(tx):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#t-4a-orchard-action-groups-digest
 def orchard_zsa_action_groups_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcActGHash')
 
     if len(tx.vActionGroupsOrchard) > 0:
         for ag in tx.vActionGroupsOrchard:
             digest.update(orchard_zsa_actions_compact_digest(ag))
-            # TODO remove memo digests once the new memo bundles are implemented (ZIP-231)
             digest.update(orchard_zsa_actions_memos_digest(ag))
             digest.update(orchard_zsa_actions_noncompact_digest(ag))
             digest.update(struct.pack('<B', ag.flagsOrchard))
@@ -38,6 +39,7 @@ def orchard_zsa_action_groups_digest(tx):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#a-3-orchard-auth-digest
 def orchard_zsa_auth_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxAuthOrchaHash')
 
@@ -50,6 +52,7 @@ def orchard_zsa_auth_digest(tx):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#a-3a-orchard-action-groups-auth-digest
 def orchard_zsa_action_groups_auth_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxAuthOrcAGHash')
 
@@ -59,6 +62,7 @@ def orchard_zsa_action_groups_auth_digest(tx):
 
     return digest.digest()
 
+# https://zips.z.cash/zip-0246#a-3a-ii-orchard-zsa-spend-auth-sigs-auth-digest
 def orchard_zsa_spend_auth_sigs_auth_digest(actions):
     digest = blake2b(digest_size=32, person=b'ZTxAuthOrSASHash')
 
@@ -70,6 +74,7 @@ def orchard_zsa_spend_auth_sigs_auth_digest(actions):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#t-4a-i-orchard-actions-compact-digest
 def orchard_zsa_actions_compact_digest(ag):
     digest = blake2b(digest_size=32, person=b'ZTxId6OActC_Hash')
     for desc in ag.vActionsOrchard:
@@ -89,18 +94,19 @@ def orchard_zsa_actions_memos_digest(ag):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#t-4a-ii-orchard-actions-noncompact-digest
 def orchard_zsa_actions_noncompact_digest(ag):
     digest = blake2b(digest_size=32, person=b'ZTxId6OActN_Hash')
     for desc in ag.vActionsOrchard:
         digest.update(bytes(desc.cv))
         digest.update(bytes(desc.rk))
-        # TODO remove encCiphertext[596:] once the new memo bundles are implemented (ZIP-231)
         digest.update(desc.encCiphertext[596:])
         digest.update(desc.outCiphertext)
 
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#t-4a-vi-orchard-burn-digest
 def orchard_zsa_burn_digest(ag):
     digest = blake2b(digest_size=32, person=b'ZTxIdOrcBurnHash')
 
@@ -112,6 +118,7 @@ def orchard_zsa_burn_digest(ag):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#t-5-issuance-digest
 def issuance_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdSAIssueHash')
 
@@ -123,6 +130,7 @@ def issuance_digest(tx):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#a-4-issuance-auth-digest
 def issuance_auth_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxAuthZSAOrHash')
     if len(tx.vIssueActions) > 0:
@@ -133,6 +141,7 @@ def issuance_auth_digest(tx):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#t-5a-issue-actions-digest
 def issue_actions_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdIssuActHash')
 
@@ -144,6 +153,7 @@ def issue_actions_digest(tx):
     return digest.digest()
 
 
+# https://zips.z.cash/zip-0246#t-5a-i-issue-notes-digest
 def issue_notes_digest(action):
     digest = blake2b(digest_size=32, person=b'ZTxIdIAcNoteHash')
 

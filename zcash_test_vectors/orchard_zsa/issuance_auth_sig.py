@@ -8,7 +8,8 @@ from ..output import render_args, render_tv
 
 assert sys.version_info[0] >= 3, "Python 3 required."
 
-# This function provides the encoding of the issuance authorization signature, with the algorithm byte prefix.
+# This function provides the encoding of the issuance authorization signature, with the algorithm byte prefix,
+# as specified in ZIP 227: https://zips.z.cash/zip-0227#issuance-authorization-signing-and-validation
 def encode_issue_auth_sig(algorithm_byte, sig):
     return algorithm_byte + sig
 
@@ -30,7 +31,7 @@ def main():
 
     test_vectors = []
 
-    # Start with the test vector from the BIP 340 repository. Specifically, the index 0 from https://github.com/bitcoin/bips/blob/master/bip-0340/test-vectors.csv
+    # Start with the test vector from the BIP 340 repository. Specifically, the index 0 from https://github.com/bitcoin/bips/blob/445e445144afa55cbd09957919ddda92c579f8d8/bip-0340/test-vectors.csv
     test_vectors.append({
         'isk': bytes.fromhex("0000000000000000000000000000000000000000000000000000000000000003"),
         'ik_encoding':  ZSA_BIP340_SIG_SCHEME + bytes.fromhex("F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9"),

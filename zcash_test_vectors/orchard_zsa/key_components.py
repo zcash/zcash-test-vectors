@@ -4,7 +4,7 @@ import sys;
 assert sys.version_info[0] >= 3, "Python 3 required."
 
 from ..orchard.pallas import Fp, Point
-from ..orchard.key_components import derive_nullifier, SpendingKey, FullViewingKey
+from ..orchard.key_components import derive_nullifier
 from ..output import render_args, render_tv
 
 from zcash_test_vectors.bip340_reference import pubkey_gen
@@ -18,7 +18,7 @@ from zcash_test_vectors.orchard_zsa.asset_base import native_asset
 # The algorithm byte prefix for the encoding of the BIP340 Schnorr signature in ZIP227 is 0x00.
 ZSA_BIP340_SIG_SCHEME = b'\0'
 
-#This function provides the encoding of the issuance key, with the algorithm byte prefix.
+# This function provides the encoding of the issuance key, with the algorithm byte prefix.
 def encode_ik(algorithm_byte, ik):
     return algorithm_byte + ik
 

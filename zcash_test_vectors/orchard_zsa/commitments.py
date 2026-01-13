@@ -9,7 +9,7 @@ from ..orchard.sinsemilla import sinsemilla_hash_to_point
 from ..utils import i2lebsp, leos2bsp
 from .asset_base import zsa_value_base, asset_digest, encode_asset_id, native_asset
 
-# Commitment schemes used in Orchard https://zips.z.cash/protocol/nu5.pdf#concretecommit
+# Commitment schemes used in Orchard https://zips.z.cash/protocol/protocol.pdf#concretecommit
 from ..orchard.commitments import rcv_trapdoor, L_ORCHARD_BASE
 
 def value_commit(rcv: Scalar, v: Scalar, asset: Point):
@@ -22,7 +22,7 @@ def sinsemilla_commit_with_blind_personalization(r: Scalar, D_hash, D_blind, M):
         group_hash(D_blind + b"-r", b"") * r
     )
 
-# ZIP-226 (https://github.com/zcash/zips/pull/628)
+# ZIP-226 (https://zips.z.cash/zip-0226)
 def note_commit(rcm, g_d, pk_d, v, asset, rho, psi):
     from ..orchard.commitments import note_commit as note_commit_orchard
 

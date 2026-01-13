@@ -15,12 +15,14 @@ def native_asset():
     return group_hash(b"z.cash:Orchard-cv", b"v")
 
 
+# https://zips.z.cash/zip-0227#zip-227-asset-identifiers
 def asset_desc_digest(asset_desc):
     h = blake2b(digest_size=32, person=b"ZSA-AssetDescCRH")
     h.update(asset_desc)
     return h.digest()
 
 
+# https://zips.z.cash/zip-0227#zip-227-asset-identifiers
 def encode_asset_id(key, asset_desc_hash):
     if not (isinstance(key, (bytes, bytearray)) and len(key) == 33 and key[0] == 0x00):
         raise ValueError("issuer (ik_encoding) must be 33 bytes and start with 0x00")
@@ -29,23 +31,23 @@ def encode_asset_id(key, asset_desc_hash):
     return ZSA_ASSETID_VERSION_BYTE + key + asset_desc_hash
 
 
+# https://zips.z.cash/zip-0227#asset-digests
 def asset_digest(encoded_asset_id):
     h = blake2b(person=b"ZSA-Asset-Digest")
     h.update(encoded_asset_id)
     return h.digest()
 
 
+# https://zips.z.cash/zip-0227#orchardzsa-asset-bases
 def zsa_value_base(asset_digest_value):
     return group_hash(b"z.cash:OrchardZSA", asset_digest_value)
 
 
 def get_random_unicode_bytes(length, rand):
 
-    get_char = chr
-
     random.seed(rand.u8())
 
-    # Update this to include code point ranges to be sampled
+    # TODO: Update this to include code point ranges to be sampled
     include_ranges = [
         ( 0x0021, 0x0021 ),
         ( 0x0023, 0x0026 ),
@@ -63,11 +65,12 @@ def get_random_unicode_bytes(length, rand):
     ]
 
     alphabet = [
-        get_char(code_point) for current_range in include_ranges
+        chr(code_point) for current_range in include_ranges
         for code_point in range(current_range[0], current_range[1] + 1)
     ]
     description_bytes = ''.join(random.choice(alphabet) for i in range(length)).encode("UTF-8")[:length].decode('UTF-8', 'ignore').encode('UTF-8').ljust(length, b'Z')
     return description_bytes
+
 
 def main():
     args = render_args()
