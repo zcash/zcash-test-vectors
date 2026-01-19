@@ -5,7 +5,6 @@ from .orchard.pallas import (
     Scalar as PallasScalar,
 )
 from .orchard.sinsemilla import group_hash as pallas_group_hash
-from .orchard_zsa.digests import NU7_TX_VERSION_BYTES
 from .sapling.generators import find_group_hash, SPENDING_KEY_BASE
 from .sapling.jubjub import (
     Fq,
@@ -508,8 +507,8 @@ class TransactionBase(object):
     def to_bytes(self, version_bytes, version_group_id, consensus_branch_id):
         ret = b''
         ret += self.header_bytes(version_bytes, version_group_id, consensus_branch_id)
-        ret += self.transparent_bytes(version_bytes)
-        ret += self.sapling_bytes(version_bytes)
+        ret += self.transparent_bytes()
+        ret += self.sapling_bytes()
         return ret
 
     def header_bytes(self, version_bytes, version_group_id, consensus_branch_id):
@@ -523,7 +522,7 @@ class TransactionBase(object):
 
         return ret
 
-    def transparent_bytes(self, version_bytes):
+    def transparent_bytes(self):
         ret = b''
         # Transparent Transaction Fields
         ret += write_compact_size(len(self.vin))
@@ -532,14 +531,13 @@ class TransactionBase(object):
         ret += write_compact_size(len(self.vout))
         for x in self.vout:
             ret += bytes(x)
-        if version_bytes == NU7_TX_VERSION_BYTES:
-            for sighash_info in self.vSighashInfo:
-                ret += write_compact_size(len(sighash_info))
-                ret += bytes(sighash_info)
-
+        ret += self.transparent_sighash_info_bytes()
         return ret
 
-    def sapling_bytes(self, version_bytes):
+    def transparent_sighash_info_bytes(self):
+        raise NotImplementedError("The transparent_sighash_info_bytes method must be implemented in the child class.")
+
+    def sapling_bytes(self):
         ret = b''
         # Sapling Transaction Fields
         has_sapling = len(self.vSpendsSapling) + len(self.vOutputsSapling) > 0
@@ -558,19 +556,19 @@ class TransactionBase(object):
             for desc in self.vSpendsSapling: # vSpendProofsSapling
                 ret += bytes(desc.proof)
             for desc in self.vSpendsSapling: # vSpendAuthSigsSapling
-                if version_bytes == NU7_TX_VERSION_BYTES:
-                    ret += write_compact_size(len(desc.spendAuthSigInfo))
-                    ret += bytes(desc.spendAuthSigInfo)
-                ret += bytes(desc.spendAuthSig)
+                ret += self.sapling_spend_auth_sig_bytes(desc)
         for desc in self.vOutputsSapling: # vOutputProofsSapling
             ret += bytes(desc.proof)
         if has_sapling:
-            if version_bytes == NU7_TX_VERSION_BYTES:
-                ret += write_compact_size(len(self.bindingSigSaplingInfo))
-                ret += bytes(self.bindingSigSaplingInfo)
-            ret += bytes(self.bindingSigSapling)
+            ret += self.sapling_binding_sig_bytes()
 
         return ret
+
+    def sapling_spend_auth_sig_bytes(self, desc):
+        raise NotImplementedError("The sapling_spend_auth_sig_bytes method must be implemented in the child class.")
+
+    def sapling_binding_sig_bytes(self):
+        raise NotImplementedError("The sapling_binding_sig_bytes method must be implemented in the child class.")
 
 class TransactionV5(TransactionBase):
     def __init__(self, rand, consensus_branch_id):
@@ -596,6 +594,16 @@ class TransactionV5(TransactionBase):
     @staticmethod
     def version_bytes():
         return NU5_TX_VERSION_BYTES
+
+    def transparent_sighash_info_bytes(self):
+        # There are no such bytes for V5 transactions.
+        return b''
+
+    def sapling_spend_auth_sig_bytes(self, desc):
+        return bytes(desc.spendAuthSig)
+
+    def sapling_binding_sig_bytes(self):
+        return bytes(self.bindingSigSapling)
 
     def __bytes__(self):
         ret = b''

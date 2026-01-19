@@ -198,6 +198,27 @@ class TransactionV6(TransactionBase):
         ret += struct.pack('<Q', self.zip233Amount)
         return ret
 
+    def transparent_sighash_info_bytes(self):
+        ret = b''
+        for sighash_info in self.vSighashInfo:
+            ret += write_compact_size(len(sighash_info))
+            ret += bytes(sighash_info)
+        return ret
+
+    def sapling_spend_auth_sig_bytes(self, desc):
+        ret = b''
+        ret += write_compact_size(len(desc.spendAuthSigInfo))
+        ret += bytes(desc.spendAuthSigInfo)
+        ret += bytes(desc.spendAuthSig)
+        return ret
+
+    def sapling_binding_sig_bytes(self):
+        ret = b''
+        ret += write_compact_size(len(self.bindingSigSaplingInfo))
+        ret += bytes(self.bindingSigSaplingInfo)
+        ret += bytes(self.bindingSigSapling)
+        return ret
+
     def issuance_field_bytes(self):
         ret = b''
         ret += write_compact_size(len(self.issuer))
