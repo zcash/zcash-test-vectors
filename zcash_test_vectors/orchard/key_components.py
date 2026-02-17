@@ -105,6 +105,18 @@ class FullViewingKey(object):
         rivk_internal = to_scalar(prf_expand(K, b'\x83' + i2leosp(256, self.ak.s) + i2leosp(256, self.nk.s)))
         return self.__class__(rivk_internal, self.ak, self.nk)
 
+class KeyInit(object):
+    def __init__(self, rand):
+        self.sk = SpendingKey(rand.b(32))
+        self.fvk = FullViewingKey.from_spending_key(self.sk)
+        self.default_d = self.fvk.default_d()
+        self.default_pk_d = self.fvk.default_pkd()
+
+        self.note_v = rand.u64()
+        self.note_rho = Fp.random(rand)
+        self.note_rseed = rand.b(32)
+
+        self.internal = self.fvk.internal()
 
 def main():
     args = render_args()
@@ -123,43 +135,34 @@ def main():
 
     test_vectors = []
     for _ in range(0, 10):
-        sk = SpendingKey(rand.b(32))
-        fvk = FullViewingKey.from_spending_key(sk)
-        default_d = fvk.default_d()
-        default_pk_d = fvk.default_pkd()
-
-        note_v = rand.u64()
-        note_rho = Fp.random(rand)
-        note_rseed = rand.b(32)
+        k = KeyInit(rand)
         note = OrchardNote(
-            default_d,
-            default_pk_d,
-            note_v,
-            note_rho,
-            note_rseed,
+            k.default_d,
+            k.default_pk_d,
+            k.note_v,
+            k.note_rho,
+            k.note_rseed,
         )
         note_cm = note.note_commitment()
-        note_nf = derive_nullifier(fvk.nk, note_rho, note.psi, note_cm)
-
-        internal = fvk.internal()
+        note_nf = derive_nullifier(k.fvk.nk, k.note_rho, note.psi, note_cm)
         test_vectors.append({
-            'sk': sk.data,
-            'ask': bytes(sk.ask),
-            'ak': bytes(fvk.ak),
-            'nk': bytes(fvk.nk),
-            'rivk': bytes(fvk.rivk),
-            'ivk': bytes(fvk.ivk()),
-            'ovk': fvk.ovk,
-            'dk': fvk.dk,
-            'default_d': default_d,
-            'default_pk_d': bytes(default_pk_d),
-            'internal_rivk': bytes(internal.rivk),
-            'internal_ivk': bytes(internal.ivk()),
-            'internal_ovk': internal.ovk,
-            'internal_dk': internal.dk,
-            'note_v': note_v,
-            'note_rho': bytes(note_rho),
-            'note_rseed': bytes(note_rseed),
+            'sk': k.sk.data,
+            'ask': bytes(k.sk.ask),
+            'ak': bytes(k.fvk.ak),
+            'nk': bytes(k.fvk.nk),
+            'rivk': bytes(k.fvk.rivk),
+            'ivk': bytes(k.fvk.ivk()),
+            'ovk': k.fvk.ovk,
+            'dk': k.fvk.dk,
+            'default_d': k.default_d,
+            'default_pk_d': bytes(k.default_pk_d),
+            'internal_rivk': bytes(k.internal.rivk),
+            'internal_ivk': bytes(k.internal.ivk()),
+            'internal_ovk': k.internal.ovk,
+            'internal_dk': k.internal.dk,
+            'note_v': k.note_v,
+            'note_rho': bytes(k.note_rho),
+            'note_rseed': bytes(k.note_rseed),
             'note_cmx': bytes(note_cm.extract()),
             'note_nf': bytes(note_nf),
         })

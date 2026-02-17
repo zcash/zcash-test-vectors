@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from .transaction import TransactionV6
+from .transaction_v6 import TransactionV6
 from .output import render_args, render_tv
 from .rand import Rand
 from .zip_0143 import (

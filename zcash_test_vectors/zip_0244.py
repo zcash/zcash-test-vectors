@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+import sys;
+
+assert sys.version_info[0] >= 3, "Python 3 required."
 
 from hashlib import blake2b
 import struct
 
+from .orchard_zsa.digests import NU7_TX_VERSION_BYTES, issuance_digest, issuance_auth_digest, orchard_zsa_digest, \
+ orchard_zsa_auth_digest
 from .transaction import (
     MAX_MONEY,
     Script,
     TransactionV5,
 )
-from .output import render_args, render_tv, Some
+from .output import render_args, render_tv
 from .rand import Rand
 from .zip_0143 import (
     getHashOutputs,
@@ -20,6 +24,8 @@ from .zip_0143 import (
     SIGHASH_NONE,
     SIGHASH_SINGLE,
 )
+
+from .zc_utils import write_compact_size
 
 
 # Transparent
@@ -34,10 +40,22 @@ def transparent_digest(tx):
 
     return digest.digest()
 
+# https://zips.z.cash/zip-0246#a-1-transparent-auth-digest,
+# https://zips.z.cash/zip-0244#a-1-transparent-scripts-digest
+TRANSPARENT_AUTH_DIGEST_PERSONALIZATION = b'ZTxAuthTransHash'
+
 def transparent_scripts_digest(tx):
-    digest = blake2b(digest_size=32, person=b'ZTxAuthTransHash')
+    digest = blake2b(digest_size=32, person=TRANSPARENT_AUTH_DIGEST_PERSONALIZATION)
     for x in tx.vin:
         digest.update(bytes(x.scriptSig))
+    return digest.digest()
+
+def transparent_auth_digest_v6(tx):
+    digest = blake2b(digest_size=32, person=TRANSPARENT_AUTH_DIGEST_PERSONALIZATION)
+    for (sighash_info, vin) in zip(tx.vSighashInfo, tx.vin):
+        digest.update(write_compact_size(len(sighash_info)))
+        digest.update(bytes(sighash_info))
+        digest.update(bytes(vin.scriptSig))
     return digest.digest()
 
 # Sapling
@@ -52,8 +70,11 @@ def sapling_digest(tx):
 
     return digest.digest()
 
+# https://zips.z.cash/zip-0244#a-2-sapling-auth-digest
+SAPLING_AUTH_DIGEST_PERSONALIZATION = b'ZTxAuthSapliHash'
+
 def sapling_auth_digest(tx):
-    digest = blake2b(digest_size=32, person=b'ZTxAuthSapliHash')
+    digest = blake2b(digest_size=32, person=SAPLING_AUTH_DIGEST_PERSONALIZATION)
 
     if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
         for desc in tx.vSpendsSapling:
@@ -62,6 +83,24 @@ def sapling_auth_digest(tx):
             digest.update(bytes(desc.spendAuthSig))
         for desc in tx.vOutputsSapling:
             digest.update(bytes(desc.proof))
+        digest.update(bytes(tx.bindingSigSapling))
+
+    return digest.digest()
+
+def sapling_auth_digest_v6(tx):
+    digest = blake2b(digest_size=32, person=SAPLING_AUTH_DIGEST_PERSONALIZATION)
+
+    if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
+        for desc in tx.vSpendsSapling:
+            digest.update(bytes(desc.proof))
+        for desc in tx.vSpendsSapling:
+            digest.update(write_compact_size(len(desc.spendAuthSigInfo)))
+            digest.update(bytes(desc.spendAuthSigInfo))
+            digest.update(bytes(desc.spendAuthSig))
+        for desc in tx.vOutputsSapling:
+            digest.update(bytes(desc.proof))
+        digest.update(write_compact_size(len(tx.bindingSigSaplingInfo)))
+        digest.update(bytes(tx.bindingSigSaplingInfo))
         digest.update(bytes(tx.bindingSigSapling))
 
     return digest.digest()
@@ -135,7 +174,7 @@ def orchard_digest(tx):
         digest.update(orchard_actions_memos_digest(tx))
         digest.update(orchard_actions_noncompact_digest(tx))
         digest.update(struct.pack('<B', tx.flagsOrchard))
-        digest.update(struct.pack('<Q', tx.valueBalanceOrchard))
+        digest.update(struct.pack('<q', tx.valueBalanceOrchard))
         digest.update(bytes(tx.anchorOrchard))
 
     return digest.digest()
@@ -150,6 +189,7 @@ def orchard_auth_digest(tx):
         digest.update(bytes(tx.bindingSigOrchard))
 
     return digest.digest()
+
 
 # - Actions
 
@@ -201,7 +241,11 @@ def txid_digest(tx):
     digest.update(header_digest(tx))
     digest.update(transparent_digest(tx))
     digest.update(sapling_digest(tx))
-    digest.update(orchard_digest(tx))
+    if tx.version_bytes() == NU7_TX_VERSION_BYTES:
+        digest.update(orchard_zsa_digest(tx))
+        digest.update(issuance_digest(tx))
+    else:
+        digest.update(orchard_digest(tx))
 
     return digest.digest()
 
@@ -213,9 +257,15 @@ def auth_digest(tx):
         person=b'ZTxAuthHash_' + struct.pack('<I', tx.nConsensusBranchId),
     )
 
-    digest.update(transparent_scripts_digest(tx))
-    digest.update(sapling_auth_digest(tx))
-    digest.update(orchard_auth_digest(tx))
+    if tx.version_bytes() == NU7_TX_VERSION_BYTES:
+        digest.update(transparent_auth_digest_v6(tx))
+        digest.update(sapling_auth_digest_v6(tx))
+        digest.update(orchard_zsa_auth_digest(tx))
+        digest.update(issuance_auth_digest(tx))
+    else:
+        digest.update(transparent_scripts_digest(tx))
+        digest.update(sapling_auth_digest(tx))
+        digest.update(orchard_auth_digest(tx))
 
     return digest.digest()
 
@@ -236,7 +286,11 @@ def signature_digest(tx, t_inputs, nHashType, txin):
     digest.update(header_digest(tx))
     digest.update(transparent_sig_digest(tx, t_inputs, nHashType, txin))
     digest.update(sapling_digest(tx))
-    digest.update(orchard_digest(tx))
+    if tx.version_bytes() == NU7_TX_VERSION_BYTES:
+        digest.update(orchard_zsa_digest(tx))
+        digest.update(issuance_digest(tx))
+    else:
+        digest.update(orchard_digest(tx))
 
     return digest.digest()
 
@@ -371,18 +425,14 @@ def generate_sighashes_and_txin(tx, t_inputs, rand):
     }
     return [sighash_shielded, other_sighashes, txin]
 
-def main():
-    args = render_args()
-
+def rand_gen():
     from random import Random
     rng = Random(0xabad533d)
     rand = randbytes(rng)
 
-    consensusBranchId = 0xc2d6d0b4 # NU5
+    return rand
 
-    test_vectors = []
-    for _ in range(10):
-        tx = TransactionV5(rand, consensusBranchId)
+def populate_test_vector(rand, test_vectors, tx):
         txid = txid_digest(tx)
         auth = auth_digest(tx)
 
@@ -411,9 +461,11 @@ def main():
             'sighash_single_anyone': other_sighashes.get(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY),
         })
 
+def generate_test_vectors(filename, test_vectors):
+    args = render_args()
     render_tv(
         args,
-        'zip_0244',
+        filename,
         (
             ('tx',                    {'rust_type': 'Vec<u8>', 'bitcoin_flavoured': False}),
             ('txid',                  '[u8; 32]'),
@@ -432,6 +484,16 @@ def main():
         test_vectors,
     )
 
+def main():
+    consensus_branch_id = 0xc2d6d0b4  # NU5
+    rand = rand_gen()
+
+    test_vectors = []
+    for _ in range(10):
+        tx = TransactionV5(rand, consensus_branch_id)
+        populate_test_vector(rand, test_vectors, tx)
+
+    generate_test_vectors('zip_0244', test_vectors)
 
 if __name__ == '__main__':
     main()
