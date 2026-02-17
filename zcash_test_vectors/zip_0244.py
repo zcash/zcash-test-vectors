@@ -40,16 +40,18 @@ def transparent_digest(tx):
 
     return digest.digest()
 
-TRANSPARENT_AUTH_DIGEST_PERSONALIZAION = b'ZTxAuthTransHash'
+# https://zips.z.cash/zip-0246#a-1-transparent-auth-digest,
+# https://zips.z.cash/zip-0244#a-1-transparent-scripts-digest
+TRANSPARENT_AUTH_DIGEST_PERSONALIZATION = b'ZTxAuthTransHash'
 
 def transparent_scripts_digest(tx):
-    digest = blake2b(digest_size=32, person=TRANSPARENT_AUTH_DIGEST_PERSONALIZAION)
+    digest = blake2b(digest_size=32, person=TRANSPARENT_AUTH_DIGEST_PERSONALIZATION)
     for x in tx.vin:
         digest.update(bytes(x.scriptSig))
     return digest.digest()
 
-def transparent_scripts_digest_v6(tx):
-    digest = blake2b(digest_size=32, person=TRANSPARENT_AUTH_DIGEST_PERSONALIZAION)
+def transparent_auth_digest_v6(tx):
+    digest = blake2b(digest_size=32, person=TRANSPARENT_AUTH_DIGEST_PERSONALIZATION)
     for (sighash_info, vin) in zip(tx.vSighashInfo, tx.vin):
         digest.update(write_compact_size(len(sighash_info)))
         digest.update(bytes(sighash_info))
@@ -68,10 +70,11 @@ def sapling_digest(tx):
 
     return digest.digest()
 
-SAPLING_AUTH_DIGEST_PERSONALIZAION = b'ZTxAuthSapliHash'
+# https://zips.z.cash/zip-0244#a-2-sapling-auth-digest
+SAPLING_AUTH_DIGEST_PERSONALIZATION = b'ZTxAuthSapliHash'
 
 def sapling_auth_digest(tx):
-    digest = blake2b(digest_size=32, person=SAPLING_AUTH_DIGEST_PERSONALIZAION)
+    digest = blake2b(digest_size=32, person=SAPLING_AUTH_DIGEST_PERSONALIZATION)
 
     if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
         for desc in tx.vSpendsSapling:
@@ -85,7 +88,7 @@ def sapling_auth_digest(tx):
     return digest.digest()
 
 def sapling_auth_digest_v6(tx):
-    digest = blake2b(digest_size=32, person=SAPLING_AUTH_DIGEST_PERSONALIZAION)
+    digest = blake2b(digest_size=32, person=SAPLING_AUTH_DIGEST_PERSONALIZATION)
 
     if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
         for desc in tx.vSpendsSapling:
@@ -255,7 +258,7 @@ def auth_digest(tx):
     )
 
     if tx.version_bytes() == NU7_TX_VERSION_BYTES:
-        digest.update(transparent_scripts_digest_v6(tx))
+        digest.update(transparent_auth_digest_v6(tx))
         digest.update(sapling_auth_digest_v6(tx))
         digest.update(orchard_zsa_auth_digest(tx))
         digest.update(issuance_auth_digest(tx))
