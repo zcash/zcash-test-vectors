@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ $# -lt 2 ]; then
+  echo "Usage: $0 <rust|json|zcash|all> <all|generator_name>"
+  exit 1
+fi
+
 case "$1" in
   "rust" )
     gen_types=(rust)
