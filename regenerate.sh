@@ -76,7 +76,7 @@ do
   for generator in "${tv_scripts[@]}"
   do
       echo "# $generator"
-      poetry run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
+      uv run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
   done
   echo "Finished $gen_type."
 done
