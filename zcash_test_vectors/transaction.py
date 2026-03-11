@@ -625,6 +625,18 @@ class TransactionV6(TransactionV5):
 
         return ret
 
+    def tachyon_bytes(self):
+        return b'\x00'
+
+    def __bytes__(self):
+        ret = b''
+        ret += self.header_bytes()
+        ret += self.transparent_bytes()
+        ret += self.sapling_bytes()
+        ret += self.orchard_bytes()
+        ret += self.tachyon_bytes()
+        return ret
+
 class Transaction(object):
     def __init__(self, rand, version, consensus_branch_id=None):
         if version == NU5_TX_VERSION:
