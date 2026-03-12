@@ -54,6 +54,7 @@ case "$2" in
         zip_0143
         zip_0243
         zip_0244
+        zip_0233
         orchard_zsa_digests
         zip_0316
         zip_0320)

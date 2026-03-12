@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from .transaction_v6 import TransactionV6
+from .transaction_v6 import (
+    TransactionV6,
+    SIGHASH_INFO_V0
+)
 from .output import render_args, render_tv
 from .rand import Rand
 from .zip_0143 import (
@@ -20,11 +23,11 @@ def main():
     rng = Random(0xB7D6_0F44)
     rand = randbytes(rng)
 
-    consensusBranchId = 0xFFFF_FFFF # ZFUTURE
+    consensusBranchId = 0x7719_0AD8 # Nu7
 
     test_vectors = []
     for _ in range(10):
-        tx = TransactionV6(rand, consensusBranchId)
+        tx = TransactionV6(rand, consensusBranchId, SIGHASH_INFO_V0)
 
         # Generate amounts and scriptCodes for each non-dummy transparent input.
         t_inputs = []
