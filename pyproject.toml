@@ -1,40 +1,38 @@
-[tool.poetry]
+[project]
 name = "zcash-test-vectors"
 version = "0.1.0"
 description = "Zcash test vectors"
 authors = [
-    "Jack Grigg <jack@z.cash>",
-    "Daira-Emma Hopwood <daira@jacaranda.org>",
-    "Ying Tong Lai <yingtong@ethereum.org>",
-    "Taylor Hornby <taylor@defuse.ca>",
-    "Kris Nuttycombe <kris@electriccoin.co>",
-    "Simon <simon@bitcartel.com>",
-    "Ariel Gabizon <ariel.gabizon@gmail.com>",
-    "Deirdre Connolly <durumcrustulum@gmail.com>",
+    { name = "Jack Grigg", email = "jack@z.cash" },
+    { name = "Daira-Emma Hopwood", email = "daira@jacaranda.org" },
+    { name = "Ying Tong Lai", email = "yingtong@ethereum.org" },
+    { name = "Taylor Hornby", email = "taylor@defuse.ca" },
+    { name = "Kris Nuttycombe", email = "kris@electriccoin.co" },
+    { name = "Simon", email = "simon@bitcartel.com" },
+    { name = "Ariel Gabizon", email = "ariel.gabizon@gmail.com" },
+    { name = "Deirdre Connolly", email = "durumcrustulum@gmail.com" },
 ]
-license = "MIT OR Apache-2.0"
+license = { text = "MIT OR Apache-2.0" }
 readme = "README.md"
-homepage = "https://github.com/zcash-hackworks/zcash-test-vectors/"
-repository = "https://github.com/zcash-hackworks/zcash-test-vectors/"
-documentation = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+requires-python = ">=3.9"
 classifiers = [
     "Private :: Do Not Upload",
 ]
+dependencies = [
+    "numpy==1.26.4",
+    "chacha20poly1305==0.0.3",
+    "cryptography==38.0.1",
+    "secp256k1==0.14.0",
+    "base58==2.1.1",
+    "ripemd-hash>=1.0.1,<2.0.0",
+]
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[project.urls]
+Homepage = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+Repository = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+Documentation = "https://github.com/zcash-hackworks/zcash-test-vectors/"
 
-[tool.poetry.dependencies]
-python = "^3.9"
-numpy = "1.26.4"
-chacha20poly1305 = "0.0.3"
-cryptography = "38.0.1"
-secp256k1 = "0.14.0"
-base58 = "2.1.1"
-ripemd-hash = "^1.0.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 # General test vectors
 f4jumble = "zcash_test_vectors.f4jumble:main"
 f4jumble_long = "zcash_test_vectors.f4jumble:long_test_vectors"
@@ -73,3 +71,7 @@ orchard_poseidon = "zcash_test_vectors.orchard.poseidon:main"
 orchard_poseidon_hash = "zcash_test_vectors.orchard.poseidon:hash_test_vectors"
 orchard_sinsemilla = "zcash_test_vectors.orchard.sinsemilla:main"
 orchard_zip32 = "zcash_test_vectors.orchard.zip32:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
