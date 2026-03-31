@@ -49,6 +49,7 @@ case "$2" in
         sapling_zip32
         sapling_zip32_hard
         unified_address
+        unified_address_r2
         unified_full_viewing_keys
         unified_incoming_viewing_keys
         zip_0032_registered
