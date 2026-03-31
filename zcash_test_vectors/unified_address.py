@@ -105,7 +105,7 @@ def main():
             assert decoded.get('sapling') == sapling_raw_addr
             assert decoded.get('transparent') == t_addr
             if has_unknown_item:
-                assert decoded.get('unknown') == (unknown_tc, unknown_bytes)
+                assert decoded.get('unknown') == [(unknown_tc, unknown_bytes)]
             else:
                 assert decoded.get('unknown') == None
 

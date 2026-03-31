@@ -11,6 +11,19 @@ P2SH_ITEM = 0x01
 SAPLING_ITEM = 0x02
 ORCHARD_ITEM = 0x03
 
+EXPIRY_HEIGHT_ITEM = 0xE0
+EXPIRY_TIME_ITEM = 0xE1
+
+# MUST-understand metadata range (Revision 2 only)
+MUST_UNDERSTAND_MIN = 0xE0
+MUST_UNDERSTAND_MAX = 0xFC
+
+# Revision 0 HRPs
+R0_HRPS = {"u", "utest", "uview", "uviewtest", "uivk", "uivktest"}
+
+def is_must_understand(typecode):
+    return MUST_UNDERSTAND_MIN <= typecode <= MUST_UNDERSTAND_MAX
+
 def tlv(typecode, value):
     return b"".join([write_compact_size(typecode), write_compact_size(len(value)), value])
 
@@ -25,6 +38,9 @@ def encode_unified(items, hrp):
     has_p2sh = False
     for item in sorted(items):
         if item[1]:
+            if hrp in R0_HRPS:
+                assert not is_must_understand(item[0]), \
+                    "Revision 0 encoding must not contain MUST-understand metadata (typecode 0x%02X)" % item[0]
             if item[0] == P2PKH_ITEM:
                 has_p2pkh = True
             if item[0] == P2SH_ITEM:
@@ -75,8 +91,9 @@ def decode_unified(encoded, expected_hrp, expected_lengths):
             result['orchard'] = item
 
         else:
-            assert not ('unknown' in result), "duplicate unknown item detected"
-            result['unknown'] = (item_type, item)
+            if 'unknown' not in result:
+                result['unknown'] = []
+            result['unknown'].append((item_type, item))
 
         assert item_type > prev_type, "items out of order: typecodes %r and %r" % (prev_type, item_type)
         prev_type = item_type

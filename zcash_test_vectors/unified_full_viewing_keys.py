@@ -102,7 +102,7 @@ def main():
         assert decoded.get('orchard') == orchard_fvk_bytes
         assert decoded.get('sapling') == sapling_fvk_bytes
         assert decoded.get('transparent') == t_key_bytes
-        assert decoded.get('unknown') == ((unknown_tc, unknown_bytes) if unknown_bytes else None)
+        assert decoded.get('unknown') == ([(unknown_tc, unknown_bytes)] if unknown_bytes else None)
 
         test_vectors.append({
             't_key_bytes': t_key_bytes,
