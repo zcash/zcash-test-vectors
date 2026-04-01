@@ -369,13 +369,13 @@ def main():
             'orchard_fvk_bytes': orchard_fvk_bytes,
             'expiry_height': expiry_height,
             'expiry_time': expiry_time,
-            'unified_fvk': ufvk.encode(),
+            'unified_fvk': ufvk,
             # UIVK fields
             't_p2pkh_ivk_bytes': t_ivk_bytes,
             'p2sh_ivk_bytes': p2sh_ivk_bytes,
             'sapling_ivk_bytes': sapling_ivk_bytes,
             'orchard_ivk_bytes': orchard_ivk_bytes,
-            'unified_ivk': uivk.encode(),
+            'unified_ivk': uivk,
             # Derived UA fields
             'p2pkh_addr': t_p2pkh_addr,
             'p2sh_addr': t_p2sh_addr,
@@ -401,13 +401,13 @@ def main():
             ('orchard_fvk_bytes',  'Option<[u8; 96]>'),
             ('expiry_height',      'Option<u32>'),
             ('expiry_time',        'Option<u64>'),
-            ('unified_fvk',        {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
+            ('unified_fvk',        {'rust_type': '&\'static str'}),
             # UIVK
             ('t_p2pkh_ivk_bytes',  'Option<[u8; 65]>'),
             ('p2sh_ivk_bytes',     {'rust_type': 'Option<&\'static [u8]>', 'bitcoin_flavoured': False}),
             ('sapling_ivk_bytes',  'Option<[u8; 64]>'),
             ('orchard_ivk_bytes',  'Option<[u8; 64]>'),
-            ('unified_ivk',        {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
+            ('unified_ivk',        {'rust_type': '&\'static str'}),
             # Derived UA
             ('p2pkh_addr',         'Option<[u8; 20]>'),
             ('p2sh_addr',          'Option<[u8; 20]>'),

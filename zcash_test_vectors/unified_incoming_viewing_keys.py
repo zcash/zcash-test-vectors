@@ -99,7 +99,7 @@ def main():
             'orchard_ivk_bytes': orchard_ivk_bytes,
             'unknown_ivk_typecode': unknown_tc,
             'unknown_ivk_bytes': unknown_bytes,
-            'unified_ivk': uivk.encode(),
+            'unified_ivk': uivk,
             'root_seed': seed,
             'account': account,
         })
@@ -113,7 +113,7 @@ def main():
             ('orchard_ivk_bytes',    'Option<[u8; 64]>'),
             ('unknown_ivk_typecode', 'u32'),
             ('unknown_ivk_bytes',    {'rust_type': 'Option<&\'static [u8]>', 'bitcoin_flavoured': False}),
-            ('unified_ivk',          {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
+            ('unified_ivk',          {'rust_type': '&\'static str'}),
             ('root_seed',            {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
             ('account',              'u32'),
         ),

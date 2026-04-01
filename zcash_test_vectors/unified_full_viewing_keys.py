@@ -98,7 +98,7 @@ def main():
             'orchard_fvk_bytes': orchard_fvk_bytes,
             'unknown_fvk_typecode': unknown_tc,
             'unknown_fvk_bytes': unknown_bytes,
-            'unified_fvk': ufvk.encode(),
+            'unified_fvk': ufvk,
             'root_seed': seed,
             'account': account,
         })
@@ -112,7 +112,7 @@ def main():
             ('orchard_fvk_bytes',    'Option<[u8; 96]>'),
             ('unknown_fvk_typecode', 'u32'),
             ('unknown_fvk_bytes',    {'rust_type': 'Option<&\'static [u8]>', 'bitcoin_flavoured': False}),
-            ('unified_fvk',          {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
+            ('unified_fvk',          {'rust_type': '&\'static str'}),
             ('root_seed',            {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
             ('account',              'u32'),
         ),
