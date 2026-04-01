@@ -1,19 +1,19 @@
 // From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_sinsemilla.py
 
 pub(crate) struct TestVector {
-    pub(crate) domain: Vec<u8>,
-    pub(crate) msg: Vec<bool>,
+    pub(crate) domain: &'static [u8],
+    pub(crate) msg: &'static [bool],
     pub(crate) point: [u8; 32],
     pub(crate) hash: [u8; 32],
 }
 
 pub(crate) const TEST_VECTORS: &[TestVector] = &[
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61,
         ],
-        msg: vec![
+        msg: &[
             false, false, false, true, false, true, true, false, true, false, true, false, false,
             true, true, false, false, false, true, true, false, true, true, false, false, false,
             true, true, false, true, true, false, true, true, true, true, false, true, true, false,
@@ -30,12 +30,12 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61, 0x2d, 0x6c, 0x6f, 0x6e, 0x67, 0x65,
             0x72,
         ],
-        msg: vec![
+        msg: &[
             true, true, false, true, false, false, true, false, true, false, false, false, false,
             true, false, true, false, false, true, false, true, true, true, false, false, false,
             false, true, true, false, false, true, false, true, false, true, false, true, true,
@@ -59,11 +59,11 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61,
         ],
-        msg: vec![
+        msg: &[
             true, false, true, true, false, true, false, true, false, true, false, true, true,
             true, true, true, true, true, false, true, false, true, true, false, true, false, true,
             false, true, false, true, false, false, true, false, true, true, false, false, false,
@@ -85,11 +85,11 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61,
         ],
-        msg: vec![
+        msg: &[
             false, false, true, true, false, false, false, true, false, false, true, false, true,
             true, true, true, false, false, true, false, true, false, false, false, true, true,
             false, false, true, true, true, true, false, true, false, false, true, false, false,
@@ -119,12 +119,12 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61, 0x2d, 0x6c, 0x6f, 0x6e, 0x67, 0x65,
             0x72,
         ],
-        msg: vec![
+        msg: &[
             false, true, true, true, true, true, true, true, true, false, false, false, false,
             true, false, true, false, false, true, false, true, false, true, true, true, false,
             true, true, true, false, true, false, true, false, false, true, true, false, false,
@@ -143,11 +143,11 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61,
         ],
-        msg: vec![
+        msg: &[
             true, true, false, false, true, true, false, true, false, false, true, true, false,
             false, true, true, false, true, false, true, true, true, false, true, true, false,
             true, true, false, true, true, true, true, true, true, false, false, false, true,
@@ -177,12 +177,12 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61, 0x2d, 0x6c, 0x6f, 0x6e, 0x67, 0x65,
             0x72,
         ],
-        msg: vec![
+        msg: &[
             false, false, true, false, false, true, true, false, false, true, true, false, true,
             true, false, true, true, true, true, false, false, false, true, true, false, true,
             true, false, true, false, true, false, true, true, true, true, false, false, false,
@@ -204,12 +204,12 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61, 0x2d, 0x6c, 0x6f, 0x6e, 0x67, 0x65,
             0x72,
         ],
-        msg: vec![
+        msg: &[
             true, true, false, true, true, true, false, false, true, false, false, false, true,
             true, false, false, true, true, true, false, false, true, false, true, true, true,
             true, false, true, true, true, false, false, true, true, false, true, true, true, true,
@@ -237,11 +237,11 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61,
         ],
-        msg: vec![
+        msg: &[
             false, false, true, false, true, false, true, false, false, true, true, false, true,
             true, true, true, true, false, false, true, true, false, true, false, true, true, true,
             false, false, false, false, true, false, false, true, true, false, false, false, false,
@@ -261,11 +261,11 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61,
         ],
-        msg: vec![
+        msg: &[
             true, true, true, false, true, false, true, false, true, true, true, true, false, true,
             false, true, false, true, false, true, false, true, false, true, true, true, false,
             false, true, false, false, true, false, false, true, true, false, true, false, false,
@@ -288,11 +288,11 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         ],
     },
     TestVector {
-        domain: vec![
+        domain: &[
             0x7a, 0x2e, 0x63, 0x61, 0x73, 0x68, 0x3a, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x53, 0x69,
             0x6e, 0x73, 0x65, 0x6d, 0x69, 0x6c, 0x6c, 0x61,
         ],
-        msg: vec![true, false, true, true, true, false, true, false],
+        msg: &[true, false, true, true, true, false, true, false],
         point: [
             0x80, 0x6a, 0xcc, 0x24, 0x7a, 0xc9, 0xba, 0x90, 0xd2, 0x5f, 0x58, 0x3d, 0xad, 0xb5,
             0xe0, 0xee, 0x5c, 0x03, 0xe1, 0xab, 0x35, 0x70, 0xb3, 0x62, 0xb4, 0xbe, 0x5a, 0x8b,

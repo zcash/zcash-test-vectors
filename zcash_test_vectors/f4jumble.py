@@ -117,8 +117,8 @@ def main():
         args,
         'f4jumble',
         (
-            ('normal', 'Vec<u8>'),
-            ('jumbled', 'Vec<u8>'),
+            ('normal', '&\'static [u8]'),
+            ('jumbled', '&\'static [u8]'),
         ),
         plain_test_vectors,
     )
