@@ -17,6 +17,10 @@ from .hd_common import ZCASH_MAIN_COINTYPE, hardened
 from .unified_encoding import encode_unified, decode_unified
 from .unified_encoding import P2PKH_ITEM, P2SH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
 from .unified_encoding import EXPIRY_HEIGHT_ITEM, EXPIRY_TIME_ITEM
+from .viewing_key_derivation import (
+    derive_sapling_fvk, derive_sapling_ivk,
+    derive_orchard_fvk, derive_orchard_ivk,
+)
 
 
 def encode_p2sh_fvk(template, keys):
@@ -194,14 +198,7 @@ def main():
 
         # Sapling FVK: ak || nk || ovk || dk (128 bytes)
         if has_s_key:
-            s_account_key = s_coin_key.child(hardened(account))
-            sapling_fvk = s_account_key.to_extended_fvk()
-            sapling_fvk_bytes = b"".join([
-                bytes(sapling_fvk.ak()),
-                bytes(sapling_fvk.nk()),
-                sapling_fvk.ovk(),
-                sapling_fvk.dk()
-            ])
+            (sapling_fvk_bytes, sapling_fvk, s_account_key) = derive_sapling_fvk(s_coin_key, account)
             fvk_items.append((SAPLING_ITEM, sapling_fvk_bytes))
         else:
             sapling_fvk_bytes = None
@@ -210,13 +207,7 @@ def main():
 
         # Orchard FVK: ak || nk || rivk (96 bytes)
         if has_o_key:
-            o_account_key = o_coin_key.child(hardened(account))
-            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(o_account_key)
-            orchard_fvk_bytes = b"".join([
-                bytes(orchard_fvk.ak),
-                bytes(orchard_fvk.nk),
-                bytes(orchard_fvk.rivk)
-            ])
+            (orchard_fvk_bytes, orchard_fvk) = derive_orchard_fvk(o_coin_key, account)
             fvk_items.append((ORCHARD_ITEM, orchard_fvk_bytes))
         else:
             orchard_fvk_bytes = None

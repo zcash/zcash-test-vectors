@@ -7,13 +7,14 @@ from random import Random
 from .output import render_args, render_tv, Some
 from .rand import Rand, randbytes
 from .zc_utils import write_compact_size
-from .sapling import key_components as sapling_key_components, zip32 as sapling_zip32
+from .sapling import zip32 as sapling_zip32
 from .orchard import key_components as orchard_key_components
 from .transparent import bip_0032
 from .hd_common import ZCASH_MAIN_COINTYPE, hardened
 from .unified_encoding import encode_unified, decode_unified
 from .unified_encoding import P2PKH_ITEM, P2SH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
 from .unified_encoding import EXPIRY_HEIGHT_ITEM, EXPIRY_TIME_ITEM
+from .viewing_key_derivation import derive_sapling_fvk, derive_orchard_fvk
 
 
 def main():
@@ -68,7 +69,7 @@ def main():
             receivers = []
 
             if has_s_addr:
-                s_account_key = s_coin_key.child(hardened(account))
+                (_, _, s_account_key) = derive_sapling_fvk(s_coin_key, account)
                 j = s_account_key.find_j(j)
                 sapling_d = s_account_key.diversifier(j)
                 sapling_pk_d = s_account_key.pk_d(j)
@@ -78,8 +79,7 @@ def main():
                 sapling_raw_addr = None
 
             if has_o_addr:
-                o_account_key = o_coin_key.child(hardened(account))
-                orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(o_account_key)
+                (_, orchard_fvk) = derive_orchard_fvk(o_coin_key, account)
                 orchard_d = orchard_fvk.diversifier(j)
                 orchard_pk_d = orchard_fvk.pk_d(j)
                 orchard_raw_addr = orchard_d + bytes(orchard_pk_d)
