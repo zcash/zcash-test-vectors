@@ -15,7 +15,7 @@ struct TestVector {
     sighash_single_anyone: Option<[u8; 32]>,
 }
 
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0233.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zip_0233.py
 const TEST_VECTORS: &[TestVector] = &[
     TestVector {
         tx: &[

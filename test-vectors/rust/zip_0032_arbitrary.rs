@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0032_arbitrary.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zip_0032_arbitrary.py
 
 pub(crate) struct TestVector {
     pub(crate) context_string: &'static [u8],

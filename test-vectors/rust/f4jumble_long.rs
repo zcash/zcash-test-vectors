@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/f4jumble_long.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/f4jumble_long.py
 
 pub(crate) struct TestVector {
     pub(crate) length: usize,

@@ -28,9 +28,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/zcash-hackworks/zcash-test-vectors/"
-Repository = "https://github.com/zcash-hackworks/zcash-test-vectors/"
-Documentation = "https://github.com/zcash-hackworks/zcash-test-vectors/"
+Homepage = "https://github.com/zcash/zcash-test-vectors/"
+Repository = "https://github.com/zcash/zcash-test-vectors/"
+Documentation = "https://github.com/zcash/zcash-test-vectors/"
 
 [project.scripts]
 # General test vectors

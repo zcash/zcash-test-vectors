@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_merkle_tree.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_merkle_tree.py
 
 pub(crate) struct TestVector {
     pub(crate) leaves: [[u8; 32]; 16],

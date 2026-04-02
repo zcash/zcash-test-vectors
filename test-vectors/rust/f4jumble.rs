@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/f4jumble.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/f4jumble.py
 
 pub(crate) struct TestVector {
     pub(crate) normal: &'static [u8],

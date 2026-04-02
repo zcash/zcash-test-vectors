@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_zip32.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/sapling_zip32.py
 
 pub(crate) struct TestVector {
     pub(crate) ask: Option<[u8; 32]>,

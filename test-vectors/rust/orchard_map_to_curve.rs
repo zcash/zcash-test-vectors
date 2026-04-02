@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_map_to_curve.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_map_to_curve.py
 
 pub(crate) struct TestVector {
     pub(crate) u: [u8; 32],

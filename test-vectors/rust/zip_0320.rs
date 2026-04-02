@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0320.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0320.py
 
 pub(crate) struct TestVector {
     pub(crate) t_addr: &'static str,

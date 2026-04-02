@@ -50,7 +50,7 @@ def tv_json(filename, parts, vectors, bitcoin_flavoured):
         vectors = [vectors]
 
     print('''[
-    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/%s.py"],
     ["%s"],''' % (
         filename,
         ', '.join([p[0] for p in parts])
@@ -198,7 +198,7 @@ def tv_part_rust(name, value, config, indent=3):
         raise ValueError('Invalid type(%s): %s' % (name, type(value)))
 
 def tv_rust(filename, parts, vectors):
-    print('// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py' % (
+    print('// From https://github.com/zcash/zcash-test-vectors/blob/master/%s.py' % (
         filename,
     ))
     print()

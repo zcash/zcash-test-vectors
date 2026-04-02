@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/unified_incoming_viewing_keys.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/unified_incoming_viewing_keys.py
 
 pub(crate) struct TestVector {
     pub(crate) t_key_bytes: Option<[u8; 65]>,

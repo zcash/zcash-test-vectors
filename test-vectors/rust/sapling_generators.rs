@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_generators.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/sapling_generators.py
 
 pub(crate) struct TestVector {
     pub(crate) skb: [u8; 32],

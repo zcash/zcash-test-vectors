@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_group_hash.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_group_hash.py
 
 pub(crate) struct TestVector {
     pub(crate) domain: &'static [u8],

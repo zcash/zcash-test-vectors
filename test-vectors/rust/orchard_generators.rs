@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_generators.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_generators.py
 
 pub(crate) struct TestVector {
     pub(crate) skb: [u8; 32],

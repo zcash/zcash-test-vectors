@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/sapling_key_components.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/sapling_key_components.py
 
 pub(crate) struct TestVector {
     pub(crate) sk: [u8; 32],

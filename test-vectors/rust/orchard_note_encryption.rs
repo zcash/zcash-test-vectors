@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_note_encryption.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_note_encryption.py
 
 pub(crate) struct TestVector {
     pub(crate) incoming_viewing_key: [u8; 64],
