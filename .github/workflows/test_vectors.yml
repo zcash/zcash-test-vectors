@@ -21,6 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Rust toolchain
+        if: matrix.kind == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
@@ -32,3 +38,14 @@ jobs:
 
       - name: Verify there are no changes
         run: git diff; git ls-files --others --exclude-standard; test -z "$(git status --porcelain)"
+
+      - name: Verify Rust test vectors compile
+        if: matrix.kind == 'rust'
+        run: |
+          tmpdir=$(mktemp -d)
+          for f in test-vectors/rust/*.rs; do
+            echo "Compiling $f"
+            printf '#![allow(dead_code)]\n' | cat - "$f" \
+              | rustc --edition 2021 --crate-type lib - -o "$tmpdir/out"
+          done
+          rm -rf "$tmpdir"

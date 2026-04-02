@@ -173,8 +173,8 @@ def main():
         render_args(),
         'orchard_group_hash',
         (
-            ('domain', 'Vec<u8>'),
-            ('msg', 'Vec<u8>'),
+            ('domain', '&\'static [u8]'),
+            ('msg', '&\'static [u8]'),
             ('point', '[u8; 32]'),
         ),
         [{
