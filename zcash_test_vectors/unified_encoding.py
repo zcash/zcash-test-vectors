@@ -14,12 +14,19 @@ ORCHARD_ITEM = 0x03
 EXPIRY_HEIGHT_ITEM = 0xE0
 EXPIRY_TIME_ITEM = 0xE1
 
+# Metadata typecode range (0xC0..=0xFC per ZIP 316)
+METADATA_MIN = 0xC0
+METADATA_MAX = 0xFC
+
 # MUST-understand metadata range (Revision 2 only)
 MUST_UNDERSTAND_MIN = 0xE0
 MUST_UNDERSTAND_MAX = 0xFC
 
 # Revision 0 HRPs
 R0_HRPS = {"u", "utest", "uview", "uviewtest", "uivk", "uivktest"}
+
+def is_metadata(typecode):
+    return METADATA_MIN <= typecode <= METADATA_MAX
 
 def is_must_understand(typecode):
     return MUST_UNDERSTAND_MIN <= typecode <= MUST_UNDERSTAND_MAX
@@ -47,6 +54,11 @@ def encode_unified(items, hrp):
                 has_p2sh = True
             assert (not (has_p2pkh and has_p2sh))
             encoded_items.append(tlv(item[0], item[1]))
+
+    # A UA/UVK MUST contain at least one non-metadata Item.
+    assert any(
+        item[1] and not is_metadata(item[0]) for item in items
+    ), "UA/UVK must contain at least one non-metadata Item"
 
     encoded_items.append(padding(hrp))
 
