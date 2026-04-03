@@ -248,6 +248,12 @@ def main():
             assert fvk_decoded.get('transparent') == p2sh_fvk_bytes
         else:
             assert fvk_decoded.get('transparent') is None
+        expected_fvk_unknown = []
+        if has_expiry_height:
+            expected_fvk_unknown.append((EXPIRY_HEIGHT_ITEM, expiry_height_bytes))
+        if has_expiry_time:
+            expected_fvk_unknown.append((EXPIRY_TIME_ITEM, expiry_time_bytes))
+        assert fvk_decoded.get('unknown') == (expected_fvk_unknown if expected_fvk_unknown else None)
 
         # --- Derive UIVK from UFVK ---
         ivk_items = []
@@ -315,6 +321,12 @@ def main():
             assert ivk_decoded.get('transparent') == p2sh_ivk_bytes
         else:
             assert ivk_decoded.get('transparent') is None
+        expected_ivk_unknown = []
+        if has_expiry_height:
+            expected_ivk_unknown.append((EXPIRY_HEIGHT_ITEM, expiry_height_bytes))
+        if has_expiry_time:
+            expected_ivk_unknown.append((EXPIRY_TIME_ITEM, expiry_time_bytes))
+        assert ivk_decoded.get('unknown') == (expected_ivk_unknown if expected_ivk_unknown else None)
 
         # --- Derive UA from UIVK ---
         ua_hrp = "zu" if is_zu else "tu"
