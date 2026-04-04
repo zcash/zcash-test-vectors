@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/unified_viewing_keys_r2.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/unified_viewing_keys_r2.py
 
 pub(crate) struct TestVector {
     pub(crate) t_p2pkh_fvk_bytes: Option<[u8; 65]>,

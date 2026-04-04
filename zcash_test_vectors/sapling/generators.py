@@ -58,7 +58,7 @@ PEDERSEN_BASES = [find_group_hash(b'Zcash_PH', i2leosp(32, iminus1))
 def main():
     render_tv(
         render_args(),
-        'sapling_generators',
+        'zcash_test_vectors/sapling/generators',
         (
             ('skb', '[u8; 32]'),
             ('pkb', '[u8; 32]'),

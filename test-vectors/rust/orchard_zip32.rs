@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_zip32.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/zip32.py
 
 pub(crate) struct TestVector {
     pub(crate) sk: [u8; 32],

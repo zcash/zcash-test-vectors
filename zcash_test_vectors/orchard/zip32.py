@@ -87,7 +87,7 @@ def render_tvs(args, keys):
 
     render_tv(
         args,
-        'orchard_zip32',
+        'zcash_test_vectors/orchard/zip32',
         (
             ('sk',  '[u8; 32]'),
             ('c',   '[u8; 32]'),

@@ -404,7 +404,7 @@ def main():
 
     render_tv(
         args,
-        'unified_viewing_keys_r2',
+        'zcash_test_vectors/unified_viewing_keys_r2',
         (
             # UFVK
             ('t_p2pkh_fvk_bytes',  'Option<[u8; 65]>'),

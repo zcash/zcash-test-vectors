@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_poseidon_hash.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/poseidon.py
 
 pub(crate) struct TestVector {
     pub(crate) input: [[u8; 32]; 2],

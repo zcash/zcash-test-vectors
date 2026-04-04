@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/zip_0316.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0316.py
 
 pub(crate) struct TestVector {
     pub(crate) c: [u8; 32],

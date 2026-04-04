@@ -171,7 +171,7 @@ def main():
 
     render_tv(
         render_args(),
-        'orchard_group_hash',
+        'zcash_test_vectors/orchard/group_hash',
         (
             ('domain', '&\'static [u8]'),
             ('msg', '&\'static [u8]'),
@@ -216,7 +216,7 @@ def map_to_curve_test_vectors():
 
     render_tv(
         render_args(),
-        'orchard_map_to_curve',
+        'zcash_test_vectors/orchard/group_hash',
         (
             ('u', '[u8; 32]'),
             ('point', '[u8; 32]'),

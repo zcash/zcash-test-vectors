@@ -155,7 +155,7 @@ def main():
 
     render_tv(
         args,
-        'sapling_note_encryption',
+        'zcash_test_vectors/sapling/note_encryption',
         (
             ('ovk', '[u8; 32]'),
             ('ivk', '[u8; 32]'),

@@ -1,5 +1,5 @@
 [
-    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zip_0316.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0316.py"],
     ["c, pk, external_ovk, internal_ovk"],
     ["482169eef62efaaf9d9364b1666e4d4c299e04a852e10c5b949e2d9a738f7a5d", "0216884f1dbc929089a4176e840bb581c80e16e9b1abd654e62c8b0b957020b748", "79409b03ad5013081effb31dec19328ccad7c423bd4f12d56477eb207ffbe7dc", "00a4c8d88302e8449b1085869e11bf7e7d32ff6a2821ac404ad9daed14c7464d"],
     ["9435a7304e9de2a5d6368e9c7e1fe01f6c54db9379a94c2941ef180c25b869bf", "037273b657d971a45e72240c7aaaa7d0685d06d7999b0a19c4cea32788a6ab513d", "52953e58f44467d10a67ea12e14e1affa12bdefb8b7048e623408f387b53318d", "f654d742d238bf3f6173540151482ea944221ccf453206be039c9d7600497716"],

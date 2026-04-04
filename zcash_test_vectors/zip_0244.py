@@ -413,7 +413,7 @@ def main():
 
     render_tv(
         args,
-        'zip_0244',
+        'zcash_test_vectors/zip_0244',
         (
             ('tx',                    {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
             ('txid',                  '[u8; 32]'),

@@ -181,7 +181,7 @@ def main():
 
     render_tv(
         args,
-        'unified_address_r2',
+        'zcash_test_vectors/unified_address_r2',
         (
             ('p2pkh_bytes',       'Option<[u8; 20]>'),
             ('p2sh_bytes',        'Option<[u8; 20]>'),

@@ -1,5 +1,5 @@
 [
-    ["From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_group_hash.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/group_hash.py"],
     ["domain, msg, point"],
     ["7a2e636173683a74657374", "5472616e7320726967687473206e6f7721", "1818cda31ffdc8c3ff23df3d88c26f952340257d0f187a0236695c9b640b6bd3"],
     ["7a2e636173683a746573742d6c6f6e676572", "8f739a2d9e945b0ce152a8049e294c4d6e66b164939daffa2ef6ee6921481cdd86b3cc4318d9614fc820905d042bb1ef9ca3f24988c7b3534201cfb1cd8dbf69b8250c18ef41294ca97993db546c1fe01f7e9c8e36d6a5e29d4e30a73594bf5098421c69378af1e40f64e125946f62c2fa7b2fecbcb64b696891", "b44ddd61dd57f51f1da1c42fe227d72377808dbed58f24777ce767264f3e60d3"],

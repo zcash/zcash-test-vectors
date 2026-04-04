@@ -79,7 +79,7 @@ def main():
 
     render_tv(
         render_args(),
-        'orchard_sinsemilla',
+        'zcash_test_vectors/orchard/sinsemilla',
         (
             ('domain', {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
             ('msg', {

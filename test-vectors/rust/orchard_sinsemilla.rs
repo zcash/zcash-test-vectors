@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/orchard_sinsemilla.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/sinsemilla.py
 
 pub(crate) struct TestVector {
     pub(crate) domain: &'static [u8],

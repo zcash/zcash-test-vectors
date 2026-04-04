@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/sapling_note_encryption.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/sapling/note_encryption.py
 
 pub(crate) struct TestVector {
     pub(crate) ovk: [u8; 32],

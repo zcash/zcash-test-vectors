@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/unified_address.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/unified_address.py
 
 pub(crate) struct TestVector {
     pub(crate) p2pkh_bytes: Option<[u8; 20]>,

@@ -106,7 +106,7 @@ def main():
 
     render_tv(
         args,
-        'unified_incoming_viewing_keys',
+        'zcash_test_vectors/unified_incoming_viewing_keys',
         (
             ('t_key_bytes',          'Option<[u8; 65]>'),
             ('sapling_ivk_bytes',    'Option<[u8; 64]>'),
