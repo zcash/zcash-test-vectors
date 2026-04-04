@@ -86,7 +86,7 @@ do
   do
       echo "# $generator"
       if [ "$gen_type" = "rust" ]; then
-          uv run $generator -t $gen_type | rustfmt >test-vectors/$gen_type/$generator.$extension
+          uv run $generator -t $gen_type | rustfmt --edition 2021 >test-vectors/$gen_type/$generator.$extension
       else
           uv run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
       fi
