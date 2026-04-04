@@ -11,6 +11,8 @@ def derive_sapling_fvk(s_coin_key, account):
     """Derive Sapling FVK encoding: ak || nk || ovk || dk (128 bytes).
 
     Returns (fvk_bytes, extended_fvk, account_key).
+    account_key is needed by callers for Sapling diversifier derivation
+    (find_j, diversifier, pk_d), unlike Orchard where the FVK has those methods.
     """
     account_key = s_coin_key.child(hardened(account))
     fvk = account_key.to_extended_fvk()
@@ -27,6 +29,8 @@ def derive_sapling_ivk(s_coin_key, account):
     """Derive Sapling IVK encoding: dk || ivk (64 bytes).
 
     Returns (ivk_bytes, extended_fvk, account_key).
+    account_key is needed by callers for Sapling diversifier derivation
+    (find_j, diversifier, pk_d), unlike Orchard where the FVK has those methods.
     """
     account_key = s_coin_key.child(hardened(account))
     fvk = account_key.to_extended_fvk()
