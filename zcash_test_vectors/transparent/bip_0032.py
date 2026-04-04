@@ -29,6 +29,10 @@ class ExtendedBase(object):
     def key_fingerprint(self):
         return self.key_identifier()[:4]
 
+    def key_bytes(self):
+        """Return the chaincode and key data without BIP 32 depth/fingerprint/index prefix."""
+        return bytes(self)[-65:]
+
 
 class ExtendedSecretKey(ExtendedBase):
     def __init__(self, chaincode, sk, depth=0, parent_tag=i2beosp(32, 0), i=0):

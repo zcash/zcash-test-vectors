@@ -174,7 +174,7 @@ def main():
         # P2PKH FVK: account-level extended public key (65 bytes = chaincode + compressed pubkey)
         if has_p2pkh_key:
             t_account_key = t_coin_key.child(hardened(account))
-            t_fvk_bytes = bytes(t_account_key.public_key())[-65:]
+            t_fvk_bytes = t_account_key.public_key().key_bytes()
             assert len(t_fvk_bytes) == 65
             fvk_items.append((P2PKH_ITEM, t_fvk_bytes))
         else:
@@ -262,7 +262,7 @@ def main():
         if has_p2pkh_key:
             t_account_pubkey = t_account_key.public_key()
             t_ivk_pubkey = t_account_pubkey.child(0)  # external chain
-            t_ivk_bytes = bytes(t_ivk_pubkey)[-65:]
+            t_ivk_bytes = t_ivk_pubkey.key_bytes()
             assert len(t_ivk_bytes) == 65
             ivk_items.append((P2PKH_ITEM, t_ivk_bytes))
         else:

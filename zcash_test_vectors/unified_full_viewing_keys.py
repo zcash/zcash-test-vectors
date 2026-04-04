@@ -44,7 +44,7 @@ def main():
             # at path m/44'/coin_type'/account', while the IVK uses the external (non-change)
             # child key at the Change level, i.e. at path m/44'/coin_type'/account'/0."
             t_account_key = t_coin_key.child(hardened(account))
-            t_key_bytes = bytes(t_account_key.public_key())[-65:]
+            t_key_bytes = t_account_key.public_key().key_bytes()
         else:
             t_key_bytes = None
 
