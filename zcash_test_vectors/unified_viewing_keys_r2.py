@@ -158,9 +158,9 @@ def main():
         # P2PKH and P2SH are mutually exclusive per ZIP 316 (both R0 and R2):
         # a UA/UVK cannot contain both a P2PKH and P2SH item.
         has_p2pkh_key = rand.bool()
-        has_p2sh_key = (not has_p2pkh_key) and rand.bool()
+        has_p2sh_key = rand.bool() and (not has_p2pkh_key)
         has_s_key = rand.bool()
-        has_o_key = (not has_s_key) or rand.bool()
+        has_o_key = rand.bool() or (not has_s_key)
         has_expiry_height = rand.bool()
         has_expiry_time = rand.bool()
 
