@@ -6,25 +6,6 @@ if [ $# -lt 2 ]; then
   exit 1
 fi
 
-case "$1" in
-  "rust" )
-    gen_types=(rust)
-    ;;
-  "zcash" )
-    gen_types=(zcash)
-    ;;
-  "json")
-    gen_types=(json)
-    ;;
-  "all")
-    gen_types=(rust zcash json)
-    ;;
-  *)
-    echo "Unexpected generation type: $1"
-    exit 1
-    ;;
-esac
-
 case "$2" in
   "all" )
     tv_scripts=(
@@ -55,6 +36,7 @@ case "$2" in
         unified_viewing_keys_r2
         zip_0032_registered
         zip_0032_arbitrary
+        zip_0048
         zip_0143
         zip_0233
         zip_0243
@@ -67,29 +49,37 @@ case "$2" in
     ;;
 esac
 
-for gen_type in "${gen_types[@]}"
-do
-  echo "Generating $gen_type test vectors..."
-  case "$gen_type" in
-    "rust" )
-      extension="rs"
-      ;;
-    "zcash" )
-      extension="json"
-      ;;
-    "json")
-      extension="json"
-      ;;
-  esac
+case "$1" in
+  "all" )
+    echo "Generating all test vector formats..."
+    for generator in "${tv_scripts[@]}"
+    do
+        echo "# $generator"
+        uv run $generator -o test-vectors -n "$generator"
+    done
+    echo "Finished all formats."
+    ;;
+  "rust" | "json" | "zcash" )
+    gen_type="$1"
+    case "$gen_type" in
+      "rust" )
+        extension="rs"
+        ;;
+      * )
+        extension="json"
+        ;;
+    esac
 
-  for generator in "${tv_scripts[@]}"
-  do
-      echo "# $generator"
-      if [ "$gen_type" = "rust" ]; then
-          uv run $generator -t $gen_type | rustfmt --edition 2021 >test-vectors/$gen_type/$generator.$extension
-      else
-          uv run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
-      fi
-  done
-  echo "Finished $gen_type."
-done
+    echo "Generating $gen_type test vectors..."
+    for generator in "${tv_scripts[@]}"
+    do
+        echo "# $generator"
+        uv run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
+    done
+    echo "Finished $gen_type."
+    ;;
+  *)
+    echo "Unexpected generation type: $1"
+    exit 1
+    ;;
+esac
