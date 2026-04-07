@@ -5,7 +5,6 @@ import os
 from binascii import unhexlify, hexlify
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 
 from .utils import bebs2ip, i2bebsp, beos2ip, bebs2osp, cldiv
 
@@ -117,7 +116,7 @@ def test_ff1():
 
 
 def aes_cbcmac(key, input):
-    encryptor = Cipher(algorithms.AES(key), modes.CBC(b'\0'*16), backend=default_backend()).encryptor()
+    encryptor = Cipher(algorithms.AES(key), modes.CBC(b'\0'*16)).encryptor()
     return (encryptor.update(input) + encryptor.finalize())[-16:]
 
 def test_aes():
