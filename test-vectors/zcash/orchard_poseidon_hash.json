@@ -1,5 +1,5 @@
 [
-    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_poseidon_hash.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/poseidon.py"],
     ["input, output"],
     [["0000000000000000000000000000000000000000000000000000000000000000", "0000000000000000000000000000000000000000000000000000000000000001"], "062ff1c32bb0ef109d6a1bc9399a083eed83c2a7fb54cdbe389d32a011d75883"],
     [["082169eef62efaaf9d9364b1666e4d4c07576bac4994133ffb70fcad738f7a5c", "0dcdb1cf014253b3c78849f2a39cefb0e6772b980e2e5d2aa6bde1f2b386dd1a"], "03e63b302667d2794b3992be2385a0f18e2ac0ca61ded5c430fef83eff7526db"],

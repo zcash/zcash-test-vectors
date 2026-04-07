@@ -31,7 +31,7 @@ MERKLE_CRH_Q = group_hash(b'z.cash:SinsemillaQ', b'z.cash:Orchard-MerkleCRH')
 def main():
     render_tv(
         render_args(),
-        'orchard_generators',
+        'zcash_test_vectors/orchard/generators',
         (
             ('skb', '[u8; 32]'),
             ('nkb', '[u8; 32]'),

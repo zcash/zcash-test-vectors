@@ -13,7 +13,7 @@ def main():
 
     render_tv(
         args,
-        'orchard_empty_roots',
+        'zcash_test_vectors/orchard/empty_roots',
         (
             ('empty_roots', '[[u8; 32]; 33]'),
         ),

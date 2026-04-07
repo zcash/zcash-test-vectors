@@ -276,7 +276,7 @@ def main():
 
     render_tv(
         args,
-        'orchard_note_encryption',
+        'zcash_test_vectors/orchard/note_encryption',
         (
             ('incoming_viewing_key', '[u8; 64]'),
             ('ovk', '[u8; 32]'),

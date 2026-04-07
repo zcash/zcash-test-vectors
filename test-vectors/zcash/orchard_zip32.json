@@ -1,5 +1,5 @@
 [
-    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_zip32.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/zip32.py"],
     ["sk, c, xsk, fp"],
     ["b8d42c8b8ee8a51708d620dce7c17689be802fb89168dda390098717103cee7e", "77665240ae500272da4c925716cbff7c4b471db692529b460ef29e50007a8bab", "000000000000000000ab8b7a00509ef20e469b5292b61d474b7cffcb1657924cda720250ae405266777eee3c1017870990a3dd6891b82f80be8976c1e7dc20d60817a5e88e8b2cd4b8", "06e738a491d868056501eaecbe1b9e336d6b614eb807880582d1c80250da4cff"],
     ["af62c977f9783c91a09addd1df97ff2c0850cd0ed16e3b5bc90405b4fc03d798", "229a66a9805b442c3bf1a67a57c9024fc01c48dc4f85b17ce9befe9cfb1d046a", "01ff4cda50010000806a041dfb9cfebee97cb1854fdc481cc04f02c9577aa6f13b2c445b80a9669a2298d703fcb40504c95b3b6ed10ecd50082cff97dfd1dd9aa0913c78f977c962af", "a6b9f7d120360dec186fd5136a7f9f5bfde18f3b913ec95d236f061d92dcbb32"],

@@ -45,14 +45,14 @@ def tv_value_json(value, bitcoin_flavoured):
 
     return bitcoinify(value)
 
-def tv_json(filename, parts, vectors, bitcoin_flavoured):
+def tv_json(source_path, parts, vectors, bitcoin_flavoured):
     if type(vectors) == type({}):
         vectors = [vectors]
 
     print('''[
-    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/%s.py"],
     ["%s"],''' % (
-        filename,
+        source_path,
         ', '.join([p[0] for p in parts])
     ))
     print('    ' + ',\n    '.join([
@@ -197,9 +197,9 @@ def tv_part_rust(name, value, config, indent=3):
     else:
         raise ValueError('Invalid type(%s): %s' % (name, type(value)))
 
-def tv_rust(filename, parts, vectors):
-    print('// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/%s.py' % (
-        filename,
+def tv_rust(source_path, parts, vectors):
+    print('// From https://github.com/zcash/zcash-test-vectors/blob/master/%s.py' % (
+        source_path,
     ))
     print()
     visibility = 'pub(crate) '
@@ -232,13 +232,13 @@ def render_args():
     parser.add_argument('-t', '--target', choices=['zcash', 'json', 'rust'], default='rust')
     return parser.parse_args()
 
-def render_tv(args, filename, parts, vectors):
+def render_tv(args, source_path, parts, vectors):
     # Convert older format
     parts = [(p[0], p[1] if type(p[1]) == type({}) else {'rust_type': p[1]}) for p in parts]
 
     if args.target == 'rust':
-        tv_rust(filename, parts, vectors)
+        tv_rust(source_path, parts, vectors)
     elif args.target == 'zcash':
-        tv_json(filename, parts, vectors, True)
+        tv_json(source_path, parts, vectors, True)
     elif args.target == 'json':
-        tv_json(filename, parts, vectors, False)
+        tv_json(source_path, parts, vectors, False)

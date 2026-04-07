@@ -103,7 +103,7 @@ def registered_key_derivation_tvs():
 
     render_tv(
         args,
-        'zip_0032_registered',
+        'zcash_test_vectors/zip_0032',
         (
             ('context_string', '&\'static [u8]'),
             ('seed',       '[u8; 32]'),
@@ -176,7 +176,7 @@ def arbitrary_key_derivation_tvs():
 
     render_tv(
         args,
-        'zip_0032_arbitrary',
+        'zcash_test_vectors/zip_0032',
         (
             ('context_string', '&\'static [u8]'),
             ('seed', '[u8; 32]'),

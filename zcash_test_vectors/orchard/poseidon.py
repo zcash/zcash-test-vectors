@@ -196,7 +196,7 @@ def main():
 
     render_tv(
         render_args(),
-        'orchard_poseidon',
+        'zcash_test_vectors/orchard/poseidon',
         (
             ('initial_state', '[[u8; 32]; 3]'),
             ('final_state', '[[u8; 32]; 3]'),
@@ -228,7 +228,7 @@ def hash_test_vectors():
 
     render_tv(
         render_args(),
-        'orchard_poseidon_hash',
+        'zcash_test_vectors/orchard/poseidon',
         (
             ('input', '[[u8; 32]; 2]'),
             ('output', '[u8; 32]'),

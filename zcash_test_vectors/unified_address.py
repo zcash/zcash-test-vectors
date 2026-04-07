@@ -105,7 +105,7 @@ def main():
             assert decoded.get('sapling') == sapling_raw_addr
             assert decoded.get('transparent') == t_addr
             if has_unknown_item:
-                assert decoded.get('unknown') == (unknown_tc, unknown_bytes)
+                assert decoded.get('unknown') == [(unknown_tc, unknown_bytes)]
             else:
                 assert decoded.get('unknown') == None
 
@@ -152,7 +152,7 @@ def main():
 
     render_tv(
         args,
-        'unified_address',
+        'zcash_test_vectors/unified_address',
         (
             ('p2pkh_bytes',       'Option<[u8; 20]>'),
             ('p2sh_bytes',        'Option<[u8; 20]>'),

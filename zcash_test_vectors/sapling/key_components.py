@@ -133,7 +133,7 @@ def main():
 
     render_tv(
         args,
-        'sapling_key_components',
+        'zcash_test_vectors/sapling/key_components',
         (
             ('sk', '[u8; 32]'),
             ('ask', '[u8; 32]'),

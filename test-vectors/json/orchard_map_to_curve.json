@@ -1,5 +1,5 @@
 [
-    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_map_to_curve.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/group_hash.py"],
     ["u, point"],
     ["0000000000000000000000000000000000000000000000000000000000000000", "0038a6bc533233af74b6e2e05c6ecaf66071c6a0f15b58e93df06bd23107152c"],
     ["0100000000000000000000000000000000000000000000000000000000000000", "20a13bbf7d671dce4ac9fcd9f9f50714392c28c4e1e9e0373378c972fb22b28b"],

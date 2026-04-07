@@ -11,6 +11,7 @@ from .transparent import bip_0032
 from .hd_common import ZCASH_MAIN_COINTYPE, hardened
 from .unified_encoding import encode_unified, decode_unified
 from .unified_encoding import P2PKH_ITEM, SAPLING_ITEM, ORCHARD_ITEM
+from .viewing_key_derivation import derive_sapling_fvk, derive_orchard_fvk
 
 
 def main():
@@ -49,26 +50,13 @@ def main():
 
         has_s_key = rand.bool()
         if has_s_key:
-            s_account_key = s_coin_key.child(hardened(account))
-            sapling_fvk = s_account_key.to_extended_fvk()
-            sapling_fvk_bytes = b"".join([
-                bytes(sapling_fvk.ak()),
-                bytes(sapling_fvk.nk()),
-                sapling_fvk.ovk(),
-                sapling_fvk.dk()
-                ])
+            (sapling_fvk_bytes, _, _) = derive_sapling_fvk(s_coin_key, account)
         else:
             sapling_fvk_bytes = None
 
         has_o_key = (not has_s_key) or rand.bool()
         if has_o_key:
-            o_account_key = o_coin_key.child(hardened(account))
-            orchard_fvk = orchard_key_components.FullViewingKey.from_spending_key(o_account_key)
-            orchard_fvk_bytes = b"".join([
-                bytes(orchard_fvk.ak),
-                bytes(orchard_fvk.nk),
-                bytes(orchard_fvk.rivk)
-                ])
+            (orchard_fvk_bytes, _) = derive_orchard_fvk(o_coin_key, account)
         else:
             orchard_fvk_bytes = None
 
@@ -102,7 +90,7 @@ def main():
         assert decoded.get('orchard') == orchard_fvk_bytes
         assert decoded.get('sapling') == sapling_fvk_bytes
         assert decoded.get('transparent') == t_key_bytes
-        assert decoded.get('unknown') == ((unknown_tc, unknown_bytes) if unknown_bytes else None)
+        assert decoded.get('unknown') == ([(unknown_tc, unknown_bytes)] if unknown_bytes else None)
 
         test_vectors.append({
             't_key_bytes': t_key_bytes,
@@ -110,21 +98,21 @@ def main():
             'orchard_fvk_bytes': orchard_fvk_bytes,
             'unknown_fvk_typecode': unknown_tc,
             'unknown_fvk_bytes': unknown_bytes,
-            'unified_fvk': ufvk.encode(),
+            'unified_fvk': ufvk,
             'root_seed': seed,
             'account': account,
         })
 
     render_tv(
         args,
-        'unified_full_viewing_keys',
+        'zcash_test_vectors/unified_full_viewing_keys',
         (
             ('t_key_bytes',          'Option<[u8; 65]>'),
             ('sapling_fvk_bytes',    'Option<[u8; 128]>'),
             ('orchard_fvk_bytes',    'Option<[u8; 96]>'),
             ('unknown_fvk_typecode', 'u32'),
             ('unknown_fvk_bytes',    {'rust_type': 'Option<&\'static [u8]>', 'bitcoin_flavoured': False}),
-            ('unified_fvk',          {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
+            ('unified_fvk',          {'rust_type': '&\'static str'}),
             ('root_seed',            {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
             ('account',              'u32'),
         ),

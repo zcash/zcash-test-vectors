@@ -120,7 +120,7 @@ def main():
 
     render_tv(
         args,
-        'orchard_merkle_tree',
+        'zcash_test_vectors/orchard/merkle_tree',
         (
             ('leaves', '[[u8; 32]; %d]' % (1 << SMALL_DEPTH)),
             ('paths', '[[[u8; 32]; %d]; %d]' % (SMALL_DEPTH, (1 << SMALL_DEPTH))),

@@ -49,11 +49,14 @@ case "$2" in
         sapling_zip32
         sapling_zip32_hard
         unified_address
+        unified_address_r2
         unified_full_viewing_keys
         unified_incoming_viewing_keys
+        unified_viewing_keys_r2
         zip_0032_registered
         zip_0032_arbitrary
         zip_0143
+        zip_0233
         zip_0243
         zip_0244
         zip_0316
@@ -83,7 +86,7 @@ do
   do
       echo "# $generator"
       if [ "$gen_type" = "rust" ]; then
-          uv run $generator -t $gen_type | rustfmt >test-vectors/$gen_type/$generator.$extension
+          uv run $generator -t $gen_type | rustfmt --edition 2021 >test-vectors/$gen_type/$generator.$extension
       else
           uv run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
       fi

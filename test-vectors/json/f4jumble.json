@@ -1,5 +1,5 @@
 [
-    ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/f4jumble.py"],
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/f4jumble.py"],
     ["normal, jumbled"],
     ["5d7a8f739a2d9e945b0ce152a8049e294c4d6e66b164939daffa2ef6ee6921481cdd86b3cc4318d9614fc820905d042b", "0304d029141b995da5387c125970673504d6c764d91ea6c082123770c7139ccd88ee27368cd0c0921a0444c8e5858d22"],
     ["b1ef9ca3f24988c7b3534201cfb1cd8dbf69b8250c18ef41294ca97993db546c1fe01f7e9c8e36d6a5e29d4e30a73594bf5098421c69378af1e40f64e125946f", "5271fa3321f3adbcfb075196883d542b438ec6339176537daf859841fe6a56222bff76d1662b5509a9e1079e446eeedd2e683c31aae3ee1851d7954328526be1"],

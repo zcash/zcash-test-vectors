@@ -263,7 +263,7 @@ def main():
 
     render_tv(
         args,
-        'bip_0032',
+        'zcash_test_vectors/transparent/bip_0032',
         (
             ('c',            '[u8; 32]'),
             ('pk',           '[u8; 33]'),

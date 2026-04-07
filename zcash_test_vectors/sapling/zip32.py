@@ -295,7 +295,7 @@ def render_tvs(args, keys_and_internals):
 
     render_tv(
         args,
-        'sapling_zip32',
+        'zcash_test_vectors/sapling/zip32',
         (
             ('ask', 'Option<[u8; 32]>'),
             ('nsk', 'Option<[u8; 32]>'),

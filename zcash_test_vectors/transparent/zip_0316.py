@@ -41,7 +41,7 @@ def main():
 
     render_tv(
         args,
-        'zip_0316',
+        'zcash_test_vectors/transparent/zip_0316',
         (
             ('c',            '[u8; 32]'),
             ('pk',           '[u8; 33]'),

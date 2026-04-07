@@ -1,4 +1,4 @@
-// From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/orchard_empty_roots.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/empty_roots.py
 
 pub(crate) struct TestVector {
     pub(crate) empty_roots: [[u8; 32]; 33],

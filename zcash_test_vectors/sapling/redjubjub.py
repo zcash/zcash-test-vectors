@@ -109,7 +109,7 @@ def main():
 
     render_tv(
         args,
-        'sapling_signatures',
+        'zcash_test_vectors/sapling/redjubjub',
         (
             ('sk', '[u8; 32]'),
             ('vk', '[u8; 32]'),
