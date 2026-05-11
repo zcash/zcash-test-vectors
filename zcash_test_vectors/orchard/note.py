@@ -1,11 +1,14 @@
 import struct
 
 from .commitments import note_commit
+from .generators import VALUE_COMMITMENT_VALUE_BASE
 from .key_components import diversify_hash, prf_expand, derive_nullifier, FullViewingKey, SpendingKey
 from .pallas import Point
 from .utils import to_base, to_scalar
 
-from ..utils import leos2bsp
+from ..utils import i2leosp, leos2bsp
+
+QR_NOTE_PLAINTEXT_LEAD_BYTE = 0x03
 
 class OrchardNote(object):
     def __init__(self, d, pk_d, v, rho, rseed):
@@ -33,12 +36,29 @@ class OrchardNote(object):
     def rcm(self):
         return to_scalar(prf_expand(self.rseed, b'\x05' + bytes(self.rho)))
 
+    def qr_rcm(self):
+        g_d = diversify_hash(self.d)
+        return to_scalar(prf_expand(
+            self.rseed,
+            bytes([0x0B, QR_NOTE_PLAINTEXT_LEAD_BYTE]) +
+            bytes(g_d) +
+            bytes(self.pk_d) +
+            i2leosp(64, self.v) +
+            bytes(self.rho) +
+            bytes(self.psi) +
+            bytes(VALUE_COMMITMENT_VALUE_BASE),
+        ))
+
     def psi(self):
         return to_base(prf_expand(self.rseed, b'\x09' + bytes(self.rho)))
 
     def note_commitment(self):
         g_d = diversify_hash(self.d)
         return note_commit(self.rcm, leos2bsp(bytes(g_d)), leos2bsp(bytes(self.pk_d)), self.v, self.rho, self.psi)
+
+    def qr_note_commitment(self):
+        g_d = diversify_hash(self.d)
+        return note_commit(self.qr_rcm(), leos2bsp(bytes(g_d)), leos2bsp(bytes(self.pk_d)), self.v, self.rho, self.psi)
 
     def note_plaintext(self, memo):
         return OrchardNotePlaintext(self.d, self.v, self.rseed, memo)
