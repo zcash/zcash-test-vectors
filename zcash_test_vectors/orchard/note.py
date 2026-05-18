@@ -1,14 +1,11 @@
 import struct
 
 from .commitments import note_commit
-from .generators import VALUE_COMMITMENT_VALUE_BASE
 from .key_components import diversify_hash, prf_expand, derive_nullifier, FullViewingKey, SpendingKey
 from .pallas import Point
 from .utils import to_base, to_scalar
 
 from ..utils import i2leosp, leos2bsp
-
-QR_NOTE_PLAINTEXT_LEAD_BYTE = 0x03
 
 class OrchardNote(object):
     def __init__(self, d, pk_d, v, rho, rseed):
@@ -40,13 +37,12 @@ class OrchardNote(object):
         g_d = diversify_hash(self.d)
         return to_scalar(prf_expand(
             self.rseed,
-            bytes([0x0B, QR_NOTE_PLAINTEXT_LEAD_BYTE]) +
+            b'\x0b' +
             bytes(g_d) +
             bytes(self.pk_d) +
             i2leosp(64, self.v) +
             bytes(self.rho) +
-            bytes(self.psi) +
-            bytes(VALUE_COMMITMENT_VALUE_BASE),
+            bytes(self.psi),
         ))
 
     def psi(self):
