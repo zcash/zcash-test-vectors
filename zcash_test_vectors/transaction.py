@@ -29,6 +29,8 @@ NU5_TX_VERSION = 5
 V6_TX_VERSION = 6
 # TODO: change this
 V6_VERSION_GROUP_ID = 0xFFFFFFFF
+ORCHARD_PROOF_BASE_SIZE = 2720
+ORCHARD_PROOF_PER_ACTION_SIZE = 2272
 
 # Sapling note magic values, copied from src/zcash/Zcash.h
 NOTEENCRYPTION_AUTH_BYTES = 16
@@ -569,7 +571,7 @@ class TransactionV5(object):
         for desc in self.vOutputsSapling:
             ret += desc.bytes_v5()
         if hasSapling:
-            ret += struct.pack('<Q', self.valueBalanceSapling)
+            ret += struct.pack('<q', self.valueBalanceSapling)
         if len(self.vSpendsSapling) > 0:
             ret += bytes(self.anchorSapling)
             # Not explicitly gated in the protocol spec, but if the gate
@@ -624,6 +626,154 @@ class TransactionV6(TransactionV5):
         ret += struct.pack('<Q', self.zip233Amount)
 
         return ret
+
+class IronwoodTransactionV6(TransactionV5):
+    def __init__(
+            self,
+            rand,
+            consensus_branch_id,
+            transparent_inputs=0,
+            transparent_outputs=0,
+            sapling=False,
+            sapling_spends=0,
+            sapling_outputs=0,
+            sapling_value_balance=0,
+            orchard_actions=0,
+            ironwood_actions=0,
+            orchard_flags=0b011,
+            ironwood_flags=0b111,
+            orchard_value_balance=0,
+            ironwood_value_balance=0):
+        self.init_header(consensus_branch_id, rand)
+        self.init_transparent(rand, transparent_inputs, transparent_outputs)
+        self.init_sapling_bundle(
+            rand,
+            sapling,
+            sapling_spends,
+            sapling_outputs,
+            sapling_value_balance,
+        )
+        self.init_orchard_bundle(
+            rand,
+            'Orchard',
+            orchard_actions,
+            orchard_flags,
+            orchard_value_balance,
+        )
+        self.init_orchard_bundle(
+            rand,
+            'Ironwood',
+            ironwood_actions,
+            ironwood_flags,
+            ironwood_value_balance,
+        )
+
+    def init_header(self, consensus_branch_id, rand):
+        self.nVersionGroupId = V6_VERSION_GROUP_ID
+        self.nConsensusBranchId = consensus_branch_id
+        self.nLockTime = rand.u32()
+        self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
+
+    def init_transparent(self, rand, transparent_inputs, transparent_outputs):
+        self.vin = []
+        self.vout = []
+        for _ in range(transparent_inputs):
+            self.vin.append(TxIn(rand))
+        for _ in range(transparent_outputs):
+            self.vout.append(TxOut(rand))
+
+    def init_sapling_bundle(self, rand, sapling, spend_count, output_count, value_balance):
+        self.vSpendsSapling = []
+        self.vOutputsSapling = []
+
+        if sapling or spend_count > 0 or output_count > 0:
+            self.anchorSapling = Fq(leos2ip(rand.b(32)))
+            for _ in range(spend_count):
+                self.vSpendsSapling.append(SpendDescription(rand, self.anchorSapling))
+            for _ in range(output_count):
+                self.vOutputsSapling.append(OutputDescription(rand))
+            self.valueBalanceSapling = value_balance
+            self.bindingSigSapling = RedJubjubSignature(rand)
+        else:
+            self.valueBalanceSapling = 0
+
+    def init_orchard_bundle(self, rand, name, action_count, flags, value_balance):
+        actions = []
+        for _ in range(action_count):
+            actions.append(OrchardActionDescription(rand))
+
+        setattr(self, 'vActions%s' % name, actions)
+        setattr(self, 'valueBalance%s' % name, value_balance if len(actions) > 0 else 0)
+
+        if len(actions) > 0:
+            setattr(self, 'flags%s' % name, flags)
+            setattr(self, 'anchor%s' % name, PallasBase(leos2ip(rand.b(32))))
+            proof_size = ORCHARD_PROOF_BASE_SIZE + ORCHARD_PROOF_PER_ACTION_SIZE * len(actions)
+            setattr(self, 'proofs%s' % name, rand.b(proof_size))
+            setattr(self, 'bindingSig%s' % name, RedPallasSignature(rand))
+
+    def version_bytes(self):
+        return V6_TX_VERSION | (1 << 31)
+
+    def __bytes__(self):
+        ret = b''
+
+        ret += self.header_bytes()
+        ret += self.transparent_bytes()
+        ret += self.sapling_bytes()
+        ret += self.orchard_bytes()
+        ret += self.ironwood_bytes()
+
+        return ret
+
+    def header_bytes(self):
+        ret = b''
+
+        ret += struct.pack('<I', self.version_bytes())
+        ret += struct.pack('<I', self.nVersionGroupId)
+        ret += struct.pack('<I', self.nConsensusBranchId)
+        ret += struct.pack('<I', self.nLockTime)
+        ret += struct.pack('<I', self.nExpiryHeight)
+
+        return ret
+
+    def orchard_bundle_bytes(self, actions, flags, value_balance, anchor, proofs, binding_sig):
+        ret = b''
+
+        ret += write_compact_size(len(actions))
+        if len(actions) > 0:
+            for desc in actions:
+                ret += bytes(desc)
+            ret += struct.pack('B', flags)
+            ret += struct.pack('<q', value_balance)
+            ret += bytes(anchor)
+            ret += write_compact_size(len(proofs))
+            ret += proofs
+            for desc in actions:
+                ret += bytes(desc.spendAuthSig)
+            ret += bytes(binding_sig)
+
+        return ret
+
+    def orchard_bytes(self):
+        return self.orchard_bundle_bytes(
+            self.vActionsOrchard,
+            getattr(self, 'flagsOrchard', 0),
+            self.valueBalanceOrchard,
+            getattr(self, 'anchorOrchard', b''),
+            getattr(self, 'proofsOrchard', b''),
+            getattr(self, 'bindingSigOrchard', b''),
+        )
+
+    def ironwood_bytes(self):
+        return self.orchard_bundle_bytes(
+            self.vActionsIronwood,
+            getattr(self, 'flagsIronwood', 0),
+            self.valueBalanceIronwood,
+            getattr(self, 'anchorIronwood', b''),
+            getattr(self, 'proofsIronwood', b''),
+            getattr(self, 'bindingSigIronwood', b''),
+        )
 
 class Transaction(object):
     def __init__(self, rand, version, consensus_branch_id=None):

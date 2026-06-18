@@ -38,13 +38,19 @@ def transparent_scripts_digest(tx):
         digest.update(bytes(x.scriptSig))
     return digest.digest()
 
+# Sapling
+
+SAPLING_SPENDS_NONCOMPACT_V6_PERSONALIZATION = b'ZTxIdSSpendNH_v6'
+SAPLING_AUTH_V6_PERSONALIZATION = b'ZTxAuthSapliH_v6'
+
+
 def sapling_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxIdSaplingHash')
 
     if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
         digest.update(sapling_spends_digest(tx))
         digest.update(sapling_outputs_digest(tx))
-        digest.update(struct.pack('<Q', tx.valueBalanceSapling))
+        digest.update(struct.pack('<q', tx.valueBalanceSapling))
 
     return digest.digest()
 
@@ -62,6 +68,22 @@ def sapling_auth_digest(tx):
 
     return digest.digest()
 
+def sapling_auth_digest_v6(tx):
+    digest = blake2b(digest_size=32, person=SAPLING_AUTH_V6_PERSONALIZATION)
+
+    if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
+        for desc in tx.vSpendsSapling:
+            digest.update(bytes(desc.proof))
+        for desc in tx.vSpendsSapling:
+            digest.update(bytes(desc.spendAuthSig))
+        for desc in tx.vOutputsSapling:
+            digest.update(bytes(desc.proof))
+        digest.update(bytes(tx.bindingSigSapling))
+        if len(tx.vSpendsSapling) > 0:
+            digest.update(bytes(tx.anchorSapling))
+
+    return digest.digest()
+
 # - Spends
 
 def sapling_spends_digest(tx):
@@ -70,6 +92,15 @@ def sapling_spends_digest(tx):
     if len(tx.vSpendsSapling) > 0:
         digest.update(sapling_spends_compact_digest(tx))
         digest.update(sapling_spends_noncompact_digest(tx))
+
+    return digest.digest()
+
+def sapling_spends_digest_v6(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxIdSSpendsHash')
+
+    if len(tx.vSpendsSapling) > 0:
+        digest.update(sapling_spends_compact_digest(tx))
+        digest.update(sapling_spends_noncompact_digest_v6(tx))
 
     return digest.digest()
 
@@ -84,6 +115,13 @@ def sapling_spends_noncompact_digest(tx):
     for desc in tx.vSpendsSapling:
         digest.update(bytes(desc.cv))
         digest.update(bytes(desc.anchor))
+        digest.update(bytes(desc.rk))
+    return digest.digest()
+
+def sapling_spends_noncompact_digest_v6(tx):
+    digest = blake2b(digest_size=32, person=SAPLING_SPENDS_NONCOMPACT_V6_PERSONALIZATION)
+    for desc in tx.vSpendsSapling:
+        digest.update(bytes(desc.cv))
         digest.update(bytes(desc.rk))
     return digest.digest()
 
@@ -121,6 +159,16 @@ def sapling_outputs_noncompact_digest(tx):
         digest.update(desc.outCipherText)
     return digest.digest()
 
+def sapling_digest_v6(tx):
+    digest = blake2b(digest_size=32, person=b'ZTxIdSaplingHash')
+
+    if len(tx.vSpendsSapling) + len(tx.vOutputsSapling) > 0:
+        digest.update(sapling_spends_digest_v6(tx))
+        digest.update(sapling_outputs_digest(tx))
+        digest.update(struct.pack('<q', tx.valueBalanceSapling))
+
+    return digest.digest()
+
 # Orchard-shaped bundles
 
 ORCHARD_PERSONALIZATIONS = {
@@ -131,12 +179,31 @@ ORCHARD_PERSONALIZATIONS = {
     'auth': b'ZTxAuthOrchaHash',
 }
 
+ORCHARD_V6_PERSONALIZATIONS = {
+    'bundle': b'ZTxIdOrchardH_v6',
+    'actions_compact': b'ZTxIdOrcActCHash',
+    'actions_memos': b'ZTxIdOrcActMHash',
+    'actions_noncompact': b'ZTxIdOrcActNHash',
+    'auth': b'ZTxAuthOrchaH_v6',
+}
+
+IRONWOOD_PERSONALIZATIONS = {
+    'bundle': b'ZTxIdIronwd_H_v6',
+    'actions_compact': b'ZTxIdIrnActCH_v6',
+    'actions_memos': b'ZTxIdIrnActMH_v6',
+    'actions_noncompact': b'ZTxIdIrnActNH_v6',
+    'auth': b'ZTxAuthIrnwdH_v6',
+}
+
 BUNDLE_FORMAT_PRE_NU6_3 = 'pre_nu6_3'
+BUNDLE_FORMAT_IRONWOOD_V6 = 'ironwood_v6'
 
 
 def encode_orchard_flags(flags, bundle_format):
     if bundle_format == BUNDLE_FORMAT_PRE_NU6_3:
         assert flags & ~0b011 == 0
+    elif bundle_format == BUNDLE_FORMAT_IRONWOOD_V6:
+        assert flags & ~0b111 == 0
     else:
         raise ValueError('Unknown Orchard bundle format: %s' % bundle_format)
     return flags
@@ -204,6 +271,48 @@ def orchard_auth_digest(tx):
         False,
     )
 
+def orchard_v6_digest(tx):
+    return orchard_bundle_digest(
+        tx.vActionsOrchard,
+        getattr(tx, 'flagsOrchard', 0),
+        tx.valueBalanceOrchard,
+        getattr(tx, 'anchorOrchard', b''),
+        ORCHARD_V6_PERSONALIZATIONS,
+        BUNDLE_FORMAT_IRONWOOD_V6,
+        False,
+    )
+
+def orchard_v6_auth_digest(tx):
+    return orchard_bundle_auth_digest(
+        tx.vActionsOrchard,
+        getattr(tx, 'anchorOrchard', b''),
+        getattr(tx, 'proofsOrchard', b''),
+        getattr(tx, 'bindingSigOrchard', b''),
+        ORCHARD_V6_PERSONALIZATIONS,
+        True,
+    )
+
+def ironwood_digest(tx):
+    return orchard_bundle_digest(
+        tx.vActionsIronwood,
+        getattr(tx, 'flagsIronwood', 0),
+        tx.valueBalanceIronwood,
+        getattr(tx, 'anchorIronwood', b''),
+        IRONWOOD_PERSONALIZATIONS,
+        BUNDLE_FORMAT_IRONWOOD_V6,
+        False,
+    )
+
+def ironwood_auth_digest(tx):
+    return orchard_bundle_auth_digest(
+        tx.vActionsIronwood,
+        getattr(tx, 'anchorIronwood', b''),
+        getattr(tx, 'proofsIronwood', b''),
+        getattr(tx, 'bindingSigIronwood', b''),
+        IRONWOOD_PERSONALIZATIONS,
+        True,
+    )
+
 # - Actions
 
 def orchard_actions_compact_digest(actions, personalizations=ORCHARD_PERSONALIZATIONS):
@@ -258,6 +367,20 @@ def txid_digest(tx):
 
     return digest.digest()
 
+def txid_digest_v6(tx):
+    digest = blake2b(
+        digest_size=32,
+        person=b'ZcashTxHash_' + struct.pack('<I', tx.nConsensusBranchId),
+    )
+
+    digest.update(header_digest(tx))
+    digest.update(transparent_digest(tx))
+    digest.update(sapling_digest_v6(tx))
+    digest.update(orchard_v6_digest(tx))
+    digest.update(ironwood_digest(tx))
+
+    return digest.digest()
+
 # Authorizing Data Commitment
 
 def auth_digest(tx):
@@ -269,6 +392,19 @@ def auth_digest(tx):
     digest.update(transparent_scripts_digest(tx))
     digest.update(sapling_auth_digest(tx))
     digest.update(orchard_auth_digest(tx))
+
+    return digest.digest()
+
+def auth_digest_v6(tx):
+    digest = blake2b(
+        digest_size=32,
+        person=b'ZTxAuthHash_' + struct.pack('<I', tx.nConsensusBranchId),
+    )
+
+    digest.update(transparent_scripts_digest(tx))
+    digest.update(sapling_auth_digest_v6(tx))
+    digest.update(orchard_v6_auth_digest(tx))
+    digest.update(ironwood_auth_digest(tx))
 
     return digest.digest()
 
@@ -290,6 +426,20 @@ def signature_digest(tx, t_inputs, nHashType, txin):
     digest.update(transparent_sig_digest(tx, t_inputs, nHashType, txin))
     digest.update(sapling_digest(tx))
     digest.update(orchard_digest(tx))
+
+    return digest.digest()
+
+def signature_digest_v6(tx, t_inputs, nHashType, txin):
+    digest = blake2b(
+        digest_size=32,
+        person=b'ZcashTxHash_' + struct.pack('<I', tx.nConsensusBranchId),
+    )
+
+    digest.update(header_digest(tx))
+    digest.update(transparent_sig_digest(tx, t_inputs, nHashType, txin))
+    digest.update(sapling_digest_v6(tx))
+    digest.update(orchard_v6_digest(tx))
+    digest.update(ironwood_digest(tx))
 
     return digest.digest()
 
@@ -398,16 +548,16 @@ def randbytes(rng):
     rand = Rand(generate_randbytes)
     return rand
 
-def generate_sighashes_and_txin(tx, t_inputs, rand):
+def generate_sighashes_and_txin(tx, t_inputs, rand, signature_digest_func=signature_digest):
      # If there are any non-dummy transparent inputs, derive a corresponding transparent sighash.
     if len(t_inputs) > 0:
         txin = rand.a(t_inputs)
     else:
         txin = None
 
-    sighash_shielded = signature_digest(tx, t_inputs, SIGHASH_ALL, None)
+    sighash_shielded = signature_digest_func(tx, t_inputs, SIGHASH_ALL, None)
     other_sighashes = {
-        nHashType: None if txin is None else signature_digest(tx, t_inputs, nHashType, txin)
+        nHashType: None if txin is None else signature_digest_func(tx, t_inputs, nHashType, txin)
         for nHashType in ([
             SIGHASH_ALL,
             SIGHASH_NONE,
