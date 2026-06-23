@@ -734,6 +734,8 @@ class IronwoodTransactionV6(TransactionV5):
         ret += struct.pack('<I', self.nConsensusBranchId)
         ret += struct.pack('<I', self.nLockTime)
         ret += struct.pack('<I', self.nExpiryHeight)
+        if hasattr(self, 'zip233Amount'):
+            ret += struct.pack('<Q', self.zip233Amount)
 
         return ret
 
