@@ -53,6 +53,9 @@ case "$2" in
         unified_full_viewing_keys
         unified_incoming_viewing_keys
         unified_viewing_keys_r2
+        zip_0221_v1
+        zip_0221_v2
+        zip_0221_v3
         zip_0032_registered
         zip_0032_arbitrary
         zip_0143
