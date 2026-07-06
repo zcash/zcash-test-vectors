@@ -24,6 +24,13 @@ ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE = ZC_ORCHARD_ZSA_ENCPLAINTEXT_SIZE + NOTEENCRY
 # SighashInfo V0
 SIGHASH_INFO_V0 = [0] + [] # sighashInfo = [sighashVersion] || associatedData
 
+ORCHARD_ZSA_BASE_PROOF_SIZE = 2848
+ORCHARD_ZSA_PER_ACTION_PROOF_SIZE = 2272
+
+
+def orchard_zsa_proof_size(num_actions):
+    return ORCHARD_ZSA_BASE_PROOF_SIZE + ORCHARD_ZSA_PER_ACTION_PROOF_SIZE * num_actions
+
 
 class OrchardZSAActionDescription(OrchardActionBase):
     def __init__(self, rand, sighash_info):
@@ -166,7 +173,9 @@ class TransactionV6(TransactionBase):
         self.vActionGroupsOrchard = []
         if have_orchard_zsa:
             # For NU7 we have a maximum of one Action Group.
-            self.vActionGroupsOrchard.append(ActionGroupDescription(rand, self.anchorOrchard, self.proofsOrchard, self.is_coinbase(), have_burn, sighash_info))
+            action_group = ActionGroupDescription(rand, self.anchorOrchard, self.proofsOrchard, self.is_coinbase(), have_burn, sighash_info)
+            action_group.proofsOrchard = rand.b(orchard_zsa_proof_size(len(action_group.vActionsOrchard)))
+            self.vActionGroupsOrchard.append(action_group)
 
         # OrchardZSA Issuance Fields
         self.vIssueActions = []
