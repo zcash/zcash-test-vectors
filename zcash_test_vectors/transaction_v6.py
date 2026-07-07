@@ -95,7 +95,7 @@ class IssueNoteDescription(object):
 
 
 class ActionGroupDescription(object):
-    def __init__(self, rand, anchor_orchard, proofs_orchard, is_coinbase, have_burn, sighash_info):
+    def __init__(self, rand, anchor_orchard, is_coinbase, have_burn, sighash_info):
         self.vActionsOrchard = []
         # There must always be a non-zero number of Action Descriptions in an Action Group.
         for _ in range(rand.u8() % 4 + 1):
@@ -108,7 +108,6 @@ class ActionGroupDescription(object):
             # set enableSpendsOrchard = 0
             self.flagsOrchard &= 2
         self.anchorOrchard = anchor_orchard
-        self.proofsOrchard = proofs_orchard
         self.nAGExpiryHeight = 0
 
         # OrchardZSA Burn Fields
@@ -116,6 +115,8 @@ class ActionGroupDescription(object):
         if have_burn:
             for _ in range(rand.u8() % 5):
                 self.vAssetBurnOrchardZSA.append(AssetBurnDescription(rand))
+
+        self.proofsOrchard = rand.b(orchard_zsa_proof_size(len(self.vActionsOrchard)))
 
 
     def __bytes__(self):
@@ -173,9 +174,7 @@ class TransactionV6(TransactionBase):
         self.vActionGroupsOrchard = []
         if have_orchard_zsa:
             # For NU7 we have a maximum of one Action Group.
-            action_group = ActionGroupDescription(rand, self.anchorOrchard, self.proofsOrchard, self.is_coinbase(), have_burn, sighash_info)
-            action_group.proofsOrchard = rand.b(orchard_zsa_proof_size(len(action_group.vActionsOrchard)))
-            self.vActionGroupsOrchard.append(action_group)
+            self.vActionGroupsOrchard.append(ActionGroupDescription(rand, self.anchorOrchard, self.is_coinbase(), have_burn, sighash_info))
 
         # OrchardZSA Issuance Fields
         self.vIssueActions = []
