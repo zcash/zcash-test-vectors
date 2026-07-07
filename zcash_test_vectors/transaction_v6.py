@@ -24,6 +24,7 @@ ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE = ZC_ORCHARD_ZSA_ENCPLAINTEXT_SIZE + NOTEENCRY
 # SighashInfo V0
 SIGHASH_INFO_V0 = [0] + [] # sighashInfo = [sighashVersion] || associatedData
 
+# Must match Proof::expected_proof_size for OrchardZSA in QED-it/orchard.
 ORCHARD_ZSA_BASE_PROOF_SIZE = 2848
 ORCHARD_ZSA_PER_ACTION_PROOF_SIZE = 2272
 
