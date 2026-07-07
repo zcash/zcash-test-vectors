@@ -157,6 +157,10 @@ class TransactionV6(TransactionBase):
 
         # All Transparent, Sapling, and part of the Orchard Transaction Fields are initialized in the super class.
         super().__init__(rand, have_orchard_zsa)
+        if have_orchard_zsa:
+            # The base class draws proofsOrchard only to keep the rand stream stable;
+            # V6 proofs live per Action Group, so drop the stale attribute.
+            del self.proofsOrchard
         self.vSighashInfo = [sighash_info] * len(self.vin)
         for desc in self.vSpendsSapling:
             desc.spendAuthSigInfo = sighash_info
