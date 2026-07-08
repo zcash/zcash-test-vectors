@@ -24,6 +24,14 @@ ZC_ORCHARD_ZSA_ENCCIPHERTEXT_SIZE = ZC_ORCHARD_ZSA_ENCPLAINTEXT_SIZE + NOTEENCRY
 # SighashInfo V0
 SIGHASH_INFO_V0 = [0] + [] # sighashInfo = [sighashVersion] || associatedData
 
+# Must match Proof::expected_proof_size for OrchardZSA in QED-it/orchard.
+ORCHARD_ZSA_BASE_PROOF_SIZE = 2848
+ORCHARD_ZSA_PER_ACTION_PROOF_SIZE = 2272
+
+
+def orchard_zsa_proof_size(num_actions):
+    return ORCHARD_ZSA_BASE_PROOF_SIZE + ORCHARD_ZSA_PER_ACTION_PROOF_SIZE * num_actions
+
 
 class OrchardZSAActionDescription(OrchardActionBase):
     def __init__(self, rand, sighash_info):
@@ -88,7 +96,7 @@ class IssueNoteDescription(object):
 
 
 class ActionGroupDescription(object):
-    def __init__(self, rand, anchor_orchard, proofs_orchard, is_coinbase, have_burn, sighash_info):
+    def __init__(self, rand, anchor_orchard, is_coinbase, have_burn, sighash_info):
         self.vActionsOrchard = []
         # There must always be a non-zero number of Action Descriptions in an Action Group.
         for _ in range(rand.u8() % 4 + 1):
@@ -101,7 +109,6 @@ class ActionGroupDescription(object):
             # set enableSpendsOrchard = 0
             self.flagsOrchard &= 2
         self.anchorOrchard = anchor_orchard
-        self.proofsOrchard = proofs_orchard
         self.nAGExpiryHeight = 0
 
         # OrchardZSA Burn Fields
@@ -109,6 +116,8 @@ class ActionGroupDescription(object):
         if have_burn:
             for _ in range(rand.u8() % 5):
                 self.vAssetBurnOrchardZSA.append(AssetBurnDescription(rand))
+
+        self.proofsOrchard = rand.b(orchard_zsa_proof_size(len(self.vActionsOrchard)))
 
 
     def __bytes__(self):
@@ -149,6 +158,10 @@ class TransactionV6(TransactionBase):
 
         # All Transparent, Sapling, and part of the Orchard Transaction Fields are initialized in the super class.
         super().__init__(rand, have_orchard_zsa)
+        if have_orchard_zsa:
+            # The base class draws proofsOrchard only to keep the rand stream stable;
+            # V6 proofs live per Action Group, so drop the stale attribute.
+            del self.proofsOrchard
         self.vSighashInfo = [sighash_info] * len(self.vin)
         for desc in self.vSpendsSapling:
             desc.spendAuthSigInfo = sighash_info
@@ -166,7 +179,7 @@ class TransactionV6(TransactionBase):
         self.vActionGroupsOrchard = []
         if have_orchard_zsa:
             # For NU7 we have a maximum of one Action Group.
-            self.vActionGroupsOrchard.append(ActionGroupDescription(rand, self.anchorOrchard, self.proofsOrchard, self.is_coinbase(), have_burn, sighash_info))
+            self.vActionGroupsOrchard.append(ActionGroupDescription(rand, self.anchorOrchard, self.is_coinbase(), have_burn, sighash_info))
 
         # OrchardZSA Issuance Fields
         self.vIssueActions = []
