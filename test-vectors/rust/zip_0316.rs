@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 // From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/transparent/zip_0316.py
 
 pub(crate) struct TestVector {

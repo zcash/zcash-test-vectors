@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 // From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard/empty_roots.py
 
 pub(crate) struct TestVector {

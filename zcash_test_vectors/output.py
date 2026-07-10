@@ -198,6 +198,8 @@ def tv_part_rust(name, value, config, indent=3):
         raise ValueError('Invalid type(%s): %s' % (name, type(value)))
 
 def tv_rust(source_path, parts, vectors):
+    print('#![allow(dead_code)]')
+    print()
     print('// From https://github.com/zcash/zcash-test-vectors/blob/master/%s.py' % (
         source_path,
     ))
