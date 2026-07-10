@@ -234,6 +234,7 @@ class Script(object):
 
     @staticmethod
     def from_bytes(b):
+        assert isinstance(b, bytes)
         script = Script()
         script._script = b
         return script

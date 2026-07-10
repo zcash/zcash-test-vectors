@@ -9,7 +9,7 @@ import base58
 from ..bech32m import bech32_encode, bech32_decode, convertbits, Encoding
 from ..output import render_args, render_tv, Some
 from ..rand import Rand, randbytes
-from ..hd_common import ZCASH_MAIN_COINTYPE, ZCASH_TEST_COINTYPE, hardened
+from ..hd_common import ADDRESS_CONSTANTS, hardened
 from .bip_0032 import ExtendedSecretKey
 
 class HrpMismatch(Exception):
@@ -29,12 +29,6 @@ def decode(hrp_expected, tex_addr):
     if hrp != hrp_expected:
         raise HrpMismatch("Expected: " + hrp_expected + "; got " + hrp)
     return bytes(convertbits(data, 5, 8, False))
-
-ADDRESS_CONSTANTS = {
-    "mainnet": { "coin_type": ZCASH_MAIN_COINTYPE, "p2pkh_lead": [0x1c, 0xb8], "tex_hrp": "tex" },
-    "testnet": { "coin_type": ZCASH_TEST_COINTYPE, "p2pkh_lead": [0x1d, 0x25], "tex_hrp": "textest" },
-    "regtest": { "coin_type": ZCASH_TEST_COINTYPE, "p2pkh_lead": [0x1d, 0x25], "tex_hrp": "texregtest" },
-}
 
 def main():
     args = render_args()
