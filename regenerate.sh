@@ -53,6 +53,7 @@ case "$2" in
         unified_full_viewing_keys
         unified_incoming_viewing_keys
         unified_viewing_keys_r2
+        ironwood_v6_tx_hash
         zip_0221_v1
         zip_0221_v2
         zip_0221_v3
