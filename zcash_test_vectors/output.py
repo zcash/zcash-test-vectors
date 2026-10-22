@@ -2,6 +2,9 @@
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
 import argparse
+import contextlib
+import os
+import sys
 from binascii import hexlify
 import json
 
@@ -227,18 +230,43 @@ def tv_rust(source_path, parts, vectors):
 # Rendering functions
 #
 
+# File extensions for each output target.
+TARGET_EXTENSIONS = {'rust': 'rs', 'zcash': 'json', 'json': 'json'}
+
 def render_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--target', choices=['zcash', 'json', 'rust'], default='rust')
+    parser.add_argument('-t', '--target', choices=['zcash', 'json', 'rust'],
+                        nargs='+', default=['rust'],
+                        help='One or more output targets. Multiple targets require --output-dir.')
+    parser.add_argument('-o', '--output-dir',
+                        help='Write each target to OUTPUT_DIR/<target>/<name>.<ext> instead of stdout.')
     return parser.parse_args()
+
+def render_one(target, source_path, parts, vectors):
+    if target == 'rust':
+        tv_rust(source_path, parts, vectors)
+    elif target == 'zcash':
+        tv_json(source_path, parts, vectors, True)
+    elif target == 'json':
+        tv_json(source_path, parts, vectors, False)
 
 def render_tv(args, source_path, parts, vectors):
     # Convert older format
     parts = [(p[0], p[1] if type(p[1]) == type({}) else {'rust_type': p[1]}) for p in parts]
 
-    if args.target == 'rust':
-        tv_rust(source_path, parts, vectors)
-    elif args.target == 'zcash':
-        tv_json(source_path, parts, vectors, True)
-    elif args.target == 'json':
-        tv_json(source_path, parts, vectors, False)
+    targets = args.target if type(args.target) == list else [args.target]
+    output_dir = getattr(args, 'output_dir', None)
+    if output_dir is None:
+        if len(targets) != 1:
+            raise ValueError('Multiple targets require --output-dir')
+        render_one(targets[0], source_path, parts, vectors)
+        return
+
+    name = os.path.basename(sys.argv[0])
+    for target in targets:
+        target_dir = os.path.join(output_dir, target)
+        os.makedirs(target_dir, exist_ok=True)
+        out_path = os.path.join(target_dir, '%s.%s' % (name, TARGET_EXTENSIONS[target]))
+        with open(out_path, 'w') as f:
+            with contextlib.redirect_stdout(f):
+                render_one(target, source_path, parts, vectors)

@@ -70,29 +70,21 @@ case "$2" in
     ;;
 esac
 
+want_rust=0
 for gen_type in "${gen_types[@]}"
 do
-  echo "Generating $gen_type test vectors..."
-  case "$gen_type" in
-    "rust" )
-      extension="rs"
-      ;;
-    "zcash" )
-      extension="json"
-      ;;
-    "json")
-      extension="json"
-      ;;
-  esac
-
-  for generator in "${tv_scripts[@]}"
-  do
-      echo "# $generator"
-      if [ "$gen_type" = "rust" ]; then
-          uv run $generator -t $gen_type | rustfmt --edition 2021 >test-vectors/$gen_type/$generator.$extension
-      else
-          uv run $generator -t $gen_type >test-vectors/$gen_type/$generator.$extension
-      fi
-  done
-  echo "Finished $gen_type."
+  if [ "$gen_type" = "rust" ]; then
+    want_rust=1
+  fi
 done
+
+echo "Generating ${gen_types[*]} test vectors..."
+for generator in "${tv_scripts[@]}"
+do
+    echo "# $generator"
+    uv run "$generator" -t "${gen_types[@]}" --output-dir test-vectors
+    if [ "$want_rust" = "1" ]; then
+        rustfmt --edition 2021 "test-vectors/rust/$generator.rs"
+    fi
+done
+echo "Finished."
