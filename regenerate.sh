@@ -31,6 +31,9 @@ case "$2" in
         bip_0032
         f4jumble
         f4jumble_long
+        frost_member_backup
+        frost_member_backup_decoding
+        frost_member_backup_restore
         orchard_empty_roots
         orchard_generators
         orchard_group_hash
