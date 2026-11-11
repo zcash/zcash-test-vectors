@@ -39,12 +39,24 @@ def CKDh(Context, sk_par, c_par, i, lead, tag):
     I_R = I[32:]
     return (I_L, I_R)
 
-def SeedFingerprint(seed):
+def seed_fingerprint_bytes(seed):
+    # BLAKE2b-256("Zcash_HD_Seed_FP", [length(S)] || S)
+    assert type(seed) == bytes
+    assert 32 <= len(seed) <= 252
+
     digest = blake2b(person=b'Zcash_HD_Seed_FP', digest_size=32)
     digest.update(i2leosp(8, len(seed)))
     digest.update(seed)
-    seedfp = digest.digest()
+    return digest.digest()
+
+def encode_seed_fingerprint(seedfp):
+    assert type(seedfp) == bytes
+    assert len(seedfp) == 32
+
     return bech32_encode('zip32seedfp', convertbits(seedfp, 8, 5), Encoding.BECH32M)
+
+def SeedFingerprint(seed):
+    return encode_seed_fingerprint(seed_fingerprint_bytes(seed))
 
 
 class RegisteredKey(object):
@@ -185,6 +197,49 @@ def arbitrary_key_derivation_tvs():
             ('path', '&\'static [u32]'),
             ('sk',   '[u8; 32]'),
             ('c',    '[u8; 32]'),
+        ),
+        test_vectors,
+    )
+
+
+def seed_fingerprint_tvs():
+    args = render_args()
+
+    seeds = [
+        # Minimum seed length; this is the seed used by the other ZIP 32 test vectors.
+        bytes(range(32)),
+        # A length that is not a multiple of 32 bytes.
+        bytes(range(33)),
+        # The length of a BIP 39 seed.
+        bytes(range(64)),
+        # Maximum seed length.
+        bytes(range(252)),
+    ]
+
+    test_vectors = []
+    for seed in seeds:
+        seedfp = seed_fingerprint_bytes(seed)
+        seedfp_encoded = encode_seed_fingerprint(seedfp)
+
+        # Check that the encoding round-trips.
+        (hrp, data, encoding) = bech32_decode(seedfp_encoded)
+        assert hrp == 'zip32seedfp'
+        assert encoding == Encoding.BECH32M
+        assert bytes(convertbits(data, 5, 8, False)) == seedfp
+
+        test_vectors.append({
+            'seed':           seed,
+            'seedfp':         seedfp,
+            'seedfp_encoded': seedfp_encoded,
+        })
+
+    render_tv(
+        args,
+        'zcash_test_vectors/zip_0032',
+        (
+            ('seed',           {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
+            ('seedfp',         '[u8; 32]'),
+            ('seedfp_encoded', '&\'static str'),
         ),
         test_vectors,
     )
