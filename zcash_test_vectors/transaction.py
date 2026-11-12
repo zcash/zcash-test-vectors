@@ -418,18 +418,20 @@ class LegacyTransaction(object):
 
 # Creating a base transaction class with common fields that V5 and subsequent versions can inherit.
 class TransactionBase(object):
-    def __init__(self, rand, have_orchard=True):
+    def __init__(self, rand, have_ironwood=True):
         # Decide which transaction parts will be generated.
         flip_coins = rand.u8()
         have_transparent_in = (flip_coins >> 0) % 2
         have_transparent_out = (flip_coins >> 1) % 2
         have_sapling = (flip_coins >> 2) % 2
+        have_orchard = (flip_coins >> 3) % 2
         is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
         self.init_header_base(rand)
         self.init_transparent(rand, have_transparent_in, have_transparent_out, is_coinbase)
         self.init_sapling(rand, have_sapling, is_coinbase)
-        self.init_orchard_base(rand, have_orchard)
+        self.init_orchard(rand, have_orchard, is_coinbase)
+        self.init_ironwood_base(rand, have_ironwood)
 
         assert is_coinbase == self.is_coinbase()
 
@@ -488,9 +490,16 @@ class TransactionBase(object):
             # v^balanceSapling is defined to be 0.
             self.valueBalanceSapling = 0
 
-    def init_orchard_base(self, rand, have_orchard):
-        # Orchard Transaction Fields that are present in both V5 and V6
+    def init_orchard(self, rand, have_orchard, is_coinbase):
+        # Orchard Transaction Fields
+        self.vActionsOrchard = []
         if have_orchard:
+            for _ in range(max(1, rand.u8() % 5)):
+                self.vActionsOrchard.append(OrchardActionDescription(rand))
+            self.flagsOrchard = rand.u8() & 3 # Only two flag bits are currently defined.
+            if is_coinbase:
+                # set enableSpendsOrchard = 0
+                self.flagsOrchard &= 2
             self.valueBalanceOrchard = rand.u64() % (MAX_MONEY + 1)
             self.anchorOrchard = PallasBase(leos2ip(rand.b(32)))
             self.proofsOrchard = rand.b(rand.u8() + 32) # Proof will always contain at least one element
@@ -499,6 +508,18 @@ class TransactionBase(object):
             # If valueBalanceOrchard is not present in the serialized transaction, then
             # v^balanceOrchard is defined to be 0.
             self.valueBalanceOrchard = 0
+
+    def init_ironwood_base(self, rand, have_ironwood):
+        # Ironwood Transaction Fields that are present in both V5 and ZSA
+        if have_ironwood:
+            self.valueBalanceIronwood = rand.u64() % (MAX_MONEY + 1)
+            self.anchorIronwood = PallasBase(leos2ip(rand.b(32)))
+            self.proofsIronwood = rand.b(rand.u8() + 32) # Proof will always contain at least one element
+            self.bindingSigIronwood = RedPallasSignature(rand)
+        else:
+            # If valueBalanceIronwood is not present in the serialized transaction, then
+            # v^balanceIronwood is defined to be 0.
+            self.valueBalanceIronwood = 0
 
     def is_coinbase(self):
         # <https://github.com/zcash/zcash/blob/d8c818bfa507adb845e527f5beb38345c490b330/src/primitives/transaction.h#L969-L972>
@@ -509,6 +530,7 @@ class TransactionBase(object):
         ret += self.header_bytes(version_bytes, version_group_id, consensus_branch_id)
         ret += self.transparent_bytes()
         ret += self.sapling_bytes()
+        ret += self.orchard_bytes()
         return ret
 
     def header_bytes(self, version_bytes, version_group_id, consensus_branch_id):
@@ -570,26 +592,47 @@ class TransactionBase(object):
     def sapling_binding_sig_bytes(self):
         raise NotImplementedError("The sapling_binding_sig_bytes method must be implemented in the child class.")
 
+    def orchard_bytes(self):
+        ret = b''
+
+        ret += write_compact_size(len(self.vActionsOrchard))
+        if len(self.vActionsOrchard) > 0:
+            # Not explicitly gated in the protocol spec, but if the gate
+            # were inactive then these loops would be empty by definition.
+            for desc in self.vActionsOrchard:
+                ret += bytes(desc) # Excludes spendAuthSig
+            ret += struct.pack('B', self.flagsOrchard)
+            ret += struct.pack('<Q', self.valueBalanceOrchard)
+            ret += bytes(self.anchorOrchard)
+            ret += write_compact_size(len(self.proofsOrchard))
+            ret += self.proofsOrchard
+            for desc in self.vActionsOrchard:
+                ret += bytes(self.orchard_spend_auth_sig_bytes(desc))
+            ret += bytes(self.orchard_binding_sig_bytes())
+
+        return ret
+
+    def orchard_spend_auth_sig_bytes(self, desc):
+        raise NotImplementedError("The orchard_spend_auth_sig_bytes method must be implemented in the child class.")
+
+    def orchard_binding_sig_bytes(self):
+        raise NotImplementedError("The orchard_binding_sig_bytes method must be implemented in the child class.")
+
+
+
 class TransactionV5(TransactionBase):
     def __init__(self, rand, consensus_branch_id):
-        have_orchard = rand.bool()
-        # All Transparent, Sapling, and part of the Orchard Transaction Fields are initialized in the super class.
-        super().__init__(rand, have_orchard)
+        have_ironwood = False
+        # All Transparent, Sapling, Orchard and part of the Ironwood Transaction Fields are initialized in the super
+        # class.
+        super().__init__(rand, have_ironwood)
 
         # Common Transaction Fields
         self.nVersionGroupId = NU5_VERSION_GROUP_ID
         self.nConsensusBranchId = consensus_branch_id
 
-        # Orchard Transaction Fields
-        self.vActionsOrchard = []
-        if have_orchard:
-            for _ in range(rand.u8() % 5):
-                self.vActionsOrchard.append(OrchardActionDescription(rand))
-            self.flagsOrchard = rand.u8()
-            self.flagsOrchard &= 3  # Only two flag bits are currently defined.
-            if self.is_coinbase():
-                # set enableSpendsOrchard = 0
-                self.flagsOrchard &= 2
+        # Ironwood Transaction Fields are empty for V5.
+        self.vActionsIronwood = []
 
     @staticmethod
     def version_bytes():
@@ -605,28 +648,20 @@ class TransactionV5(TransactionBase):
     def sapling_binding_sig_bytes(self):
         return bytes(self.bindingSigSapling)
 
+    def orchard_spend_auth_sig_bytes(self, desc):
+        return bytes(desc.spendAuthSig)
+
+    def orchard_binding_sig_bytes(self):
+        return bytes(self.bindingSigOrchard)
+
+
     def __bytes__(self):
         ret = b''
 
         # Common Transaction Fields
         ret += super().to_bytes(self.version_bytes(), self.nVersionGroupId, self.nConsensusBranchId)
 
-        # Orchard Transaction Fields
-        ret += write_compact_size(len(self.vActionsOrchard))
-        if len(self.vActionsOrchard) > 0:
-            # Not explicitly gated in the protocol spec, but if the gate
-            # were inactive then these loops would be empty by definition.
-            for desc in self.vActionsOrchard:
-                ret += bytes(desc) # Excludes spendAuthSig
-            ret += struct.pack('B', self.flagsOrchard)
-            ret += struct.pack('<Q', self.valueBalanceOrchard)
-            ret += bytes(self.anchorOrchard)
-            ret += write_compact_size(len(self.proofsOrchard))
-            ret += self.proofsOrchard
-            for desc in self.vActionsOrchard:
-                ret += bytes(desc.spendAuthSig)
-            ret += bytes(self.bindingSigOrchard)
-
+        # Ironwood Transaction Fields do not exist for V5 transactions, so we don't serialize them.
         return ret
 
 class Transaction(object):
