@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import sys; assert sys.version_info[0] >= 3, "Python 3 required."
+import sys;
+
+assert sys.version_info[0] >= 3, "Python 3 required."
 
 from hashlib import blake2b
 import struct
@@ -9,7 +11,7 @@ from .transaction import (
     Script,
     TransactionV5,
 )
-from .output import render_args, render_tv, Some
+from .output import render_args, render_tv
 from .rand import Rand
 from .zip_0143 import (
     getHashOutputs,
@@ -34,8 +36,12 @@ def transparent_digest(tx):
 
     return digest.digest()
 
+# https://zips.z.cash/zip-0246#a-1-transparent-auth-digest,
+# https://zips.z.cash/zip-0244#a-1-transparent-scripts-digest
+TRANSPARENT_AUTH_DIGEST_PERSONALIZATION = b'ZTxAuthTransHash'
+
 def transparent_scripts_digest(tx):
-    digest = blake2b(digest_size=32, person=b'ZTxAuthTransHash')
+    digest = blake2b(digest_size=32, person=TRANSPARENT_AUTH_DIGEST_PERSONALIZATION)
     for x in tx.vin:
         digest.update(bytes(x.scriptSig))
     return digest.digest()
@@ -52,6 +58,7 @@ def sapling_digest(tx):
 
     return digest.digest()
 
+# https://zips.z.cash/zip-0244#a-2-sapling-auth-digest
 def sapling_auth_digest(tx):
     digest = blake2b(digest_size=32, person=b'ZTxAuthSapliHash')
 
@@ -135,7 +142,7 @@ def orchard_digest(tx):
         digest.update(orchard_actions_memos_digest(tx))
         digest.update(orchard_actions_noncompact_digest(tx))
         digest.update(struct.pack('<B', tx.flagsOrchard))
-        digest.update(struct.pack('<Q', tx.valueBalanceOrchard))
+        digest.update(struct.pack('<q', tx.valueBalanceOrchard))
         digest.update(bytes(tx.anchorOrchard))
 
     return digest.digest()
@@ -150,6 +157,7 @@ def orchard_auth_digest(tx):
         digest.update(bytes(tx.bindingSigOrchard))
 
     return digest.digest()
+
 
 # - Actions
 
@@ -345,16 +353,17 @@ def randbytes(rng):
     rand = Rand(generate_randbytes)
     return rand
 
-def generate_sighashes_and_txin(tx, t_inputs, rand):
+def generate_sighashes_and_txin(tx, t_inputs, rand, is_zsa=False):
      # If there are any non-dummy transparent inputs, derive a corresponding transparent sighash.
     if len(t_inputs) > 0:
         txin = rand.a(t_inputs)
     else:
         txin = None
 
-    sighash_shielded = signature_digest(tx, t_inputs, SIGHASH_ALL, None)
+    from .orchard_zsa.digests import signature_digest_zsa
+    sighash_shielded = signature_digest_zsa(tx, t_inputs, SIGHASH_ALL, None) if is_zsa else signature_digest(tx, t_inputs, SIGHASH_ALL, None)
     other_sighashes = {
-        nHashType: None if txin is None else signature_digest(tx, t_inputs, nHashType, txin)
+        nHashType: None if txin is None else signature_digest_zsa(tx, t_inputs, nHashType, txin) if is_zsa else signature_digest(tx, t_inputs, nHashType, txin)
         for nHashType in ([
             SIGHASH_ALL,
             SIGHASH_NONE,
@@ -371,49 +380,52 @@ def generate_sighashes_and_txin(tx, t_inputs, rand):
     }
     return [sighash_shielded, other_sighashes, txin]
 
-def main():
-    args = render_args()
-
+def rand_gen():
     from random import Random
     rng = Random(0xabad533d)
     rand = randbytes(rng)
 
-    consensusBranchId = 0xc2d6d0b4 # NU5
+    return rand
 
-    test_vectors = []
-    for _ in range(10):
-        tx = TransactionV5(rand, consensusBranchId)
+def populate_test_vector(rand, test_vectors, tx, is_zsa=False):
+    if is_zsa:
+        from .orchard_zsa.digests import txid_digest_zsa, auth_digest_zsa
+        txid = txid_digest_zsa(tx)
+        auth = auth_digest_zsa(tx)
+    else:
         txid = txid_digest(tx)
         auth = auth_digest(tx)
 
-        # Generate amounts and scriptCodes for each non-dummy transparent input.
-        if tx.is_coinbase():
-            t_inputs = []
-        else:
-            # We don't attempt to avoid generating amounts than sum to more than MAX_MONEY.
-            t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
+    # Generate amounts and scriptCodes for each non-dummy transparent input.
+    if tx.is_coinbase():
+        t_inputs = []
+    else:
+        # We don't attempt to avoid generating amounts than sum to more than MAX_MONEY.
+        t_inputs = [TransparentInput(nIn, rand) for nIn in range(len(tx.vin))]
 
-        [sighash_shielded, other_sighashes, txin] = generate_sighashes_and_txin(tx, t_inputs, rand)
+    [sighash_shielded, other_sighashes, txin] = generate_sighashes_and_txin(tx, t_inputs, rand, is_zsa)
 
-        test_vectors.append({
-            'tx': bytes(tx),
-            'txid': txid,
-            'auth_digest': auth,
-            'amounts': [x.amount for x in t_inputs],
-            'script_pubkeys': [x.scriptPubKey.raw() for x in t_inputs],
-            'transparent_input': None if txin is None else txin.nIn,
-            'sighash_shielded': sighash_shielded,
-            'sighash_all': other_sighashes.get(SIGHASH_ALL),
-            'sighash_none': other_sighashes.get(SIGHASH_NONE),
-            'sighash_single': other_sighashes.get(SIGHASH_SINGLE),
-            'sighash_all_anyone': other_sighashes.get(SIGHASH_ALL | SIGHASH_ANYONECANPAY),
-            'sighash_none_anyone': other_sighashes.get(SIGHASH_NONE | SIGHASH_ANYONECANPAY),
-            'sighash_single_anyone': other_sighashes.get(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY),
-        })
+    test_vectors.append({
+        'tx': bytes(tx),
+        'txid': txid,
+        'auth_digest': auth,
+        'amounts': [x.amount for x in t_inputs],
+        'script_pubkeys': [x.scriptPubKey.raw() for x in t_inputs],
+        'transparent_input': None if txin is None else txin.nIn,
+        'sighash_shielded': sighash_shielded,
+        'sighash_all': other_sighashes.get(SIGHASH_ALL),
+        'sighash_none': other_sighashes.get(SIGHASH_NONE),
+        'sighash_single': other_sighashes.get(SIGHASH_SINGLE),
+        'sighash_all_anyone': other_sighashes.get(SIGHASH_ALL | SIGHASH_ANYONECANPAY),
+        'sighash_none_anyone': other_sighashes.get(SIGHASH_NONE | SIGHASH_ANYONECANPAY),
+        'sighash_single_anyone': other_sighashes.get(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY),
+    })
 
+def generate_test_vectors(source_path, test_vectors):
+    args = render_args()
     render_tv(
         args,
-        'zcash_test_vectors/zip_0244',
+        source_path,
         (
             ('tx',                    {'rust_type': '&\'static [u8]', 'bitcoin_flavoured': False}),
             ('txid',                  '[u8; 32]'),
@@ -432,6 +444,16 @@ def main():
         test_vectors,
     )
 
+def main():
+    consensus_branch_id = 0xc2d6d0b4  # NU5
+    rand = rand_gen()
+
+    test_vectors = []
+    for _ in range(10):
+        tx = TransactionV5(rand, consensus_branch_id)
+        populate_test_vector(rand, test_vectors, tx)
+
+    generate_test_vectors('zcash_test_vectors/zip_0244', test_vectors)
 
 if __name__ == '__main__':
     main()
