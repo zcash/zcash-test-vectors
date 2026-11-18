@@ -62,6 +62,7 @@ case "$2" in
         zip_0233
         zip_0243
         zip_0244
+        zip_0312_negation
         zip_0316
         zip_0320)
     ;;
