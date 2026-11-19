@@ -28,7 +28,12 @@ def decode(hrp_expected, tex_addr):
         raise InvalidEncoding("ZIP 320 addresses must be encoded using Bech32m")
     if hrp != hrp_expected:
         raise HrpMismatch("Expected: " + hrp_expected + "; got " + hrp)
-    return bytes(convertbits(data, 5, 8, False))
+    p2pkh_bytes = convertbits(data, 5, 8, False)
+    if p2pkh_bytes is None:
+        raise InvalidEncoding("Invalid padding")
+    if len(p2pkh_bytes) != 20:
+        raise InvalidEncoding("ZIP 320 addresses must encode a 20-byte validating key hash")
+    return bytes(p2pkh_bytes)
 
 ADDRESS_CONSTANTS = {
     "mainnet": { "coin_type": ZCASH_MAIN_COINTYPE, "p2pkh_lead": [0x1c, 0xb8], "tex_hrp": "tex" },
@@ -65,12 +70,17 @@ def main():
             p2pkh_bytes_decoded = decode(constants["tex_hrp"], tex_addr)
             assert p2pkh_bytes_decoded == p2pkh_bytes
 
+            # A Consumer MUST accept the all-uppercase form (ZIP 173); a Producer encodes in lowercase.
+            tex_addr_upper = tex_addr.upper()
+            assert decode(constants["tex_hrp"], tex_addr_upper) == p2pkh_bytes
+
             test_vectors.append({
                 't_addr': t_addr,
                 'p2pkh_bytes': p2pkh_bytes,
                 'tex_addr': tex_addr,
                 'account': account,
                 'child_index': j,
+                'tex_addr_upper': tex_addr_upper,
             })
 
     render_tv(
@@ -82,6 +92,7 @@ def main():
             ('tex_addr',          {'rust_type': '&\'static str'}),
             ('account',           'u32'),
             ('child_index',       'u32'),
+            ('tex_addr_upper',    {'rust_type': '&\'static str'}),
         ),
         test_vectors,
     )
