@@ -70,12 +70,17 @@ def main():
             p2pkh_bytes_decoded = decode(constants["tex_hrp"], tex_addr)
             assert p2pkh_bytes_decoded == p2pkh_bytes
 
+            # A Consumer MUST accept the all-uppercase form (ZIP 173); a Producer encodes in lowercase.
+            tex_addr_upper = tex_addr.upper()
+            assert decode(constants["tex_hrp"], tex_addr_upper) == p2pkh_bytes
+
             test_vectors.append({
                 't_addr': t_addr,
                 'p2pkh_bytes': p2pkh_bytes,
                 'tex_addr': tex_addr,
                 'account': account,
                 'child_index': j,
+                'tex_addr_upper': tex_addr_upper,
             })
 
     render_tv(
@@ -87,6 +92,7 @@ def main():
             ('tex_addr',          {'rust_type': '&\'static str'}),
             ('account',           'u32'),
             ('child_index',       'u32'),
+            ('tex_addr_upper',    {'rust_type': '&\'static str'}),
         ),
         test_vectors,
     )

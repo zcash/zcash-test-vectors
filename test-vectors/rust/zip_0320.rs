@@ -6,6 +6,7 @@ pub(crate) struct TestVector {
     pub(crate) tex_addr: &'static str,
     pub(crate) account: u32,
     pub(crate) child_index: u32,
+    pub(crate) tex_addr_upper: &'static str,
 }
 
 pub(crate) const TEST_VECTORS: &[TestVector] = &[
@@ -18,6 +19,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex10wur2u9clts5dcpu2vc6qg93uzyj7cca2xm732",
         account: 0,
         child_index: 0,
+        tex_addr_upper: "TEX10WUR2U9CLTS5DCPU2VC6QG93UZYJ7CCA2XM732",
     },
     TestVector {
         t_addr: "t1LZdE42PAt1wREUv1YMYRFwJDPHPW8toLL",
@@ -28,6 +30,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1rkq7seu3cukjjtusde7q8xnjne93laluyvdxu7",
         account: 0,
         child_index: 1,
+        tex_addr_upper: "TEX1RKQ7SEU3CUKJJTUSDE7Q8XNJNE93LALUYVDXU7",
     },
     TestVector {
         t_addr: "t1M5AgJw56FNFRBNGtzAGX4AHfQh7ZCxd4w",
@@ -38,6 +41,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1yvvrncc9czsza45pgph67g39shmxywgyvsypwn",
         account: 0,
         child_index: 2,
+        tex_addr_upper: "TEX1YVVRNCC9CZSZA45PGPH67G39SHMXYWGYVSYPWN",
     },
     TestVector {
         t_addr: "t1bh6KjXccz6Ed45vFc3GeqoxWbwPxe8w2n",
@@ -48,6 +52,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1cd648x9ckalkx0720n9a4yqgx9rcj7wfvjcq63",
         account: 1,
         child_index: 0,
+        tex_addr_upper: "TEX1CD648X9CKALKX0720N9A4YQGX9RCJ7WFVJCQ63",
     },
     TestVector {
         t_addr: "t1WvCtHojWHSHBdDtCFgorUN1TzUFV8sCth",
@@ -58,6 +63,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex13ute2r3zkzygdtzgxt3zuf8jareuk6ep7qd8ty",
         account: 1,
         child_index: 1,
+        tex_addr_upper: "TEX13UTE2R3ZKZYGDTZGXT3ZUF8JAREUK6EP7QD8TY",
     },
     TestVector {
         t_addr: "t1U2MF7f81qrXkWouT3Xt4hLDAMjC9LniTK",
@@ -68,6 +74,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1dav2mtczhdywdvuc53p29v55tz0qg93qvfjp46",
         account: 1,
         child_index: 2,
+        tex_addr_upper: "TEX1DAV2MTCZHDYWDVUC53P29V55TZ0QG93QVFJP46",
     },
     TestVector {
         t_addr: "t1awMYfhispKsnJPHn7jgUxNnVW1DTpTJx9",
@@ -78,6 +85,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1hvhmk4q0palyx33kdq82aghwlcm45av3ezlrzn",
         account: 2,
         child_index: 0,
+        tex_addr_upper: "TEX1HVHMK4Q0PALYX33KDQ82AGHWLCM45AV3EZLRZN",
     },
     TestVector {
         t_addr: "t1Kgn7v5a2rKkxC24LoXNyHRn4q4Gs3KEEF",
@@ -88,6 +96,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1z0jpu36ysy3v45fut3l4h5cuwa3e48uea95pc6",
         account: 2,
         child_index: 1,
+        tex_addr_upper: "TEX1Z0JPU36YSY3V45FUT3L4H5CUWA3E48UEA95PC6",
     },
     TestVector {
         t_addr: "t1c1ixUTuStCzo19qPg89U9XFYmWDLru9mt",
@@ -98,6 +107,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1cmakfkr40ewgtv3s5v6cwytf0tn9gz6y9j5z8e",
         account: 2,
         child_index: 2,
+        tex_addr_upper: "TEX1CMAKFKR40EWGTV3S5V6CWYTF0TN9GZ6Y9J5Z8E",
     },
     TestVector {
         t_addr: "t1WBxR5jNWgg4Cqeot3FvNkBb9ztYyjVELp",
@@ -108,6 +118,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1sudq382yvf5257kq854x7c9wwzqg7wt5h2c24u",
         account: 3,
         child_index: 0,
+        tex_addr_upper: "TEX1SUDQ382YVF5257KQ854X7C9WWZQG7WT5H2C24U",
     },
     TestVector {
         t_addr: "t1VEuDXP1QocoNaxrq4gZArTqqKCZdrwjG7",
@@ -118,6 +129,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex10jc8cvd4spq2clxp90a25yuvl0hm8pzheuufxw",
         account: 3,
         child_index: 1,
+        tex_addr_upper: "TEX10JC8CVD4SPQ2CLXP90A25YUVL0HM8PZHEUUFXW",
     },
     TestVector {
         t_addr: "t1PXVM8oR6qVrVjtcnU1iNmH2CfvZyBai8u",
@@ -128,6 +140,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex18cpwpz6evh7wnssvum0xl9q8vaxsrwsz83vght",
         account: 3,
         child_index: 2,
+        tex_addr_upper: "TEX18CPWPZ6EVH7WNSSVUM0XL9Q8VAXSRWSZ83VGHT",
     },
     TestVector {
         t_addr: "t1M3p1MgJCgjq4FMogS84kVvuszJbxPnpSM",
@@ -138,6 +151,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1yttgm6anj2x6gprrwrf9a54mar27npws73jwdy",
         account: 4,
         child_index: 0,
+        tex_addr_upper: "TEX1YTTGM6ANJ2X6GPRRWRF9A54MAR27NPWS73JWDY",
     },
     TestVector {
         t_addr: "t1aqnebXhA45WpgQHLiXTPU1Kk6rp8vVDDr",
@@ -148,6 +162,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1hg3rpdqlmjqhzsegyv05p2mnl66jv3dykth955",
         account: 4,
         child_index: 1,
+        tex_addr_upper: "TEX1HG3RPDQLMJQHZSEGYV05P2MNL66JV3DYKTH955",
     },
     TestVector {
         t_addr: "t1UG6FVxexmJRFXG4gvEmSF9HSTwHMFaSDT",
@@ -158,5 +173,6 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         tex_addr: "tex1w8clcm7kjdc0yds32d4nke88muwwhmmfunhkhd",
         account: 4,
         child_index: 2,
+        tex_addr_upper: "TEX1W8CLCM7KJDC0YDS32D4NKE88MUWWHMMFUNHKHD",
     },
 ];

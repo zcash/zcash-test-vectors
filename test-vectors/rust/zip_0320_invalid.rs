@@ -47,6 +47,12 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
     TestVector {
         network: "mainnet",
         direction: "decode",
+        encoded: "tex1s2rt77ggv6q989lr49rkgzmh5slsksa9pdy4pvw",
+        reason: "non-zero padding: one more 5-bit group than a 20-byte payload needs, and it is not zero (ZIP 173 requires padding bits to be zero)",
+    },
+    TestVector {
+        network: "mainnet",
+        direction: "decode",
         encoded: "tex1S2rt77ggv6q989lr49rkgzmh5slsksa9khdgte",
         reason: "mixed case",
     },
@@ -102,7 +108,7 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         network: "mainnet",
         direction: "decode",
         encoded: "texregtest1s2rt77ggv6q989lr49rkgzmh5slsksa990zqpk",
-        reason: "Regtest TEX address given to a Mainnet Consumer",
+        reason: "unknown HRP (texregtest; ZIPs do not specify Regtest)",
     },
     TestVector {
         network: "mainnet",

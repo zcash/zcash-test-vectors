@@ -44,6 +44,8 @@ def main():
         ("mainnet", tex("tex", b""), "empty payload"),
         ("mainnet", bech32_encode("tex", convertbits(PKH, 8, 5) + [0], Encoding.BECH32M),
          "excess padding: one more 5-bit group than a 20-byte payload needs (ZIP 173 allows at most 4 padding bits)"),
+        ("mainnet", bech32_encode("tex", convertbits(PKH, 8, 5) + [1], Encoding.BECH32M),
+         "non-zero padding: one more 5-bit group than a 20-byte payload needs, and it is not zero (ZIP 173 requires padding bits to be zero)"),
         ("mainnet", "tex1S2rt77ggv6q989lr49rkgzmh5slsksa9khdgte", "mixed case"),
         ("mainnet", EXAMPLE_TEX[:-1] + "f", "checksum error (last character changed)"),
         ("mainnet", EXAMPLE_TEX[:-1] + "b", "character outside the Bech32 alphabet"),
@@ -53,7 +55,7 @@ def main():
         ("mainnet", tex("textestnet", PKH), "unknown HRP"),
         ("mainnet", tex("textest", PKH), "Testnet TEX address given to a Mainnet Consumer"),
         ("testnet", EXAMPLE_TEX, "Mainnet TEX address given to a Testnet Consumer"),
-        ("mainnet", tex("texregtest", PKH), "Regtest TEX address given to a Mainnet Consumer"),
+        ("mainnet", tex("texregtest", PKH), "unknown HRP (texregtest; ZIPs do not specify Regtest)"),
     ]
     test_vectors = []
     for (network, addr, reason) in decode_cases:
