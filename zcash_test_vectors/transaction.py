@@ -25,10 +25,7 @@ SAPLING_TX_VERSION = 4
 
 NU5_VERSION_GROUP_ID = 0x26A7270A
 NU5_TX_VERSION = 5
-
-V6_TX_VERSION = 6
-# TODO: change this
-V6_VERSION_GROUP_ID = 0xFFFFFFFF
+NU5_TX_VERSION_BYTES = NU5_TX_VERSION | (1 << 31)
 
 # Sapling note magic values, copied from src/zcash/Zcash.h
 NOTEENCRYPTION_AUTH_BYTES = 16
@@ -162,8 +159,8 @@ class OutputDescription(object):
             bytes(self.proof)
         )
 
-class OrchardActionDescription(object):
-    def __init__(self, rand):
+class OrchardActionBase(object):
+    def __init__(self, enc_ciphertext_size, rand):
         # We don't need to take account of whether this is a coinbase transaction,
         # because we're only generating random fields.
         self.cv = pallas_group_hash(b'TVRandPt', rand.b(32))
@@ -171,7 +168,7 @@ class OrchardActionDescription(object):
         self.rk = pallas_group_hash(b'TVRandPt', rand.b(32))
         self.cmx = PallasBase(leos2ip(rand.b(32)))
         self.ephemeralKey = pallas_group_hash(b'TVRandPt', rand.b(32))
-        self.encCiphertext = rand.b(ZC_SAPLING_ENCCIPHERTEXT_SIZE)
+        self.encCiphertext = rand.b(enc_ciphertext_size)
         self.outCiphertext = rand.b(ZC_SAPLING_OUTCIPHERTEXT_SIZE)
         self.spendAuthSig = RedPallasSignature(rand)
 
@@ -185,6 +182,10 @@ class OrchardActionDescription(object):
             self.encCiphertext +
             self.outCiphertext
         )
+
+class OrchardActionDescription(OrchardActionBase):
+    def __init__(self, rand):
+        super().__init__(ZC_SAPLING_ENCCIPHERTEXT_SIZE, rand)
 
 class JoinSplit(object):
     def __init__(self, rand, fUseGroth = False):
@@ -415,35 +416,27 @@ class LegacyTransaction(object):
 
         return ret
 
-
-class TransactionV5(object):
-    def __init__(self, rand, consensus_branch_id):
+# Creating a base transaction class with common fields that V5 and subsequent versions can inherit.
+class TransactionBase(object):
+    def __init__(self, rand, have_ironwood=True):
         # Decide which transaction parts will be generated.
-        flip_coins_result = rand.u8()
+        flip_coins = rand.u8()
+        have_transparent_in = (flip_coins >> 0) % 2
+        have_transparent_out = (flip_coins >> 1) % 2
+        have_sapling = (flip_coins >> 2) % 2
+        have_orchard = (flip_coins >> 3) % 2
+        is_coinbase = (not have_transparent_in) and (flip_coins >> 4) % 2
 
-        have_transparent_in = (flip_coins_result >> 0) % 2
-        have_transparent_out = (flip_coins_result >> 1) % 2
-        have_sapling = (flip_coins_result >> 2) % 2
-        have_orchard = (flip_coins_result >> 3) % 2
-        is_coinbase = (not have_transparent_in) and (flip_coins_result >> 4) % 2
-
-        self.init_header(consensus_branch_id, rand)
+        self.init_header_base(rand)
         self.init_transparent(rand, have_transparent_in, have_transparent_out, is_coinbase)
         self.init_sapling(rand, have_sapling, is_coinbase)
-
-        # Satisfy consensus rules that require at least one input and at least one output.
-        if (not (is_coinbase or have_transparent_in or have_sapling)
-                or not (have_transparent_out or have_sapling)):
-            have_orchard = True
-
         self.init_orchard(rand, have_orchard, is_coinbase)
+        self.init_ironwood_base(rand, have_ironwood)
 
         assert is_coinbase == self.is_coinbase()
 
-    def init_header(self, consensus_branch_id, rand):
+    def init_header_base(self, rand):
         # Common Transaction Fields
-        self.nVersionGroupId = NU5_VERSION_GROUP_ID
-        self.nConsensusBranchId = consensus_branch_id
         self.nLockTime = rand.u32()
         self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
 
@@ -516,37 +509,42 @@ class TransactionV5(object):
             # v^balanceOrchard is defined to be 0.
             self.valueBalanceOrchard = 0
 
-    def version_bytes(self):
-        return NU5_TX_VERSION | (1 << 31)
+    def init_ironwood_base(self, rand, have_ironwood):
+        # Ironwood Transaction Fields that are present in both V5 and ZSA
+        if have_ironwood:
+            self.valueBalanceIronwood = rand.u64() % (MAX_MONEY + 1)
+            self.anchorIronwood = PallasBase(leos2ip(rand.b(32)))
+            self.proofsIronwood = rand.b(rand.u8() + 32) # Proof will always contain at least one element
+            self.bindingSigIronwood = RedPallasSignature(rand)
+        else:
+            # If valueBalanceIronwood is not present in the serialized transaction, then
+            # v^balanceIronwood is defined to be 0.
+            self.valueBalanceIronwood = 0
 
     def is_coinbase(self):
         # <https://github.com/zcash/zcash/blob/d8c818bfa507adb845e527f5beb38345c490b330/src/primitives/transaction.h#L969-L972>
         return len(self.vin) == 1 and bytes(self.vin[0].prevout.txid) == b'\x00'*32 and self.vin[0].prevout.n == 0xFFFFFFFF
 
-    # TODO: Update ZIP 225 to document endianness
-    def __bytes__(self):
+    def to_bytes(self, version_bytes, version_group_id, consensus_branch_id):
         ret = b''
-
-        ret += self.header_bytes()
+        ret += self.header_bytes(version_bytes, version_group_id, consensus_branch_id)
         ret += self.transparent_bytes()
         ret += self.sapling_bytes()
         ret += self.orchard_bytes()
-
         return ret
 
-    def header_bytes(self):
+    def header_bytes(self, version_bytes, version_group_id, consensus_branch_id):
         ret = b''
-
         # Common Transaction Fields
-        ret += struct.pack('<I', self.version_bytes())
-        ret += struct.pack('<I', self.nVersionGroupId)
-        ret += struct.pack('<I', self.nConsensusBranchId)
+        ret += struct.pack('<I', version_bytes)
+        ret += struct.pack('<I', version_group_id)
+        ret += struct.pack('<I', consensus_branch_id)
         ret += struct.pack('<I', self.nLockTime)
         ret += struct.pack('<I', self.nExpiryHeight)
 
         return ret
 
-    def transparent_bytes(self): 
+    def transparent_bytes(self):
         ret = b''
         # Transparent Transaction Fields
         ret += write_compact_size(len(self.vin))
@@ -555,20 +553,23 @@ class TransactionV5(object):
         ret += write_compact_size(len(self.vout))
         for x in self.vout:
             ret += bytes(x)
-
+        ret += self.transparent_sighash_info_bytes()
         return ret
 
-    def sapling_bytes(self): 
+    def transparent_sighash_info_bytes(self):
+        raise NotImplementedError("The transparent_sighash_info_bytes method must be implemented in the child class.")
+
+    def sapling_bytes(self):
         ret = b''
         # Sapling Transaction Fields
-        hasSapling = len(self.vSpendsSapling) + len(self.vOutputsSapling) > 0
+        has_sapling = len(self.vSpendsSapling) + len(self.vOutputsSapling) > 0
         ret += write_compact_size(len(self.vSpendsSapling))
         for desc in self.vSpendsSapling:
             ret += desc.bytes_v5()
         ret += write_compact_size(len(self.vOutputsSapling))
         for desc in self.vOutputsSapling:
             ret += desc.bytes_v5()
-        if hasSapling:
+        if has_sapling:
             ret += struct.pack('<Q', self.valueBalanceSapling)
         if len(self.vSpendsSapling) > 0:
             ret += bytes(self.anchorSapling)
@@ -577,17 +578,23 @@ class TransactionV5(object):
             for desc in self.vSpendsSapling: # vSpendProofsSapling
                 ret += bytes(desc.proof)
             for desc in self.vSpendsSapling: # vSpendAuthSigsSapling
-                ret += bytes(desc.spendAuthSig)
+                ret += self.sapling_spend_auth_sig_bytes(desc)
         for desc in self.vOutputsSapling: # vOutputProofsSapling
             ret += bytes(desc.proof)
-        if hasSapling:
-            ret += bytes(self.bindingSigSapling)
+        if has_sapling:
+            ret += self.sapling_binding_sig_bytes()
 
         return ret
-    
-    def orchard_bytes(self): 
+
+    def sapling_spend_auth_sig_bytes(self, desc):
+        raise NotImplementedError("The sapling_spend_auth_sig_bytes method must be implemented in the child class.")
+
+    def sapling_binding_sig_bytes(self):
+        raise NotImplementedError("The sapling_binding_sig_bytes method must be implemented in the child class.")
+
+    def orchard_bytes(self):
         ret = b''
-        # Orchard Transaction Fields
+
         ret += write_compact_size(len(self.vActionsOrchard))
         if len(self.vActionsOrchard) > 0:
             # Not explicitly gated in the protocol spec, but if the gate
@@ -600,29 +607,61 @@ class TransactionV5(object):
             ret += write_compact_size(len(self.proofsOrchard))
             ret += self.proofsOrchard
             for desc in self.vActionsOrchard:
-                ret += bytes(desc.spendAuthSig)
-            ret += bytes(self.bindingSigOrchard)
+                ret += bytes(self.orchard_spend_auth_sig_bytes(desc))
+            ret += bytes(self.orchard_binding_sig_bytes())
 
         return ret
 
-class TransactionV6(TransactionV5):
-    def init_header(self, consensus_branch_id, rand):
+    def orchard_spend_auth_sig_bytes(self, desc):
+        raise NotImplementedError("The orchard_spend_auth_sig_bytes method must be implemented in the child class.")
+
+    def orchard_binding_sig_bytes(self):
+        raise NotImplementedError("The orchard_binding_sig_bytes method must be implemented in the child class.")
+
+
+
+class TransactionV5(TransactionBase):
+    def __init__(self, rand, consensus_branch_id):
+        have_ironwood = False
+        # All Transparent, Sapling, Orchard and part of the Ironwood Transaction Fields are initialized in the super
+        # class.
+        super().__init__(rand, have_ironwood)
+
         # Common Transaction Fields
-        self.nVersionGroupId = V6_VERSION_GROUP_ID
+        self.nVersionGroupId = NU5_VERSION_GROUP_ID
         self.nConsensusBranchId = consensus_branch_id
-        self.nLockTime = rand.u32()
-        self.nExpiryHeight = rand.u32() % TX_EXPIRY_HEIGHT_THRESHOLD
-        self.zip233Amount = 0
 
-    def version_bytes(self):
-        return V6_TX_VERSION | (1 << 31)
+        # Ironwood Transaction Fields are empty for V5.
+        self.vActionsIronwood = []
 
-    def header_bytes(self):
+    @staticmethod
+    def version_bytes():
+        return NU5_TX_VERSION_BYTES
+
+    def transparent_sighash_info_bytes(self):
+        # There are no such bytes for V5 transactions.
+        return b''
+
+    def sapling_spend_auth_sig_bytes(self, desc):
+        return bytes(desc.spendAuthSig)
+
+    def sapling_binding_sig_bytes(self):
+        return bytes(self.bindingSigSapling)
+
+    def orchard_spend_auth_sig_bytes(self, desc):
+        return bytes(desc.spendAuthSig)
+
+    def orchard_binding_sig_bytes(self):
+        return bytes(self.bindingSigOrchard)
+
+
+    def __bytes__(self):
         ret = b''
 
-        ret += super().header_bytes()
-        ret += struct.pack('<Q', self.zip233Amount)
+        # Common Transaction Fields
+        ret += super().to_bytes(self.version_bytes(), self.nVersionGroupId, self.nConsensusBranchId)
 
+        # Ironwood Transaction Fields do not exist for V5 transactions, so we don't serialize them.
         return ret
 
 class Transaction(object):
@@ -630,9 +669,6 @@ class Transaction(object):
         if version == NU5_TX_VERSION:
             assert consensus_branch_id is not None
             self.inner = TransactionV5(rand, consensus_branch_id)
-        elif version == V6_TX_VERSION:
-            assert consensus_branch_id is not None
-            self.inner = TransactionV6(rand, consensus_branch_id)
         else:
             self.inner = LegacyTransaction(rand, version)
 
