@@ -1,13 +1,13 @@
 import struct
 
 from zcash_test_vectors.bip340_reference import schnorr_sign
-from zcash_test_vectors.orchard_zsa.issuance_auth_sig import encode_issue_auth_sig
+from zcash_test_vectors.ironwood_zsa.issuance_auth_sig import encode_issue_auth_sig
 from zcash_test_vectors.zip_0143 import SIGHASH_ALL
 from .orchard.key_components import FullViewingKey, SpendingKey
 from .orchard.pallas import Point
-from .orchard_zsa.key_components import IssuanceKeys, ZSA_BIP340_SIG_SCHEME
-from .orchard_zsa.digests import NU7_VERSION_GROUP_ID, NU7_TX_VERSION_BYTES, signature_digest_zsa
-from .orchard_zsa.asset_base import zsa_value_base, asset_digest, encode_asset_id, get_random_unicode_bytes, asset_desc_digest
+from .ironwood_zsa.key_components import IssuanceKeys, ZSA_BIP340_SIG_SCHEME
+from .ironwood_zsa.digests import NU7_VERSION_GROUP_ID, NU7_TX_VERSION_BYTES, signature_digest_zsa
+from .ironwood_zsa.asset_base import zsa_value_base, asset_digest, encode_asset_id, get_random_unicode_bytes, asset_desc_digest
 from .zc_utils import write_compact_size
 from .transaction import (
     NOTEENCRYPTION_AUTH_BYTES, ZC_SAPLING_ENCPLAINTEXT_SIZE,
@@ -298,7 +298,7 @@ def main():
 
     # Since the burn fields are within the Ironwood ZSA fields, we can't have burn without Ironwood ZSA.
     # We also cannot have issuance without Ironwood ZSA.
-    # This gives us the following choices for [have_orchard_zsa, have_burn, have_issuance]:
+    # This gives us the following choices for [have_ironwood_zsa, have_burn, have_issuance]:
     allowed_choices = [
         [False, False, False],
         [True, False, False],

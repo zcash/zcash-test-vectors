@@ -8,7 +8,7 @@ from ..orchard.key_components import derive_nullifier
 from ..output import render_args, render_tv
 
 from zcash_test_vectors.bip340_reference import pubkey_gen
-from zcash_test_vectors.orchard_zsa.asset_base import native_asset
+from zcash_test_vectors.ironwood_zsa.asset_base import native_asset
 
 
 #
@@ -102,7 +102,7 @@ def main():
 
     render_tv(
         args,
-        'zcash_test_vectors/orchard_zsa/key_components',
+        'zcash_test_vectors/ironwood_zsa/key_components',
         (
             ('sk', '[u8; 32]'),
             ('ask', '[u8; 32]'),

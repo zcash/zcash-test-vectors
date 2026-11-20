@@ -41,10 +41,10 @@ case "$2" in
         orchard_poseidon
         orchard_poseidon_hash
         orchard_sinsemilla
-        orchard_zsa_asset_base
-        orchard_zsa_issuance_auth_sig
-        orchard_zsa_key_components
-        orchard_zsa_note_encryption
+        ironwood_zsa_asset_base
+        ironwood_zsa_issuance_auth_sig
+        ironwood_zsa_key_components
+        ironwood_zsa_note_encryption
         orchard_zip32
         sapling_generators
         sapling_key_components
@@ -67,7 +67,7 @@ case "$2" in
         zip_0243
         zip_0244
         zip_0233
-        orchard_zsa_digests
+        ironwood_zsa_digests
         zip_0316
         zip_0320)
     ;;

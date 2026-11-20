@@ -2,7 +2,7 @@
 import sys;
 
 from zcash_test_vectors.bip340_reference import schnorr_sign
-from zcash_test_vectors.orchard_zsa.key_components import IssuanceKeys, ZSA_BIP340_SIG_SCHEME, encode_ik
+from zcash_test_vectors.ironwood_zsa.key_components import IssuanceKeys, ZSA_BIP340_SIG_SCHEME, encode_ik
 
 from ..output import render_args, render_tv
 
@@ -57,7 +57,7 @@ def main():
 
     render_tv(
         args,
-        'zcash_test_vectors/orchard_zsa/issuance_auth_sig',
+        'zcash_test_vectors/ironwood_zsa/issuance_auth_sig',
         (
             ('isk', '[u8; 32]'),
             ('ik_encoding', '[u8; 33]'),

@@ -360,7 +360,7 @@ def generate_sighashes_and_txin(tx, t_inputs, rand, is_zsa=False):
     else:
         txin = None
 
-    from .orchard_zsa.digests import signature_digest_zsa
+    from .ironwood_zsa.digests import signature_digest_zsa
     sighash_shielded = signature_digest_zsa(tx, t_inputs, SIGHASH_ALL, None) if is_zsa else signature_digest(tx, t_inputs, SIGHASH_ALL, None)
     other_sighashes = {
         nHashType: None if txin is None else signature_digest_zsa(tx, t_inputs, nHashType, txin) if is_zsa else signature_digest(tx, t_inputs, nHashType, txin)
@@ -389,7 +389,7 @@ def rand_gen():
 
 def populate_test_vector(rand, test_vectors, tx, is_zsa=False):
     if is_zsa:
-        from .orchard_zsa.digests import txid_digest_zsa, auth_digest_zsa
+        from .ironwood_zsa.digests import txid_digest_zsa, auth_digest_zsa
         txid = txid_digest_zsa(tx)
         auth = auth_digest_zsa(tx)
     else:

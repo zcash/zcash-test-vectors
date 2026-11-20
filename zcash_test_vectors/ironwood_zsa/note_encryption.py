@@ -119,7 +119,7 @@ def main():
 
     render_tv(
         args,
-        'zcash_test_vectors/orchard_zsa/note_encryption',
+        'zcash_test_vectors/ironwood_zsa/note_encryption',
         (
             ('incoming_viewing_key', '[u8; 64]'),
             ('ovk', '[u8; 32]'),

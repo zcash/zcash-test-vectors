@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard_zsa/asset_base.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/ironwood_zsa/asset_base.py
 
 pub(crate) struct TestVector {
     pub(crate) key: [u8; 33],

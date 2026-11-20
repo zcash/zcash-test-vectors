@@ -7,7 +7,7 @@ from .transaction_zsa import (
 )
 
 from .zip_0244 import *
-from zcash_test_vectors.orchard_zsa.digests import txid_digest_zsa, auth_digest_zsa
+from zcash_test_vectors.ironwood_zsa.digests import txid_digest_zsa, auth_digest_zsa
 
 def main():
     args = render_args()

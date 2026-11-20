@@ -1,4 +1,4 @@
-// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/orchard_zsa/issuance_auth_sig.py
+// From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/ironwood_zsa/issuance_auth_sig.py
 
 pub(crate) struct TestVector {
     pub(crate) isk: [u8; 32],
