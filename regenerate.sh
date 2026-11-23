@@ -66,7 +66,6 @@ case "$2" in
         zip_0233
         zip_0243
         zip_0244
-        zip_0233
         ironwood_zsa_digests
         zip_0316
         zip_0320)

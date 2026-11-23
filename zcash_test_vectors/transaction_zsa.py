@@ -181,7 +181,6 @@ class TransactionZSA(TransactionBase):
     # Common Transaction Fields
         self.nVersionGroupId = NU7_VERSION_GROUP_ID
         self.nConsensusBranchId = consensus_branch_id
-        self.zip233Amount = 0
 
         # IronwoodZSA Transaction Fields
         self.vActionGroupsIronwood = []
@@ -212,12 +211,6 @@ class TransactionZSA(TransactionBase):
     @staticmethod
     def version_bytes():
         return NU7_TX_VERSION_BYTES
-
-    def header_bytes(self, version_bytes, version_group_id, consensus_branch_id):
-        ret = b''
-        ret += super().header_bytes(version_bytes, version_group_id, consensus_branch_id)
-        # ret += struct.pack('<Q', self.zip233Amount) #not included in spec.
-        return ret
 
     def transparent_sighash_info_bytes(self):
         ret = b''

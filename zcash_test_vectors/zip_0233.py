@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 import sys; assert sys.version_info[0] >= 3, "Python 3 required."
 
-from .transaction_zsa import (
-    TransactionZSA,
-    SIGHASH_INFO_V0
+from .transaction import TransactionV6
+from .output import render_args, render_tv
+from .rand import Rand
+from .zip_0143 import (
+    SIGHASH_ALL,
+    SIGHASH_ANYONECANPAY,
+    SIGHASH_NONE,
+    SIGHASH_SINGLE,
 )
 
 from .zip_0244 import *
-from zcash_test_vectors.ironwood_zsa.digests import txid_digest_zsa, auth_digest_zsa
 
 def main():
     args = render_args()
@@ -16,11 +20,11 @@ def main():
     rng = Random(0xB7D6_0F44)
     rand = randbytes(rng)
 
-    consensusBranchId = 0x7719_0AD8 # Nu7
+    consensusBranchId = 0xFFFF_FFFF # ZFUTURE
 
     test_vectors = []
     for _ in range(10):
-        tx = TransactionZSA(rand, consensusBranchId, SIGHASH_INFO_V0)
+        tx = TransactionV6(rand, consensusBranchId)
 
         # Generate amounts and scriptCodes for each non-dummy transparent input.
         t_inputs = []
@@ -38,8 +42,8 @@ def main():
         if rand.u8() % 2 == 0:
             tx.zip233Amount = 0
 
-        txid = txid_digest_zsa(tx)
-        auth = auth_digest_zsa(tx)
+        txid = txid_digest(tx)
+        auth = auth_digest(tx)
 
         [sighash_shielded, other_sighashes, txin] = generate_sighashes_and_txin(tx, t_inputs, rand)
 

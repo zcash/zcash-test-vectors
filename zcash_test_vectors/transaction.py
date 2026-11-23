@@ -27,6 +27,10 @@ NU5_VERSION_GROUP_ID = 0x26A7270A
 NU5_TX_VERSION = 5
 NU5_TX_VERSION_BYTES = NU5_TX_VERSION | (1 << 31)
 
+V6_TX_VERSION = 6
+# TODO: change this
+V6_VERSION_GROUP_ID = 0xFFFFFFFF
+
 # Sapling note magic values, copied from src/zcash/Zcash.h
 NOTEENCRYPTION_AUTH_BYTES = 16
 ZC_NOTEPLAINTEXT_LEADING = 1
@@ -662,6 +666,23 @@ class TransactionV5(TransactionBase):
         ret += super().to_bytes(self.version_bytes(), self.nVersionGroupId, self.nConsensusBranchId)
 
         # Ironwood Transaction Fields do not exist for V5 transactions, so we don't serialize them.
+        return ret
+
+class TransactionV6(TransactionV5):
+    def __init__(self, rand, consensus_branch_id):
+        super().__init__(rand, consensus_branch_id)
+        self.nVersionGroupId = V6_VERSION_GROUP_ID
+        self.zip233Amount = 0
+
+    def version_bytes(self):
+        return V6_TX_VERSION | (1 << 31)
+
+    def header_bytes(self, version_bytes, version_group_id, consensus_branch_id):
+        ret = b''
+
+        ret += super().header_bytes(version_bytes, version_group_id, consensus_branch_id)
+        ret += struct.pack('<Q', self.zip233Amount)
+
         return ret
 
 class Transaction(object):
