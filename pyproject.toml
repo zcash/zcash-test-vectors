@@ -77,6 +77,13 @@ orchard_poseidon_hash = "zcash_test_vectors.orchard.poseidon:hash_test_vectors"
 orchard_sinsemilla = "zcash_test_vectors.orchard.sinsemilla:main"
 orchard_zip32 = "zcash_test_vectors.orchard.zip32:main"
 
+# IronwoodZSA test vectors
+ironwood_zsa_asset_base="zcash_test_vectors.ironwood_zsa.asset_base:main"
+ironwood_zsa_issuance_auth_sig="zcash_test_vectors.ironwood_zsa.issuance_auth_sig:main"
+ironwood_zsa_key_components = "zcash_test_vectors.ironwood_zsa.key_components:main"
+ironwood_zsa_note_encryption = "zcash_test_vectors.ironwood_zsa.note_encryption:main"
+ironwood_zsa_digests = "zcash_test_vectors.transaction_zsa:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
