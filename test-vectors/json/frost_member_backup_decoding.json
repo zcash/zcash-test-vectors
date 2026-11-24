@@ -1,0 +1,23 @@
+[
+    ["From https://github.com/zcash/zcash-test-vectors/blob/master/zcash_test_vectors/frost_member_backup.py"],
+    ["encoding, payload, reason"],
+    ["zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxm4ktp7", "010102032caaa5adfcad8ac0bb8c50dcdbbc1e954825be403f97f44bc1d6c543e15d4f3b24cf13c724758886048e05834d5d0a644e9c8e155d7e0bac3f25586b6caa11c3", "valid, lowercase"],
+    ["ZKFROST1QYQSYQEV42J6ML9D3TQTHRZSMNDMC854FQJMUSPLJL6YHSWKC4P7ZH208VJV7Y78Y36C3PSY3CZCXN2APFJYA8YWZ4WHUZAV8UJ4S6MV4GGUXM4KTP7", "010102032caaa5adfcad8ac0bb8c50dcdbbc1e954825be403f97f44bc1d6c543e15d4f3b24cf13c724758886048e05834d5d0a644e9c8e155d7e0bac3f25586b6caa11c3", "valid, uppercase"],
+    ["zkfros1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxj5zv7a", null, "wrong human-readable part"],
+    ["zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxm4ktpq", null, "invalid checksum"],
+    ["zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxwfx8yu", null, "Bech32 checksum instead of Bech32m"],
+    ["ZKFROST1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxm4ktp7", null, "mixed case"],
+    ["zkfrost1qyqsyqev42J6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxm4ktp7", null, "mixed case in the data part"],
+    ["zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4ggu8xrz7uv", null, "non-zero padding bit"],
+    ["zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxq7psp6f", null, "more than 4 padding bits"],
+    ["zkfrost1qqqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxvn9wls", null, "version 0"],
+    ["zkfrost1qgqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxtl2y2v", null, "version 2"],
+    ["zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4ggs2jtyl7", null, "payload of 67 bytes"],
+    ["zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxqqcmvflp", null, "payload of 69 bytes"],
+    ["zkfrost1qyqqyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxxh50p3", null, "identifier 0"],
+    ["zkfrost1qyzqyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4ggux2ef5a0", null, "identifier greater than n"],
+    ["zkfrost1qyqsqqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxnxkmvq", null, "threshold 0"],
+    ["zkfrost1qyqszqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxhmkn70", null, "threshold 1"],
+    ["zkfrost1qyqsgqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxrfkjk4", null, "threshold greater than n"],
+    ["zkfrost1qyqszqpv42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4ggux8e6jef", null, "group size 0"]
+]

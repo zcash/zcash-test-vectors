@@ -117,6 +117,12 @@ def tv_option_bytes_rust(name, value, pad, kind=""):
     else:
         print('%s%s: None,' % (pad, name))
 
+def tv_option_str_rust(name, value, pad):
+    if value:
+        print('''%s%s: Some("%s"),''' % (pad, name, value.thing))
+    else:
+        print('%s%s: None,' % (pad, name))
+
 def tv_int_rust(name, value, pad):
     print('%s%s: %d,' % (pad, name, value))
 
@@ -143,6 +149,8 @@ def tv_part_rust(name, value, config, indent=3):
         tv_tuple_int_bytes_rust(name, value, pad)
     elif config['rust_type'] == '&\'static str':
         tv_str_rust(name, value, pad)
+    elif config['rust_type'] == 'Option<&\'static str>':
+        tv_option_str_rust(name, value, pad)
     elif config['rust_type'].startswith('Option<[u8'):
         tv_option_bytes_rust(name, value, pad)
     elif type(value) == bytes:
