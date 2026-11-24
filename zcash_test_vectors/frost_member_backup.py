@@ -188,9 +188,11 @@ def restore_member(encoding, ufvk):
     except ValueError:
         raise ValueError("invalid sk")
     try:
-        Scalar.from_bytes(share)
+        s = Scalar.from_bytes(share)
     except ValueError:
         raise ValueError("non-canonical signing share")
+    if s == Scalar.ZERO:
+        raise ValueError("signing share of zero")
 
     ak = Fp.from_bytes(fvk[:32])
     for derivation in (ZIP_2005, LEGACY):
@@ -383,6 +385,9 @@ def restore():
     # The Pallas scalar modulus, which is not a canonical encoding of a
     # signing share.
     non_canonical = a.payload(1)[:4] + i2leosp(256, q) + a.sk
+    # Zero is a canonical encoding, but its verifying share is the identity,
+    # which ZIP 312 does not allow.
+    zero_share = a.payload(1)[:4] + i2leosp(256, 0) + a.sk
     sapling_only = encode_unified([(SAPLING_ITEM, SAPLING_FVK)], "uview")
 
     cases = [
@@ -395,6 +400,8 @@ def restore():
             "viewing key of another group", "neither derivation matches the viewing key"),
         (encode_payload(non_canonical), ufvk(a, ZIP_2005), None,
             "non-canonical signing share (the Pallas scalar modulus)", "non-canonical signing share"),
+        (encode_payload(zero_share), ufvk(a, ZIP_2005), None,
+            "signing share of zero", "signing share of zero"),
         (a1, sapling_only, None,
             "viewing key with no Orchard component", "no Orchard component"),
     ]

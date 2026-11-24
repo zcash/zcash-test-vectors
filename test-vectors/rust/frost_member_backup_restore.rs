@@ -39,6 +39,12 @@ pub(crate) const TEST_VECTORS: &[TestVector] = &[
         reason: "non-canonical signing share (the Pallas scalar modulus)",
     },
     TestVector {
+        encoding: "zkfrost1qyqsyqcqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxrtt574",
+        ufvk: "uview1mvknnjr2s9cuc7z5kjsd3twesswde37tpfw2z4v5a8jmsnwdwsg8sc2hdq302ud7j57d7dvmmt6mtc6c3fk7zkdyx5mrhq8fvyw8xp0dlgzl8kkwawt9j7m9z5adwpuskfscg5fyrpc0sca8lydtxfw7hfaaydtg88ayqj6y89a9jllhupn3hzgp7vq6d",
+        derivation: None,
+        reason: "signing share of zero",
+    },
+    TestVector {
         encoding: "zkfrost1qyqsyqev42j6ml9d3tqthrzsmndmc854fqjmuspljl6yhswkc4p7zh208vjv7y78y36c3psy3czcxn2apfjya8ywz4whuzav8uj4s6mv4gguxm4ktp7",
         ufvk: "uview1fxwd87wc360kpkye42gul65r0yc4qgsn7tnywsf9ngtqqhg4qtv5r5lv0wcd7gghvasxawmccfsah5jqquleahngy3gjeeyslm5l2v7sc6ykjx3psdt8le3g9vjm4ynusrydwl2h2cmsr58r9z5m7cn0u6730d6s6w97gtx2vcp8tfzc3uydg6n5zak7kgz73ck3qhqldd2k7erhwz576p87eexfqr5vq952t9khyvvqwa29",
         derivation: None,
